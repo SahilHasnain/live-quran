@@ -1,0 +1,93 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Testing
+coverage/
+.nyc_output/
+
+# Build outputs
+dist/
+build/
+web-build/
+.expo/
+.expo-shared/
+
+# Native builds
+ios/
+android/
+.kotlin/
+
+# Environment files
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+.parcel-cache/
+
+# Documentation and examples
+README.md
+CHANGELOG.md
+docs/
+documentation/
+examples/
+inspiration/
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+.circleci/
+
+# Testing and linting configs
+.eslintrc*
+.prettierrc*
+jest.config.*
+.babelrc
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+*.orig.*
+*.bak
+*.backup
+
+# Scripts (if not needed for build)
+scripts/
+
+# Functions (if separate deployment)
+functions/

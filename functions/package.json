@@ -1,0 +1,17 @@
+{
+  "name": "tilawat-tracker",
+  "version": "1.0.0",
+  "description": "Tracks current playing tilawat and advances tracks",
+  "main": "src/main.js",
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write .",
+    "build": "echo 'no build scripts'"
+  },
+  "dependencies": {
+    "node-appwrite": "^21.0.1"
+  },
+  "devDependencies": {
+    "prettier": "^3.0.0"
+  }
+}
