@@ -69,51 +69,31 @@ export const TilawatPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const isPlaying = playbackState.state === State.Playing;
 
-  // Get audio file URL from Appwrite
+  // Get audio file URL from Appwrite with proper download parameter
   const getAudioUrl = useCallback((fileId: string) => {
-    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/view?project=${APPWRITE_PROJECT_ID}`;
+    // Use download endpoint instead of view to get proper audio file with correct headers
+    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/download?project=${APPWRITE_PROJECT_ID}`;
   }, []);
 
   // Fetch current state from backend
   const fetchCurrentState = useCallback(async () => {
     try {
-      const response = await fetch(
-        `${APPWRITE_ENDPOINT}/functions/${GET_STATE_FUNCTION_ID}/executions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Appwrite-Project": APPWRITE_PROJECT_ID,
-          },
+      // Call the tracker function directly as an API endpoint
+      const response = await fetch(TRACKER_FUNCTION_ID, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+      });
 
       if (!response.ok) {
         throw new Error(`Failed to fetch state: ${response.status}`);
       }
 
-      const execution = await response.json();
+      const data = await response.json();
 
-      // Poll for execution result
-      let result = execution;
-      while (result.status === "processing" || result.status === "waiting") {
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        const statusResponse = await fetch(
-          `${APPWRITE_ENDPOINT}/functions/${GET_STATE_FUNCTION_ID}/executions/${result.$id}`,
-          {
-            headers: {
-              "X-Appwrite-Project": APPWRITE_PROJECT_ID,
-            },
-          },
-        );
-        result = await statusResponse.json();
-      }
-
-      if (result.status === "completed" && result.responseBody) {
-        const data = JSON.parse(result.responseBody);
-        if (data.success) {
-          return data.currentTrack;
-        }
+      if (data.success && data.currentTrack) {
+        return data.currentTrack;
       }
 
       throw new Error("Failed to get valid state");

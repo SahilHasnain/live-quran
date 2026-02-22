@@ -1,7 +1,7 @@
 /**
  * Track Player Context
  * Uses react-native-track-player for reliable background audio streaming
- * Supports multiple modes: Tafseer and Tilawat
+ * Supports multiple modes: Tafseer, Tilawat (polling-based), and Translation
  */
 
 import TrackPlayer, {
@@ -14,6 +14,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -23,19 +24,40 @@ const TAFSEER_STREAM_URL =
   process.env.EXPO_PUBLIC_TAFSEER_STREAM_URL ||
   "https://livequran.duckdns.org/stream";
 
-const TILAWAT_STREAM_URL =
-  process.env.EXPO_PUBLIC_TILAWAT_STREAM_URL ||
-  "https://livequran.duckdns.org/tilawat";
-
 const TRANSLATION_STREAM_URL =
   process.env.EXPO_PUBLIC_TRANSLATION_STREAM_URL ||
   "https://livequran.duckdns.org/translation";
+
+// Tilawat uses polling-based playback
+const APPWRITE_ENDPOINT =
+  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
+  "https://sgp.cloud.appwrite.io/v1";
+const APPWRITE_PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
+const TRACKER_FUNCTION_ID =
+  process.env.EXPO_PUBLIC_TILAWAT_TRACKER_FUNCTION_ID || "";
+const APPWRITE_BUCKET_ID =
+  process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID || "";
+
+const POLL_INTERVAL = 10000; // Poll every 10 seconds for tilawat
+
+interface TilawatTrack {
+  id: string;
+  title: string;
+  duration: number;
+  fileId: string;
+  thumbnail: string | null;
+  youtubeId: string;
+  uploader: string | null;
+  elapsedSeconds: number;
+  remainingSeconds: number;
+}
 
 interface TrackPlayerContextType {
   isPlaying: boolean;
   isLoading: boolean;
   error: Error | null;
   currentMode: QuranMode;
+  currentTrack: TilawatTrack | null; // Only populated in tilawat mode
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -54,21 +76,23 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [isSetup, setIsSetup] = useState(false);
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
   const [shouldBePlaying, setShouldBePlaying] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
   const playbackState = usePlaybackState();
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const currentTrackIdRef = useRef<string | null>(null);
+  const trackStartTimeRef = useRef<number>(0); // Track when current track started playing
 
   const isPlaying = playbackState.state === State.Playing;
 
-  // Get stream URL based on current mode
+  // Get stream URL based on current mode (not used for tilawat)
   const getStreamUrl = useCallback((mode: QuranMode) => {
     switch (mode) {
       case "tafseer":
         return TAFSEER_STREAM_URL;
-      case "tilawat":
-        return TILAWAT_STREAM_URL;
       case "translation":
         return TRANSLATION_STREAM_URL;
       default:
-        return TILAWAT_STREAM_URL;
+        return TAFSEER_STREAM_URL;
     }
   }, []);
 
@@ -86,6 +110,109 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  // Get audio file URL from Appwrite with proper download parameter
+  const getAudioUrl = useCallback((fileId: string) => {
+    // Use download endpoint to get proper audio file with correct headers
+    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/download?project=${APPWRITE_PROJECT_ID}`;
+  }, []);
+
+  // Fetch current tilawat state from backend
+  const fetchTilawatState = useCallback(async () => {
+    try {
+      console.log(
+        "[TrackPlayer] Fetching tilawat state from:",
+        TRACKER_FUNCTION_ID,
+      );
+
+      const response = await fetch(TRACKER_FUNCTION_ID, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch state: ${response.status} ${response.statusText}`,
+        );
+      }
+
+      const data = await response.json();
+      console.log("[TrackPlayer] Received tilawat state:", {
+        trackId: data.currentTrack?.id,
+        title: data.currentTrack?.title,
+        elapsed: data.currentTrack?.elapsedSeconds,
+        duration: data.currentTrack?.duration,
+      });
+
+      if (data.success && data.currentTrack) {
+        return data.currentTrack;
+      }
+
+      throw new Error("Failed to get valid state");
+    } catch (err) {
+      console.error("[TrackPlayer] Error fetching tilawat state:", err);
+      throw err;
+    }
+  }, []);
+
+  // Load and play tilawat track
+  const loadTilawatTrack = useCallback(
+    async (track: TilawatTrack) => {
+      try {
+        console.log(`[TrackPlayer] Loading tilawat track: ${track.title}`);
+
+        await TrackPlayer.reset();
+        await TrackPlayer.add({
+          id: track.id,
+          url: getAudioUrl(track.fileId),
+          title: track.title,
+          artist: track.uploader || "Quran Recitation",
+          artwork: track.thumbnail || require("../assets/images/icon.png"),
+          duration: track.duration,
+        });
+
+        // Always start from beginning - backend controls the "live" position
+        // Users joining mid-track will hear from the start until backend advances
+        await TrackPlayer.seekTo(0);
+
+        setCurrentTrack(track);
+        currentTrackIdRef.current = track.id;
+        trackStartTimeRef.current = Date.now(); // Record when we started this track
+
+        if (shouldBePlaying) {
+          await TrackPlayer.play();
+        }
+      } catch (err) {
+        console.error("[TrackPlayer] Error loading tilawat track:", err);
+        throw err;
+      }
+    },
+    [getAudioUrl, shouldBePlaying],
+  );
+
+  // Poll backend for tilawat state changes
+  const pollTilawatState = useCallback(async () => {
+    try {
+      const track = await fetchTilawatState();
+
+      // Check if track changed - this is the only thing we care about
+      if (track.id !== currentTrackIdRef.current) {
+        console.log("[TrackPlayer] Tilawat track changed, loading new track");
+        await loadTilawatTrack(track);
+      } else {
+        // Just update the track info in state for display purposes
+        // Don't sync playback position - let it play naturally
+        setCurrentTrack((prev) =>
+          prev ? { ...prev, elapsedSeconds: track.elapsedSeconds } : null,
+        );
+      }
+    } catch (err) {
+      console.error("[TrackPlayer] Tilawat polling error:", err);
+      setError(err as Error);
+    }
+  }, [fetchTilawatState, loadTilawatTrack]);
+
   // Setup TrackPlayer
   useEffect(() => {
     const setup = async () => {
@@ -100,18 +227,24 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           notificationCapabilities: [Capability.Play, Capability.Pause],
         });
 
-        // Add the initial stream (Tilawat by default)
-        await TrackPlayer.add({
-          id: "live-stream",
-          url: getStreamUrl("tilawat"),
-          title: getStreamTitle("tilawat"),
-          artist: "Quran Recitation",
-          artwork: require("../assets/images/icon.png"),
-          isLiveStream: true,
-        });
-
         setIsSetup(true);
         console.log("[TrackPlayer] Setup complete");
+
+        // Load initial mode (tilawat with polling)
+        if (currentMode === "tilawat") {
+          const track = await fetchTilawatState();
+          await loadTilawatTrack(track);
+        } else {
+          // Add the initial stream for tafseer/translation
+          await TrackPlayer.add({
+            id: "live-stream",
+            url: getStreamUrl(currentMode),
+            title: getStreamTitle(currentMode),
+            artist: "Quran Recitation",
+            artwork: require("../assets/images/icon.png"),
+            isLiveStream: true,
+          });
+        }
 
         // Auto-play on mount
         await TrackPlayer.play();
@@ -128,35 +261,47 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       TrackPlayer.reset();
     };
-  }, [getStreamUrl, getStreamTitle]);
+  }, []);
 
-  // Auto-resume playback when stream reconnects after track change
+  // Start/stop polling for tilawat mode
   useEffect(() => {
-    if (!isSetup || !shouldBePlaying) return;
+    if (currentMode === "tilawat" && shouldBePlaying && isSetup) {
+      // Poll immediately on start
+      console.log("[TrackPlayer] Starting tilawat polling (immediate poll)");
+      pollTilawatState();
 
-    const checkAndResume = async () => {
-      const state = await TrackPlayer.getState();
+      // Then poll every 10 seconds
+      pollIntervalRef.current = setInterval(pollTilawatState, POLL_INTERVAL);
+      console.log("[TrackPlayer] Tilawat polling interval set");
+    } else {
+      // Stop polling
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
+        console.log("[TrackPlayer] Stopped tilawat polling");
+      }
+    }
 
-      // If we should be playing but we're not, try to resume
-      if (
-        state !== State.Playing &&
-        state !== State.Buffering &&
-        state !== State.Loading
-      ) {
-        console.log(`[TrackPlayer] Auto-resuming from state: ${state}`);
-        try {
-          await TrackPlayer.play();
-        } catch (err) {
-          console.error("[TrackPlayer] Auto-resume error:", err);
-        }
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
       }
     };
+  }, [currentMode, shouldBePlaying, isSetup, pollTilawatState]);
 
-    // Check every 2 seconds if we need to resume
-    const interval = setInterval(checkAndResume, 2000);
+  // Update elapsed time display every second for tilawat mode (UI only)
+  useEffect(() => {
+    if (currentMode !== "tilawat" || !isPlaying || !currentTrack) return;
+
+    const interval = setInterval(() => {
+      const elapsedMs = Date.now() - trackStartTimeRef.current;
+      const elapsedSeconds = Math.floor(elapsedMs / 1000);
+
+      setCurrentTrack((prev) => (prev ? { ...prev, elapsedSeconds } : null));
+    }, 1000);
 
     return () => clearInterval(interval);
-  }, [isSetup, shouldBePlaying]);
+  }, [currentMode, isPlaying, currentTrack?.id]);
 
   const play = useCallback(async () => {
     if (!isSetup) {
@@ -209,20 +354,32 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         // Reset the queue
         await TrackPlayer.reset();
 
-        // Add new track with new stream URL
-        await TrackPlayer.add({
-          id: "live-stream",
-          url: getStreamUrl(mode),
-          title: getStreamTitle(mode),
-          artist: "Quran Recitation",
-          artwork: require("../assets/images/icon.png"),
-          isLiveStream: true,
-        });
+        // Clear tilawat track if switching away from tilawat
+        if (currentMode === "tilawat") {
+          setCurrentTrack(null);
+          currentTrackIdRef.current = null;
+        }
 
         // Update mode
         setCurrentMode(mode);
 
-        // Start playing new stream
+        if (mode === "tilawat") {
+          // Load tilawat track with polling
+          const track = await fetchTilawatState();
+          await loadTilawatTrack(track);
+        } else {
+          // Add new stream for tafseer/translation
+          await TrackPlayer.add({
+            id: "live-stream",
+            url: getStreamUrl(mode),
+            title: getStreamTitle(mode),
+            artist: "Quran Recitation",
+            artwork: require("../assets/images/icon.png"),
+            isLiveStream: true,
+          });
+        }
+
+        // Start playing new stream/track
         await TrackPlayer.play();
         setShouldBePlaying(true);
 
@@ -234,7 +391,13 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLoading(false);
       }
     },
-    [currentMode, getStreamUrl, getStreamTitle],
+    [
+      currentMode,
+      getStreamUrl,
+      getStreamTitle,
+      fetchTilawatState,
+      loadTilawatTrack,
+    ],
   );
 
   const value: TrackPlayerContextType = {
@@ -242,6 +405,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     isLoading,
     error,
     currentMode,
+    currentTrack,
     play,
     pause,
     stop,

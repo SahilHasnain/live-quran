@@ -11,8 +11,16 @@ import {
 } from "react-native";
 
 export default function Index() {
-  const { isPlaying, isLoading, error, currentMode, play, pause, switchMode } =
-    useTrackPlayer();
+  const {
+    isPlaying,
+    isLoading,
+    error,
+    currentMode,
+    currentTrack,
+    play,
+    pause,
+    switchMode,
+  } = useTrackPlayer();
 
   // Get display name for mode
   const getModeDisplayName = (mode: QuranMode) => {
@@ -149,6 +157,32 @@ export default function Index() {
               <View className="w-32 h-32 bg-emerald-800 rounded-full items-center justify-center mb-6 shadow-xl">
                 <MaterialIcons name="radio" size={64} color="#fbbf24" />
               </View>
+
+              {/* Show current track info for tilawat mode */}
+              {currentMode === "tilawat" && currentTrack && (
+                <View className="w-full mb-6">
+                  <Text className="text-white text-lg font-semibold text-center mb-2">
+                    {currentTrack.title}
+                  </Text>
+                  <Text className="text-emerald-300 text-sm text-center mb-2">
+                    {currentTrack.uploader || "Quran Recitation"}
+                  </Text>
+                  <View className="flex-row justify-center items-center gap-2">
+                    <Text className="text-emerald-400 text-xs">
+                      {Math.floor(currentTrack.elapsedSeconds / 60)}:
+                      {String(currentTrack.elapsedSeconds % 60).padStart(
+                        2,
+                        "0",
+                      )}
+                    </Text>
+                    <Text className="text-emerald-600 text-xs">/</Text>
+                    <Text className="text-emerald-400 text-xs">
+                      {Math.floor(currentTrack.duration / 60)}:
+                      {String(currentTrack.duration % 60).padStart(2, "0")}
+                    </Text>
+                  </View>
+                </View>
+              )}
 
               <TouchableOpacity
                 onPress={isPlaying ? pause : play}
