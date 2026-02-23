@@ -20,7 +20,7 @@ export default {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
-    scheme: "myapp",
+    scheme: "livequran",
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
@@ -34,7 +34,7 @@ export default {
     },
     android: {
       adaptiveIcon: {
-        foregroundImage: "./assets/images/android-icon-foreground.png",
+        foregroundImage: "./assets/images/icon.png",
         backgroundColor: "#064e3b",
       },
       package: getPackageName(),

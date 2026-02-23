@@ -158,32 +158,6 @@ export default function Index() {
                 <MaterialIcons name="radio" size={64} color="#fbbf24" />
               </View>
 
-              {/* Show current track info for tilawat mode */}
-              {currentMode === "tilawat" && currentTrack && (
-                <View className="w-full mb-6">
-                  <Text className="text-white text-lg font-semibold text-center mb-2">
-                    {currentTrack.title}
-                  </Text>
-                  <Text className="text-emerald-300 text-sm text-center mb-2">
-                    {currentTrack.uploader || "Quran Recitation"}
-                  </Text>
-                  <View className="flex-row justify-center items-center gap-2">
-                    <Text className="text-emerald-400 text-xs">
-                      {Math.floor(currentTrack.elapsedSeconds / 60)}:
-                      {String(currentTrack.elapsedSeconds % 60).padStart(
-                        2,
-                        "0",
-                      )}
-                    </Text>
-                    <Text className="text-emerald-600 text-xs">/</Text>
-                    <Text className="text-emerald-400 text-xs">
-                      {Math.floor(currentTrack.duration / 60)}:
-                      {String(currentTrack.duration % 60).padStart(2, "0")}
-                    </Text>
-                  </View>
-                </View>
-              )}
-
               <TouchableOpacity
                 onPress={isPlaying ? pause : play}
                 disabled={isLoading}
