@@ -9,6 +9,7 @@ import TrackPlayer, {
   State,
   usePlaybackState,
 } from "@weights-ai/react-native-track-player";
+import * as SplashScreen from "expo-splash-screen";
 import React, {
   createContext,
   useCallback,
@@ -17,6 +18,9 @@ import React, {
   useRef,
   useState,
 } from "react";
+
+// Keep splash screen visible until first audio is ready
+SplashScreen.preventAutoHideAsync();
 
 export type QuranMode = "tafseer" | "tilawat" | "translation";
 
@@ -58,6 +62,7 @@ interface TrackPlayerContextType {
   error: Error | null;
   currentMode: QuranMode;
   currentTrack: TilawatTrack | null; // Only populated in tilawat mode
+  isInitialLoad: boolean; // Track if this is the first load
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
@@ -77,10 +82,12 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
   const [shouldBePlaying, setShouldBePlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const playbackState = usePlaybackState();
   const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const currentTrackIdRef = useRef<string | null>(null);
   const trackStartTimeRef = useRef<number>(0); // Track when current track started playing
+  const splashHiddenRef = useRef(false);
 
   const isPlaying = playbackState.state === State.Playing;
 
@@ -213,6 +220,29 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [fetchTilawatState, loadTilawatTrack]);
 
+  // Hide splash screen once audio is ready to play
+  useEffect(() => {
+    const hideSplash = async () => {
+      if (
+        !splashHiddenRef.current &&
+        isSetup &&
+        !isLoading &&
+        (isPlaying || error)
+      ) {
+        try {
+          await SplashScreen.hideAsync();
+          splashHiddenRef.current = true;
+          setIsInitialLoad(false);
+          console.log("[TrackPlayer] Splash screen hidden - audio ready");
+        } catch (err) {
+          console.warn("[TrackPlayer] Error hiding splash:", err);
+        }
+      }
+    };
+
+    hideSplash();
+  }, [isSetup, isLoading, isPlaying, error]);
+
   // Setup TrackPlayer
   useEffect(() => {
     const setup = async () => {
@@ -253,6 +283,15 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
         setError(err as Error);
+        // Hide splash even on error so user can see error message
+        if (!splashHiddenRef.current) {
+          try {
+            await SplashScreen.hideAsync();
+            splashHiddenRef.current = true;
+          } catch (splashErr) {
+            console.warn("[TrackPlayer] Error hiding splash:", splashErr);
+          }
+        }
       }
     };
 
@@ -406,6 +445,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     error,
     currentMode,
     currentTrack,
+    isInitialLoad,
     play,
     pause,
     stop,

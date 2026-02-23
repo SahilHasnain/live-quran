@@ -17,6 +17,7 @@ export default function Index() {
     error,
     currentMode,
     currentTrack,
+    isInitialLoad,
     play,
     pause,
     switchMode,
@@ -44,6 +45,22 @@ export default function Index() {
   return (
     <View className="flex-1 bg-emerald-950">
       <StatusBar barStyle="light-content" />
+
+      {/* Loading Overlay for Mode Switches */}
+      {isLoading && !isInitialLoad && (
+        <View className="absolute inset-0 bg-emerald-950/95 z-50 items-center justify-center">
+          <View className="items-center">
+            <View className="w-24 h-24 bg-emerald-800 rounded-full items-center justify-center mb-6">
+              <MaterialIcons name="radio" size={48} color="#fbbf24" />
+            </View>
+            <ActivityIndicator size="large" color="#10b981" />
+            <Text className="text-white text-lg font-semibold mt-4">
+              Loading {getModeDisplayName(currentMode)}...
+            </Text>
+            <Text className="text-emerald-300 text-sm mt-2">Please wait</Text>
+          </View>
+        </View>
+      )}
 
       {/* Header */}
       <View className="pt-14 pb-6 px-6 bg-emerald-900/30">
@@ -73,15 +90,19 @@ export default function Index() {
               currentMode === "tilawat"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            }`}
+            } ${isLoading ? "opacity-50" : ""}`}
           >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "tilawat" ? "text-white" : "text-emerald-300"
-              }`}
-            >
-              Tilawat
-            </Text>
+            {isLoading && currentMode !== "tilawat" ? (
+              <ActivityIndicator size="small" color="#6ee7b7" />
+            ) : (
+              <Text
+                className={`text-center font-semibold ${
+                  currentMode === "tilawat" ? "text-white" : "text-emerald-300"
+                }`}
+              >
+                Tilawat
+              </Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -91,17 +112,21 @@ export default function Index() {
               currentMode === "translation"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            }`}
+            } ${isLoading ? "opacity-50" : ""}`}
           >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "translation"
-                  ? "text-white"
-                  : "text-emerald-300"
-              }`}
-            >
-              Translation
-            </Text>
+            {isLoading && currentMode !== "translation" ? (
+              <ActivityIndicator size="small" color="#6ee7b7" />
+            ) : (
+              <Text
+                className={`text-center font-semibold ${
+                  currentMode === "translation"
+                    ? "text-white"
+                    : "text-emerald-300"
+                }`}
+              >
+                Translation
+              </Text>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -111,15 +136,19 @@ export default function Index() {
               currentMode === "tafseer"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            }`}
+            } ${isLoading ? "opacity-50" : ""}`}
           >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "tafseer" ? "text-white" : "text-emerald-300"
-              }`}
-            >
-              Tafseer
-            </Text>
+            {isLoading && currentMode !== "tafseer" ? (
+              <ActivityIndicator size="small" color="#6ee7b7" />
+            ) : (
+              <Text
+                className={`text-center font-semibold ${
+                  currentMode === "tafseer" ? "text-white" : "text-emerald-300"
+                }`}
+              >
+                Tafseer
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </View>
