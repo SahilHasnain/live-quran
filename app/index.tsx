@@ -90,19 +90,15 @@ export default function Index() {
               currentMode === "tilawat"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            } ${isLoading ? "opacity-50" : ""}`}
+            } ${isLoading && currentMode !== "tilawat" ? "opacity-50" : ""}`}
           >
-            {isLoading && currentMode !== "tilawat" ? (
-              <ActivityIndicator size="small" color="#6ee7b7" />
-            ) : (
-              <Text
-                className={`text-center font-semibold ${
-                  currentMode === "tilawat" ? "text-white" : "text-emerald-300"
-                }`}
-              >
-                Tilawat
-              </Text>
-            )}
+            <Text
+              className={`text-center font-semibold ${
+                currentMode === "tilawat" ? "text-white" : "text-emerald-300"
+              }`}
+            >
+              Tilawat
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -112,21 +108,17 @@ export default function Index() {
               currentMode === "translation"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            } ${isLoading ? "opacity-50" : ""}`}
+            } ${isLoading && currentMode !== "translation" ? "opacity-50" : ""}`}
           >
-            {isLoading && currentMode !== "translation" ? (
-              <ActivityIndicator size="small" color="#6ee7b7" />
-            ) : (
-              <Text
-                className={`text-center font-semibold ${
-                  currentMode === "translation"
-                    ? "text-white"
-                    : "text-emerald-300"
-                }`}
-              >
-                Translation
-              </Text>
-            )}
+            <Text
+              className={`text-center font-semibold ${
+                currentMode === "translation"
+                  ? "text-white"
+                  : "text-emerald-300"
+              }`}
+            >
+              Translation
+            </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -136,19 +128,15 @@ export default function Index() {
               currentMode === "tafseer"
                 ? "bg-emerald-600"
                 : "bg-emerald-800/50 border border-emerald-700"
-            } ${isLoading ? "opacity-50" : ""}`}
+            } ${isLoading && currentMode !== "tafseer" ? "opacity-50" : ""}`}
           >
-            {isLoading && currentMode !== "tafseer" ? (
-              <ActivityIndicator size="small" color="#6ee7b7" />
-            ) : (
-              <Text
-                className={`text-center font-semibold ${
-                  currentMode === "tafseer" ? "text-white" : "text-emerald-300"
-                }`}
-              >
-                Tafseer
-              </Text>
-            )}
+            <Text
+              className={`text-center font-semibold ${
+                currentMode === "tafseer" ? "text-white" : "text-emerald-300"
+              }`}
+            >
+              Tafseer
+            </Text>
           </TouchableOpacity>
         </View>
       </View>

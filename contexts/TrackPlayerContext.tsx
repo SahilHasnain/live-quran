@@ -386,6 +386,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         setIsLoading(true);
         setError(null);
+        const startTime = Date.now();
 
         // Stop current playback
         await TrackPlayer.stop();
@@ -421,6 +422,15 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         // Start playing new stream/track
         await TrackPlayer.play();
         setShouldBePlaying(true);
+
+        // Ensure minimum loading duration for smooth UX
+        const elapsed = Date.now() - startTime;
+        const minDuration = 800;
+        if (elapsed < minDuration) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, minDuration - elapsed),
+          );
+        }
 
         console.log(`[TrackPlayer] Switched to ${mode} mode`);
         setIsLoading(false);
