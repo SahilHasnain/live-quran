@@ -24,7 +24,7 @@ export default {
     userInterfaceStyle: "automatic",
     newArchEnabled: true,
     splash: {
-      image: "./assets/images/splash-icon.png",
+      image: "./assets/images/icon.png",
       resizeMode: "contain",
       backgroundColor: "#064e3b",
     },
@@ -63,7 +63,7 @@ export default {
     },
     extra: {
       eas: {
-        projectId: "b600580f-4278-4000-a60a-aef1086892c1",
+        projectId: "eabe5711-9f2b-469c-a2a7-80a8b1e8c9b0",
       },
     },
   },

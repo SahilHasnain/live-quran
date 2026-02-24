@@ -8,17 +8,37 @@
       "developmentClient": true,
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "development"
+        "APP_VARIANT": "development",
+        "EXPO_PUBLIC_TAFSEER_STREAM_URL": "https://livequran.duckdns.org/stream",
+        "EXPO_PUBLIC_TRANSLATION_STREAM_URL": "https://livequran.duckdns.org/translation",
+        "EXPO_PUBLIC_APPWRITE_ENDPOINT": "https://sgp.cloud.appwrite.io/v1",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "698e91f800372012b43e",
+        "EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID": "69958cf3001a3bb3e6dd",
+        "EXPO_PUBLIC_TILAWAT_TRACKER_FUNCTION_ID": "https://699ac3ad0023b545e8bb.sgp.appwrite.run"
       }
     },
     "preview": {
       "distribution": "internal",
       "env": {
-        "APP_VARIANT": "preview"
+        "APP_VARIANT": "preview",
+        "EXPO_PUBLIC_TAFSEER_STREAM_URL": "https://livequran.duckdns.org/stream",
+        "EXPO_PUBLIC_TRANSLATION_STREAM_URL": "https://livequran.duckdns.org/translation",
+        "EXPO_PUBLIC_APPWRITE_ENDPOINT": "https://sgp.cloud.appwrite.io/v1",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "698e91f800372012b43e",
+        "EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID": "69958cf3001a3bb3e6dd",
+        "EXPO_PUBLIC_TILAWAT_TRACKER_FUNCTION_ID": "https://699ac3ad0023b545e8bb.sgp.appwrite.run"
       }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_TAFSEER_STREAM_URL": "https://livequran.duckdns.org/stream",
+        "EXPO_PUBLIC_TRANSLATION_STREAM_URL": "https://livequran.duckdns.org/translation",
+        "EXPO_PUBLIC_APPWRITE_ENDPOINT": "https://sgp.cloud.appwrite.io/v1",
+        "EXPO_PUBLIC_APPWRITE_PROJECT_ID": "698e91f800372012b43e",
+        "EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID": "69958cf3001a3bb3e6dd",
+        "EXPO_PUBLIC_TILAWAT_TRACKER_FUNCTION_ID": "https://699ac3ad0023b545e8bb.sgp.appwrite.run"
+      }
     }
   },
   "submit": {
