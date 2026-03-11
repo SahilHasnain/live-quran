@@ -1,5 +1,8 @@
+import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "expo-router";
+import React, { useCallback } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -10,6 +13,7 @@ import {
 } from "react-native";
 
 export default function Index() {
+  const { showTabBar } = useTabBarVisibility();
   const {
     isPlaying,
     isBuffering,
@@ -22,6 +26,13 @@ export default function Index() {
     pause,
     switchMode,
   } = useTrackPlayer();
+
+  // Always show tab bar on Live screen
+  useFocusEffect(
+    useCallback(() => {
+      showTabBar();
+    }, [showTabBar]),
+  );
 
   const getModeDisplayName = (mode: QuranMode) => {
     switch (mode) {

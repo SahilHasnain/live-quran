@@ -5,7 +5,7 @@ export default function NotFound() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/");
+    router.replace("/(tabs)/" as any);
   }, []);
 
   return null;

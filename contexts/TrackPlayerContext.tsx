@@ -68,6 +68,7 @@ interface TrackPlayerContextType {
   pause: () => Promise<void>;
   stop: () => Promise<void>;
   switchMode: (mode: QuranMode) => Promise<void>;
+  playTrack: (track: TilawatTrack) => Promise<void>;
 }
 
 const TrackPlayerContext = createContext<TrackPlayerContextType | undefined>(
@@ -458,6 +459,49 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     ],
   );
 
+  // Play a specific tilawat track on demand (from audio list)
+  const playTrack = useCallback(
+    async (track: TilawatTrack) => {
+      try {
+        setIsLoading(true);
+        setError(null);
+
+        // Stop polling if active
+        if (pollIntervalRef.current) {
+          clearInterval(pollIntervalRef.current);
+          pollIntervalRef.current = null;
+        }
+
+        // Switch to tilawat mode if not already
+        setCurrentMode("tilawat");
+
+        await TrackPlayer.reset();
+        await TrackPlayer.add({
+          id: track.id,
+          url: getAudioUrl(track.fileId),
+          title: track.title,
+          artist: track.uploader || "Quran Recitation",
+          artwork: track.thumbnail || require("../assets/images/icon.png"),
+          duration: track.duration,
+        });
+
+        await TrackPlayer.seekTo(0);
+        setCurrentTrack(track);
+        currentTrackIdRef.current = track.id;
+        trackStartTimeRef.current = Date.now();
+
+        await TrackPlayer.play();
+        setShouldBePlaying(true);
+        setIsLoading(false);
+      } catch (err) {
+        console.error("[TrackPlayer] playTrack error:", err);
+        setError(err as Error);
+        setIsLoading(false);
+      }
+    },
+    [getAudioUrl],
+  );
+
   // Use shouldBePlaying for immediate UI response, native state for actual status
   const isBuffering =
     shouldBePlaying && playbackState.state !== State.Playing;
@@ -474,6 +518,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     pause,
     stop,
     switchMode,
+    playTrack,
   };
 
   return (
