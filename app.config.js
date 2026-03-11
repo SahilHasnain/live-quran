@@ -35,7 +35,7 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/icon.png",
-        backgroundColor: "#064e3b",
+        backgroundColor: "#0f0f0f",
       },
       package: getPackageName(),
     },
@@ -63,7 +63,7 @@ export default {
     },
     extra: {
       eas: {
-        projectId: "eabe5711-9f2b-469c-a2a7-80a8b1e8c9b0",
+         "projectId": "b600580f-4278-4000-a60a-aef1086892c1"
       },
     },
   },
