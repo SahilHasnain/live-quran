@@ -5,18 +5,18 @@
  */
 
 import TrackPlayer, {
-  Capability,
-  State,
-  usePlaybackState,
+    Capability,
+    State,
+    usePlaybackState,
 } from "@weights-ai/react-native-track-player";
 import * as SplashScreen from "expo-splash-screen";
 import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
+    createContext,
+    useCallback,
+    useContext,
+    useEffect,
+    useRef,
+    useState,
 } from "react";
 
 // Keep splash screen visible until first audio is ready
@@ -58,6 +58,7 @@ interface TilawatTrack {
 
 interface TrackPlayerContextType {
   isPlaying: boolean;
+  isBuffering: boolean;
   isLoading: boolean;
   error: Error | null;
   currentMode: QuranMode;
@@ -89,7 +90,16 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const trackStartTimeRef = useRef<number>(0); // Track when current track started playing
   const splashHiddenRef = useRef(false);
 
-  const isPlaying = playbackState.state === State.Playing;
+  const nativeIsPlaying = playbackState.state === State.Playing;
+
+  // Sync shouldBePlaying with native state (handles notification controls)
+  useEffect(() => {
+    if (nativeIsPlaying && !shouldBePlaying) {
+      setShouldBePlaying(true);
+    } else if (!nativeIsPlaying && shouldBePlaying && !isLoading && playbackState.state === State.Paused) {
+      setShouldBePlaying(false);
+    }
+  }, [nativeIsPlaying, playbackState.state]);
 
   // Get stream URL based on current mode (not used for tilawat)
   const getStreamUrl = useCallback((mode: QuranMode) => {
@@ -227,7 +237,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         !splashHiddenRef.current &&
         isSetup &&
         !isLoading &&
-        (isPlaying || error)
+        (nativeIsPlaying || error)
       ) {
         try {
           await SplashScreen.hideAsync();
@@ -241,7 +251,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     hideSplash();
-  }, [isSetup, isLoading, isPlaying, error]);
+  }, [isSetup, isLoading, nativeIsPlaying, error]);
 
   // Setup TrackPlayer
   useEffect(() => {
@@ -330,7 +340,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Update elapsed time display every second for tilawat mode (UI only)
   useEffect(() => {
-    if (currentMode !== "tilawat" || !isPlaying || !currentTrack) return;
+    if (currentMode !== "tilawat" || !nativeIsPlaying || !currentTrack) return;
 
     const interval = setInterval(() => {
       const elapsedMs = Date.now() - trackStartTimeRef.current;
@@ -340,7 +350,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [currentMode, isPlaying, currentTrack?.id]);
+  }, [currentMode, nativeIsPlaying, currentTrack?.id]);
 
   const play = useCallback(async () => {
     if (!isSetup) {
@@ -349,24 +359,23 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      setIsLoading(true);
       setError(null);
-      await TrackPlayer.play();
       setShouldBePlaying(true);
-      setIsLoading(false);
+      await TrackPlayer.play();
     } catch (err) {
       console.error("[TrackPlayer] Play error:", err);
+      setShouldBePlaying(false);
       setError(err as Error);
-      setIsLoading(false);
     }
   }, [isSetup]);
 
   const pause = useCallback(async () => {
     try {
-      await TrackPlayer.pause();
       setShouldBePlaying(false);
+      await TrackPlayer.pause();
     } catch (err) {
       console.error("[TrackPlayer] Pause error:", err);
+      setShouldBePlaying(true);
     }
   }, []);
 
@@ -449,8 +458,13 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     ],
   );
 
+  // Use shouldBePlaying for immediate UI response, native state for actual status
+  const isBuffering =
+    shouldBePlaying && playbackState.state !== State.Playing;
+
   const value: TrackPlayerContextType = {
-    isPlaying,
+    isPlaying: shouldBePlaying,
+    isBuffering,
     isLoading,
     error,
     currentMode,

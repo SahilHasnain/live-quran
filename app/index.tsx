@@ -1,6 +1,5 @@
 import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
-import { useEffect } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -13,6 +12,7 @@ import {
 export default function Index() {
   const {
     isPlaying,
+    isBuffering,
     isLoading,
     error,
     currentMode,
@@ -36,10 +36,6 @@ export default function Index() {
     }
   };
 
-  useEffect(() => {
-    play();
-  }, [play]);
-
   return (
     <View className="flex-1 bg-[#0f0f0f]">
       <StatusBar barStyle="light-content" />
@@ -61,33 +57,29 @@ export default function Index() {
       )}
 
       {/* Header */}
-      <View className="pt-14 pb-6 px-6 bg-[#1f1f1f]">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-white/90 text-3xl font-bold">
-              {getModeDisplayName(currentMode)}
-            </Text>
-            <Text className="text-neutral-500 text-sm mt-1">
-              24/7 Live Stream
-            </Text>
-          </View>
-          <View className="bg-red-500 px-4 py-2 rounded-full flex-row items-center">
-            <View className="w-2 h-2 bg-white rounded-full mr-2" />
-            <Text className="text-white text-xs font-bold uppercase tracking-wider">
+      {/* Header */}
+      <View className="pt-14 pb-5 px-6">
+        <View className="flex-row items-center gap-3">
+          <Text className="text-white/90 text-2xl font-bold">
+            {getModeDisplayName(currentMode)}
+          </Text>
+          <View className="bg-red-500/90 px-3 py-1 rounded-full flex-row items-center">
+            <View className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
+            <Text className="text-white text-[10px] font-bold uppercase tracking-wider">
               Live
             </Text>
           </View>
         </View>
 
         {/* Mode Selection Buttons */}
-        <View className="mt-6 flex-row gap-2">
+        <View className="mt-5 flex-row gap-2">
           <TouchableOpacity
             onPress={() => switchMode("tilawat")}
             disabled={isLoading || currentMode === "tilawat"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tilawat"
                 ? "bg-emerald-600"
-                : "bg-[#272727] border border-[#3f3f3f]"
+                : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "tilawat" ? "opacity-50" : ""}`}
           >
             <Text
@@ -105,7 +97,7 @@ export default function Index() {
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "translation"
                 ? "bg-emerald-600"
-                : "bg-[#272727] border border-[#3f3f3f]"
+                : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "translation" ? "opacity-50" : ""}`}
           >
             <Text
@@ -123,7 +115,7 @@ export default function Index() {
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tafseer"
                 ? "bg-emerald-600"
-                : "bg-[#272727] border border-[#3f3f3f]"
+                : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "tafseer" ? "opacity-50" : ""}`}
           >
             <Text
@@ -139,7 +131,7 @@ export default function Index() {
 
       <ScrollView className="flex-1">
         {/* Now Playing Card */}
-        <View className="mx-6 mt-6 mb-6 bg-[#1f1f1f] rounded-3xl p-8 items-center border border-[#272727]">
+        <View className="mx-6 mt-6 mb-6 bg-[#1a1a1a] rounded-3xl p-8 items-center">
           {error ? (
             <View className="items-center">
               <View className="w-20 h-20 bg-red-500/10 rounded-full items-center justify-center mb-4">
@@ -167,7 +159,7 @@ export default function Index() {
             </View>
           ) : (
             <>
-              <View className="w-32 h-32 bg-[#272727] rounded-full items-center justify-center mb-6 border border-[#3f3f3f]">
+              <View className="w-32 h-32 bg-[#222222] rounded-full items-center justify-center mb-6">
                 <MaterialIcons name="radio" size={64} color="#fbbf24" />
               </View>
 
@@ -178,16 +170,21 @@ export default function Index() {
                   isPlaying ? "bg-emerald-700" : "bg-emerald-600"
                 } w-20 h-20 rounded-full items-center justify-center`}
               >
-                {isLoading ? (
-                  <ActivityIndicator color="white" size="large" />
-                ) : (
-                  <MaterialIcons
-                    name={isPlaying ? "pause" : "play-arrow"}
-                    size={40}
-                    color="white"
-                  />
-                )}
+                <MaterialIcons
+                  name={isPlaying ? "pause" : "play-arrow"}
+                  size={40}
+                  color="white"
+                />
               </TouchableOpacity>
+
+              {isBuffering && (
+                <View className="mt-3 flex-row items-center">
+                  <ActivityIndicator color="#10b981" size="small" />
+                  <Text className="text-neutral-400 text-xs ml-2">
+                    Buffering...
+                  </Text>
+                </View>
+              )}
             </>
           )}
         </View>
