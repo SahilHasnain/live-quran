@@ -72,7 +72,7 @@ export async function fetchAudios(
   ];
 
   if (search && search.trim()) {
-    queries.push(Query.search("title", search.trim()));
+    queries.push(Query.contains("title", search.trim()));
   }
 
   const response = await databases.listDocuments(

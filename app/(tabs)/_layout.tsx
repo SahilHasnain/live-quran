@@ -28,7 +28,7 @@ export default function TabLayout() {
             options={{
               title: "Browse",
               tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="library-music" size={size} color={color} />
+                <MaterialIcons name="menu-book" size={size} color={color} />
               ),
             }}
           />
