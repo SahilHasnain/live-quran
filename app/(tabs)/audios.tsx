@@ -1,24 +1,25 @@
 import { useHeaderVisibility } from "@/contexts/HeaderVisibilityContext";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
+import { colors } from "@/constants/theme";
 import {
-    fetchAudios,
-    formatDuration,
-    getThumbnailUrl,
-    type AudioMode,
-    type QuranAudio,
+  fetchAudios,
+  formatDuration,
+  getThumbnailUrl,
+  type AudioMode,
+  type QuranAudio,
 } from "@/services/appwrite";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-    ActivityIndicator,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View
+  ActivityIndicator,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -136,7 +137,7 @@ export default function AudiosScreen() {
       <TouchableOpacity
         onPress={() => handlePlay(item)}
         activeOpacity={0.7}
-        className={`flex-row items-center px-4 py-2 gap-4 ${isCurrentlyPlaying ? "bg-emerald-900/20" : ""}`}
+        className={`flex-row items-center px-4 py-2 gap-4 ${isCurrentlyPlaying ? "bg-primary/10" : ""}`}
         accessibilityLabel={`Play ${item.title}`}
         accessibilityRole="button"
       >
@@ -152,7 +153,7 @@ export default function AudiosScreen() {
               className="absolute inset-0 items-center justify-center"
               style={{ borderRadius: 16, backgroundColor: "rgba(0,0,0,0.4)" }}
             >
-              <MaterialIcons name="equalizer" size={28} color="#10b981" />
+              <MaterialIcons name="equalizer" size={28} color={colors.primary.light} />
             </View>
           )}
           <View
@@ -165,7 +166,7 @@ export default function AudiosScreen() {
         </View>
         <View className="flex-1 gap-1.5">
           <Text
-            className={`text-base font-medium ${isCurrentlyPlaying ? "text-emerald-400" : "text-white"}`}
+            className={`text-base font-medium ${isCurrentlyPlaying ? "text-primary-light" : "text-white"}`}
             numberOfLines={2}
           >
             {item.title}
@@ -184,7 +185,7 @@ export default function AudiosScreen() {
     if (!loadingMore) return null;
     return (
       <View className="py-4 items-center">
-        <ActivityIndicator color="#10b981" />
+        <ActivityIndicator color={colors.primary.light} />
       </View>
     );
   };
@@ -234,7 +235,7 @@ export default function AudiosScreen() {
               key={m.key}
               onPress={() => switchMode(m.key)}
               className={`flex-1 py-3 px-4 rounded-full ${
-                mode === m.key ? "bg-emerald-600" : "bg-[#1a1a1a]"
+                mode === m.key ? "bg-primary" : "bg-background-secondary"
               }`}
             >
               <Text
@@ -252,7 +253,7 @@ export default function AudiosScreen() {
       {/* Content */}
       {loading ? (
         <View className="flex-1 items-center justify-center" style={{ paddingTop: 120 }}>
-          <ActivityIndicator size="large" color="#10b981" />
+          <ActivityIndicator size="large" color={colors.primary.light} />
           <Text className="text-neutral-400 mt-3">Loading audios...</Text>
         </View>
       ) : error ? (
@@ -261,7 +262,7 @@ export default function AudiosScreen() {
           <Text className="text-neutral-400 text-center mt-3">{error}</Text>
           <TouchableOpacity
             onPress={() => loadAudios()}
-            className="mt-4 bg-emerald-600 px-6 py-3 rounded-full"
+            className="mt-4 bg-primary px-6 py-3 rounded-full"
           >
             <Text className="text-white font-semibold">Retry</Text>
           </TouchableOpacity>

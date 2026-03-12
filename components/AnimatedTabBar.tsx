@@ -1,3 +1,4 @@
+import { colors } from "@/constants/theme";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import React from "react";
@@ -27,8 +28,8 @@ export function AnimatedTabBar({
           left: 0,
           right: 0,
           flexDirection: "row",
-          backgroundColor: "#0f0f0f",
-          borderTopColor: "#1a1a1a",
+          backgroundColor: colors.background.primary,
+          borderTopColor: colors.background.secondary,
           borderTopWidth: 1,
           height: TAB_BAR_HEIGHT + insets.bottom,
           paddingBottom: insets.bottom + 4,
@@ -73,7 +74,7 @@ export function AnimatedTabBar({
         const icon = options.tabBarIcon
           ? options.tabBarIcon({
               focused: isFocused,
-              color: isFocused ? "#10b981" : "#525252",
+              color: isFocused ? colors.primary.DEFAULT : colors.text.muted,
               size: 24,
             })
           : null;
@@ -96,7 +97,7 @@ export function AnimatedTabBar({
               {icon}
               <Text
                 style={{
-                  color: isFocused ? "#10b981" : "#525252",
+                  color: isFocused ? colors.primary.DEFAULT : colors.text.muted,
                   fontSize: 11,
                   fontWeight: "600",
                   marginTop: 4,

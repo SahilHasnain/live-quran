@@ -1,3 +1,4 @@
+import { colors } from "@/constants/theme";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -11,7 +12,7 @@ import {
   StatusBar,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 
 export default function Index() {
@@ -56,7 +57,7 @@ export default function Index() {
       imageStyle={{ opacity: 0.3 }}
     >
       <View 
-        className="absolute inset-0 bg-cyan-950/80"
+        className="absolute inset-0 bg-black/70"
       />
       <StatusBar barStyle="light-content" />
 
@@ -64,10 +65,12 @@ export default function Index() {
       {isLoading && !isInitialLoad && (
         <View className="absolute inset-0 bg-[#0f0f0f]/95 z-50 items-center justify-center">
           <View className="items-center">
-            <View className="w-24 h-24 bg-[#272727] rounded-full items-center justify-center mb-6">
-              <MaterialIcons name="radio" size={48} color="#fbbf24" />
-            </View>
-            <ActivityIndicator size="large" color="#06b6d4" />
+            <Image
+              source={require("@/assets/images/headphone-v1.png")}
+              style={{ width: 80, height: 80, marginBottom: 24 }}
+              resizeMode="contain"
+            />
+            <ActivityIndicator size="large" color={colors.primary.light} />
             <Text className="text-white/90 text-lg font-semibold mt-4">
               Loading {getModeDisplayName(currentMode)}...
             </Text>
@@ -104,8 +107,8 @@ export default function Index() {
             disabled={isLoading || currentMode === "tilawat"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tilawat"
-                ? "bg-cyan-600"
-                : "bg-[#1a1a1a]"
+                ? "bg-primary"
+                : "bg-background-secondary"
             } ${isLoading && currentMode !== "tilawat" ? "opacity-50" : ""}`}
           >
             <Text
@@ -122,8 +125,8 @@ export default function Index() {
             disabled={isLoading || currentMode === "translation"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "translation"
-                ? "bg-cyan-600"
-                : "bg-[#1a1a1a]"
+                ? "bg-primary"
+                : "bg-background-secondary"
             } ${isLoading && currentMode !== "translation" ? "opacity-50" : ""}`}
           >
             <Text
@@ -140,8 +143,8 @@ export default function Index() {
             disabled={isLoading || currentMode === "tafseer"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tafseer"
-                ? "bg-cyan-600"
-                : "bg-[#1a1a1a]"
+                ? "bg-primary"
+                : "bg-background-secondary"
             } ${isLoading && currentMode !== "tafseer" ? "opacity-50" : ""}`}
           >
             <Text
@@ -172,7 +175,7 @@ export default function Index() {
               <TouchableOpacity
                 onPress={play}
                 disabled={isLoading}
-                className="bg-cyan-600 px-8 py-3 rounded-full"
+                className="bg-primary px-8 py-3 rounded-full"
               >
                 {isLoading ? (
                   <ActivityIndicator color="white" />
@@ -195,7 +198,7 @@ export default function Index() {
 
               {isBuffering && (
                 <View className="mb-4 flex-row items-center">
-                  <ActivityIndicator color="#06b6d4" size="small" />
+                  <ActivityIndicator color={colors.primary.light} size="small" />
                   <Text className="text-neutral-400 text-xs ml-2">
                     Buffering...
                   </Text>
@@ -212,7 +215,7 @@ export default function Index() {
           onPress={isPlaying ? pause : play}
           disabled={isLoading}
           className={`${
-            isPlaying ? "bg-cyan-700" : "bg-cyan-600"
+            isPlaying ? "bg-primary-dark" : "bg-primary"
           } w-16 h-16 rounded-full items-center justify-center shadow-2xl`}
         >
           <MaterialIcons
