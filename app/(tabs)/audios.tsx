@@ -2,23 +2,23 @@ import { useHeaderVisibility } from "@/contexts/HeaderVisibilityContext";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import {
-  fetchAudios,
-  formatDuration,
-  getThumbnailUrl,
-  type AudioMode,
-  type QuranAudio,
+    fetchAudios,
+    formatDuration,
+    getThumbnailUrl,
+    type AudioMode,
+    type QuranAudio,
 } from "@/services/appwrite";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View
+    ActivityIndicator,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -199,7 +199,13 @@ export default function AudiosScreen() {
       >
         {/* Header with Search */}
         <View className="pt-14 pb-2 px-4">
-          <View className="flex-row items-center bg-[#1a1a1a] rounded-xl px-3 gap-2">
+          <View className="flex-row items-center gap-3">
+            <Image
+              source={require("@/assets/images/icon.png")}
+              style={{ width: 32, height: 32 }}
+              contentFit="contain"
+            />
+            <View className="flex-1 flex-row items-center bg-[#1a1a1a] rounded-xl px-3 gap-2">
             <MaterialIcons name="search" size={20} color="#525252" />
             <TextInput
               value={searchQuery}
@@ -217,6 +223,7 @@ export default function AudiosScreen() {
                 <MaterialIcons name="close" size={18} color="#525252" />
               </TouchableOpacity>
             )}
+            </View>
           </View>
         </View>
 

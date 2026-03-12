@@ -77,12 +77,18 @@ export default function Index() {
       )}
 
       {/* Header */}
-      {/* Header */}
       <View className="pt-14 pb-5 px-6">
-        <View className="flex-row items-center gap-3">
-          <Text className="text-white/90 text-2xl font-bold">
-            {getModeDisplayName(currentMode)}
-          </Text>
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-center gap-3">
+            <Image
+              source={require("@/assets/images/icon.png")}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
+            <Text className="text-white/90 text-2xl font-bold">
+              {getModeDisplayName(currentMode)}
+            </Text>
+          </View>
           <View className="bg-red-500/90 px-3 py-1 rounded-full flex-row items-center">
             <View className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
             <Text className="text-white text-[10px] font-bold uppercase tracking-wider">
