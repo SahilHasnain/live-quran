@@ -5,6 +5,7 @@ import { useFocusEffect } from "expo-router";
 import React, { useCallback } from "react";
 import {
   ActivityIndicator,
+  ImageBackground,
   ScrollView,
   StatusBar,
   Text,
@@ -48,7 +49,14 @@ export default function Index() {
   };
 
   return (
-    <View className="flex-1 bg-[#0f0f0f]">
+    <ImageBackground
+      source={require("@/assets/images/quran-bg.png")}
+      style={{ flex: 1 }}
+      imageStyle={{ opacity: 0.3 }}
+    >
+      <View 
+        className="absolute inset-0 bg-emerald-950/80"
+      />
       <StatusBar barStyle="light-content" />
 
       {/* Loading Overlay */}
@@ -142,7 +150,7 @@ export default function Index() {
 
       <ScrollView className="flex-1">
         {/* Now Playing Card */}
-        <View className="mx-6 mt-6 mb-6 bg-[#1a1a1a] rounded-3xl p-8 items-center">
+        <View className="mx-6 mt-6 mb-6 p-8 items-center">
           {error ? (
             <View className="items-center">
               <View className="w-20 h-20 bg-red-500/10 rounded-full items-center justify-center mb-4">
@@ -170,7 +178,7 @@ export default function Index() {
             </View>
           ) : (
             <>
-              <View className="w-32 h-32 bg-[#222222] rounded-full items-center justify-center mb-6">
+              <View className="w-32 h-32 rounded-full items-center justify-center mb-6">
                 <MaterialIcons name="radio" size={64} color="#fbbf24" />
               </View>
 
@@ -200,6 +208,6 @@ export default function Index() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </ImageBackground>
   );
 }
