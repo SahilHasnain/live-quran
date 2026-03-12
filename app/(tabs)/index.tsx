@@ -1,6 +1,7 @@
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback } from "react";
 import {
@@ -10,7 +11,7 @@ import {
   StatusBar,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 
 export default function Index() {
@@ -55,7 +56,7 @@ export default function Index() {
       imageStyle={{ opacity: 0.3 }}
     >
       <View 
-        className="absolute inset-0 bg-emerald-950/80"
+        className="absolute inset-0 bg-cyan-950/80"
       />
       <StatusBar barStyle="light-content" />
 
@@ -66,7 +67,7 @@ export default function Index() {
             <View className="w-24 h-24 bg-[#272727] rounded-full items-center justify-center mb-6">
               <MaterialIcons name="radio" size={48} color="#fbbf24" />
             </View>
-            <ActivityIndicator size="large" color="#10b981" />
+            <ActivityIndicator size="large" color="#06b6d4" />
             <Text className="text-white/90 text-lg font-semibold mt-4">
               Loading {getModeDisplayName(currentMode)}...
             </Text>
@@ -97,7 +98,7 @@ export default function Index() {
             disabled={isLoading || currentMode === "tilawat"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tilawat"
-                ? "bg-emerald-600"
+                ? "bg-cyan-600"
                 : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "tilawat" ? "opacity-50" : ""}`}
           >
@@ -115,7 +116,7 @@ export default function Index() {
             disabled={isLoading || currentMode === "translation"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "translation"
-                ? "bg-emerald-600"
+                ? "bg-cyan-600"
                 : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "translation" ? "opacity-50" : ""}`}
           >
@@ -133,7 +134,7 @@ export default function Index() {
             disabled={isLoading || currentMode === "tafseer"}
             className={`flex-1 py-3 px-4 rounded-full ${
               currentMode === "tafseer"
-                ? "bg-emerald-600"
+                ? "bg-cyan-600"
                 : "bg-[#1a1a1a]"
             } ${isLoading && currentMode !== "tafseer" ? "opacity-50" : ""}`}
           >
@@ -165,7 +166,7 @@ export default function Index() {
               <TouchableOpacity
                 onPress={play}
                 disabled={isLoading}
-                className="bg-emerald-600 px-8 py-3 rounded-full"
+                className="bg-cyan-600 px-8 py-3 rounded-full"
               >
                 {isLoading ? (
                   <ActivityIndicator color="white" />
@@ -179,26 +180,16 @@ export default function Index() {
           ) : (
             <>
               <View className="w-32 h-32 rounded-full items-center justify-center mb-6">
-                <MaterialIcons name="radio" size={64} color="#fbbf24" />
+                <Image 
+                  source={require("@/assets/images/headphone-v1.png")}
+                  style={{ width: 120, height: 120 }}
+                  resizeMode="contain"
+                />
               </View>
 
-              <TouchableOpacity
-                onPress={isPlaying ? pause : play}
-                disabled={isLoading}
-                className={`${
-                  isPlaying ? "bg-emerald-700" : "bg-emerald-600"
-                } w-20 h-20 rounded-full items-center justify-center`}
-              >
-                <MaterialIcons
-                  name={isPlaying ? "pause" : "play-arrow"}
-                  size={40}
-                  color="white"
-                />
-              </TouchableOpacity>
-
               {isBuffering && (
-                <View className="mt-3 flex-row items-center">
-                  <ActivityIndicator color="#10b981" size="small" />
+                <View className="mb-4 flex-row items-center">
+                  <ActivityIndicator color="#06b6d4" size="small" />
                   <Text className="text-neutral-400 text-xs ml-2">
                     Buffering...
                   </Text>
@@ -208,6 +199,23 @@ export default function Index() {
           )}
         </View>
       </ScrollView>
+
+      {/* Fixed Play/Pause Button at Bottom Right */}
+      <View className="absolute bottom-24 right-6 pb-8">
+        <TouchableOpacity
+          onPress={isPlaying ? pause : play}
+          disabled={isLoading}
+          className={`${
+            isPlaying ? "bg-cyan-700" : "bg-cyan-600"
+          } w-16 h-16 rounded-full items-center justify-center shadow-2xl`}
+        >
+          <MaterialIcons
+            name={isPlaying ? "pause" : "play-arrow"}
+            size={36}
+            color="white"
+          />
+        </TouchableOpacity>
+      </View>
     </ImageBackground>
   );
 }
