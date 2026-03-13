@@ -6,15 +6,15 @@ import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
-  ImageBackground,
-  Modal,
-  ScrollView,
-  StatusBar,
-  Text,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-  View
+    ActivityIndicator,
+    ImageBackground,
+    Modal,
+    ScrollView,
+    StatusBar,
+    Text,
+    TouchableOpacity,
+    TouchableWithoutFeedback,
+    View
 } from "react-native";
 
 const MODES: { key: QuranMode; label: string }[] = [
@@ -32,7 +32,6 @@ export default function Index() {
     error,
     currentMode,
     currentTrack,
-    isInitialLoad,
     play,
     pause,
     switchMode,
@@ -122,7 +121,7 @@ export default function Index() {
       </Modal>
 
       {/* Loading Overlay */}
-      {isLoading && !isInitialLoad && (
+      {isLoading && (
         <View className="absolute inset-0 bg-[#0f0f0f]/95 z-50 items-center justify-center">
           <View className="items-center">
             <Image
