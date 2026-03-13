@@ -180,27 +180,30 @@ class StreamManager {
       `icecast://source:hackme@localhost:${this.icecastPort}${this.mountPoint}`
     ];
 
+    console.log(`[${this.streamName}] FFmpeg command: ffmpeg ${ffmpegArgs.join(' ')}`);
     this.ffmpegProcess = spawn('ffmpeg', ffmpegArgs);
 
     this.ffmpegProcess.stdout.on('data', (data) => {
-      // Suppress verbose stdout
+      console.log(`[${this.streamName}] FFmpeg stdout: ${data.toString().trim()}`);
     });
 
     this.ffmpegProcess.stderr.on('data', (data) => {
-      const output = data.toString();
-      // Only log important messages
-      if (output.includes('error') || output.includes('Error')) {
-        console.error(`[${this.streamName}] FFmpeg error: ${output}`);
-      }
+      const output = data.toString().trim();
+      console.log(`[${this.streamName}] FFmpeg stderr: ${output}`);
     });
 
     this.ffmpegProcess.on('close', (code) => {
-      console.log(`[${this.streamName}] FFmpeg process exited with code ${code}`);
+      console.log(`[${this.streamName}] ❌ FFmpeg process exited with code ${code}`);
       
       // Restart after 5 seconds
       setTimeout(() => {
+        console.log(`[${this.streamName}] 🔄 Restarting FFmpeg...`);
         this.startStream();
       }, 5000);
+    });
+
+    this.ffmpegProcess.on('error', (error) => {
+      console.error(`[${this.streamName}] ❌ FFmpeg spawn error: ${error.message}`);
     });
   }
 }
