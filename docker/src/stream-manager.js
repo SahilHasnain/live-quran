@@ -24,13 +24,17 @@ class StreamManager {
     // Ensure directories exist
     await fs.ensureDir(this.audioCacheDir);
     
-    // Load initial playlist
+    // Load initial playlist and wait for it to complete
     await this.updatePlaylist();
     
-    // Start Icecast streaming
-    this.startStream();
+    // Only start stream after playlist is ready
+    if (this.currentPlaylist.length > 0) {
+      this.startStream();
+    } else {
+      console.error(`[${this.streamName}] ❌ Cannot start stream - no tracks in playlist`);
+    }
     
-    // Update playlist every 5 minutes
+    // Update playlist every 5 minutes (but don't restart stream)
     setInterval(() => {
       this.updatePlaylist();
     }, 5 * 60 * 1000);
@@ -86,7 +90,10 @@ class StreamManager {
   async generateFFmpegPlaylist() {
     const playlistContent = [];
     
-    for (const track of this.currentPlaylist) {
+    // Limit initial caching to first 10 tracks for faster startup
+    const tracksToCache = this.currentPlaylist.slice(0, 10);
+    
+    for (const track of tracksToCache) {
       // Download and cache audio file
       const cachedFile = await this.cacheAudioFile(track);
       if (cachedFile) {
@@ -100,7 +107,20 @@ class StreamManager {
     }
     
     await fs.writeFile(this.playlistFile, playlistContent.join('\n'));
-    console.log(`[${this.streamName}] Generated playlist with ${playlistContent.length} tracks`);
+    console.log(`[${this.streamName}] ✅ Generated playlist with ${playlistContent.length} tracks`);
+    
+    // Cache remaining tracks in background
+    if (this.currentPlaylist.length > 10) {
+      console.log(`[${this.streamName}] 📥 Caching remaining ${this.currentPlaylist.length - 10} tracks in background...`);
+      this.cacheRemainingTracks(10);
+    }
+  }
+  
+  async cacheRemainingTracks(startIndex) {
+    for (let i = startIndex; i < this.currentPlaylist.length; i++) {
+      await this.cacheAudioFile(this.currentPlaylist[i]);
+    }
+    console.log(`[${this.streamName}] ✅ All tracks cached`);
   }
 
   async cacheAudioFile(track) {
