@@ -102,7 +102,6 @@ class StreamManager {
     await fs.writeFile(this.playlistFile, playlistContent.join('\n'));
     console.log(`[${this.streamName}] Generated playlist with ${playlistContent.length} tracks`);
   }
-  }
 
   async cacheAudioFile(track) {
     const filename = `${track.id}.mp3`;
