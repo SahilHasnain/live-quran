@@ -32,6 +32,15 @@ export default function TabLayout() {
               ),
             }}
           />
+          <Tabs.Screen
+            name="downloads"
+            options={{
+              title: "Downloads",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="download" size={size} color={color} />
+              ),
+            }}
+          />
         </Tabs>
       </TabBarVisibilityProvider>
     </HeaderVisibilityProvider>

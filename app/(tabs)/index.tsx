@@ -4,16 +4,24 @@ import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   ImageBackground,
+  Modal,
   ScrollView,
   StatusBar,
   Text,
   TouchableOpacity,
-  View,
+  TouchableWithoutFeedback,
+  View
 } from "react-native";
+
+const MODES: { key: QuranMode; label: string }[] = [
+  { key: "tilawat", label: "Tilawat" },
+  { key: "translation", label: "Translation" },
+  { key: "tafseer", label: "Tafseer" },
+];
 
 export default function Index() {
   const { showTabBar } = useTabBarVisibility();
@@ -29,6 +37,7 @@ export default function Index() {
     pause,
     switchMode,
   } = useTrackPlayer();
+  const [showModeMenu, setShowModeMenu] = useState(false);
 
   // Always show tab bar on Live screen
   useFocusEffect(
@@ -50,6 +59,16 @@ export default function Index() {
     }
   };
 
+  const getModeLabel = (mode: QuranMode) => {
+    return MODES.find(m => m.key === mode)?.label || "Tilawat";
+  };
+
+  const handleModeSwitch = (mode: QuranMode) => {
+    if (mode === currentMode) return;
+    switchMode(mode);
+    setShowModeMenu(false);
+  };
+
   return (
     <ImageBackground
       source={require("@/assets/images/quran-bg.png")}
@@ -60,6 +79,47 @@ export default function Index() {
         className="absolute inset-0 bg-black/70"
       />
       <StatusBar barStyle="light-content" />
+
+      {/* Mode Dropdown Modal */}
+      <Modal
+        visible={showModeMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowModeMenu(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowModeMenu(false)}>
+          <View className="flex-1 bg-black/50">
+            <TouchableWithoutFeedback>
+              <View className="absolute top-[72px] right-4 bg-[#1a1a1a] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+                {MODES.map((m, index) => (
+                  <TouchableOpacity
+                    key={m.key}
+                    onPress={() => handleModeSwitch(m.key)}
+                    disabled={isLoading}
+                    className={`px-4 py-3 flex-row items-center justify-between ${
+                      index < MODES.length - 1 ? "border-b border-neutral-800" : ""
+                    } ${currentMode === m.key ? "bg-primary/20" : ""} ${
+                      isLoading ? "opacity-50" : ""
+                    }`}
+                    style={{ minWidth: 140 }}
+                  >
+                    <Text
+                      className={`font-medium ${
+                        currentMode === m.key ? "text-primary-light" : "text-white"
+                      }`}
+                    >
+                      {m.label}
+                    </Text>
+                    {currentMode === m.key && (
+                      <MaterialIcons name="check" size={18} color={colors.primary.light} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
 
       {/* Loading Overlay */}
       {isLoading && !isInitialLoad && (
@@ -88,73 +148,40 @@ export default function Index() {
               style={{ width: 32, height: 32 }}
               resizeMode="contain"
             />
-            <Text className="text-white/90 text-2xl font-bold">
-              {getModeDisplayName(currentMode)}
-            </Text>
+            <View>
+              <Text className="text-white/90 text-xl font-bold">
+                Quran Radio
+              </Text>
+              {/* Live Badge Below Text */}
+              <View className="mt-1 self-start bg-green-500/90 px-2 py-0.5 rounded flex-row items-center">
+                <View className="w-1 h-1 bg-white rounded-full mr-1" />
+                <Text className="text-white text-[8px] font-bold uppercase tracking-wider">
+                  Live
+                </Text>
+              </View>
+            </View>
           </View>
-          <View className="bg-red-500/90 px-3 py-1 rounded-full flex-row items-center">
-            <View className="w-1.5 h-1.5 bg-white rounded-full mr-1.5" />
-            <Text className="text-white text-[10px] font-bold uppercase tracking-wider">
-              Live
-            </Text>
+          
+          <View className="flex-row items-center gap-3">
+            {/* Mode Selector Button */}
+            <TouchableOpacity
+              onPress={() => setShowModeMenu(!showModeMenu)}
+              disabled={isLoading}
+              className={`bg-primary px-4 py-2.5 rounded-xl flex-row items-center gap-2 ${
+                isLoading ? "opacity-50" : ""
+              }`}
+              accessibilityLabel="Select mode"
+            >
+              <Text className="text-white font-semibold text-sm">
+                {getModeLabel(currentMode)}
+              </Text>
+              <MaterialIcons 
+                name={showModeMenu ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
+                size={20} 
+                color="white" 
+              />
+            </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Mode Selection Buttons */}
-        <View className="mt-5 flex-row gap-2">
-          <TouchableOpacity
-            onPress={() => switchMode("tilawat")}
-            disabled={isLoading || currentMode === "tilawat"}
-            className={`flex-1 py-3 px-4 rounded-full ${
-              currentMode === "tilawat"
-                ? "bg-primary"
-                : "bg-background-secondary"
-            } ${isLoading && currentMode !== "tilawat" ? "opacity-50" : ""}`}
-          >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "tilawat" ? "text-white" : "text-neutral-400"
-              }`}
-            >
-              Tilawat
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => switchMode("translation")}
-            disabled={isLoading || currentMode === "translation"}
-            className={`flex-1 py-3 px-4 rounded-full ${
-              currentMode === "translation"
-                ? "bg-primary"
-                : "bg-background-secondary"
-            } ${isLoading && currentMode !== "translation" ? "opacity-50" : ""}`}
-          >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "translation" ? "text-white" : "text-neutral-400"
-              }`}
-            >
-              Translation
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => switchMode("tafseer")}
-            disabled={isLoading || currentMode === "tafseer"}
-            className={`flex-1 py-3 px-4 rounded-full ${
-              currentMode === "tafseer"
-                ? "bg-primary"
-                : "bg-background-secondary"
-            } ${isLoading && currentMode !== "tafseer" ? "opacity-50" : ""}`}
-          >
-            <Text
-              className={`text-center font-semibold ${
-                currentMode === "tafseer" ? "text-white" : "text-neutral-400"
-              }`}
-            >
-              Tafseer
-            </Text>
-          </TouchableOpacity>
         </View>
       </View>
 
