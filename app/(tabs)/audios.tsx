@@ -1,25 +1,25 @@
+import { colors } from "@/constants/theme";
 import { useHeaderVisibility } from "@/contexts/HeaderVisibilityContext";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
-import { colors } from "@/constants/theme";
 import {
-  fetchAudios,
-  formatDuration,
-  getThumbnailUrl,
-  type AudioMode,
-  type QuranAudio,
+    fetchAudios,
+    formatDuration,
+    getThumbnailUrl,
+    type AudioMode,
+    type QuranAudio,
 } from "@/services/appwrite";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
-  StatusBar,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    StatusBar,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
@@ -42,7 +42,17 @@ export default function AudiosScreen() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
+  const [downloadProgress, setDownloadProgress] = useState<Map<string, number>>(new Map());
+  const [downloads, setDownloads] = useState<Set<string>>(new Set());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Initialize download manager
+  useEffect(() => {
+    downloadManager.initialize().then(() => {
+      const allDownloads = downloadManager.getAllDownloads();
+      setDownloads(new Set(allDownloads.map(d => d.id)));
+    });
+  }, []);
 
   const loadAudios = useCallback(
     async (offset = 0, search = activeSearch, currentMode = mode) => {
@@ -120,6 +130,72 @@ export default function AudiosScreen() {
     });
   };
 
+  const handleDownload = async (item: QuranAudio) => {
+    try {
+      const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${
+        mode === 'tilawat' ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID :
+        mode === 'translation' ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID :
+        process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
+      }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
+
+      const result = await downloadManager.downloadAudio(
+        item.$id,
+        item.title,
+        item.duration,
+        audioUrl,
+        mode,
+        item.thumbnail || getThumbnailUrl(item.youtubeId),
+        (progress) => {
+          setDownloadProgress(prev => new Map(prev).set(item.$id, progress));
+        }
+      );
+
+      if (result) {
+        setDownloads(prev => new Set(prev).add(item.$id));
+        setDownloadProgress(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(item.$id);
+          return newMap;
+        });
+        Alert.alert('Success', 'Audio downloaded successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to download audio. Please try again.');
+      }
+    } catch (error) {
+      console.error('[Download] Error:', error);
+      Alert.alert('Error', 'Failed to download audio. Please try again.');
+      setDownloadProgress(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(item.$id);
+        return newMap;
+      });
+    }
+  };
+
+  const handleDeleteDownload = (item: QuranAudio) => {
+    Alert.alert(
+      'Delete Download',
+      'Are you sure you want to delete this downloaded audio?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: async () => {
+            const success = await downloadManager.deleteDownload(item.$id);
+            if (success) {
+              setDownloads(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(item.$id);
+                return newSet;
+              });
+            }
+          }
+        }
+      ]
+    );
+  };
+
   const handleScroll = (event: any) => {
     handleHeaderScroll(event);
     handleTabBarScroll(event);
@@ -132,52 +208,97 @@ export default function AudiosScreen() {
   const renderItem = ({ item }: { item: QuranAudio }) => {
     const thumbnailUri = item.thumbnail || getThumbnailUrl(item.youtubeId);
     const isCurrentlyPlaying = currentTrack?.id === item.$id && isPlaying;
+    const isDownloaded = downloads.has(item.$id);
+    const progress = downloadProgress.get(item.$id);
+    const isDownloading = progress !== undefined;
 
     return (
-      <TouchableOpacity
-        onPress={() => handlePlay(item)}
-        activeOpacity={0.7}
-        className={`flex-row items-center px-4 py-2 gap-4 ${isCurrentlyPlaying ? "bg-primary/10" : ""}`}
-        accessibilityLabel={`Play ${item.title}`}
-        accessibilityRole="button"
-      >
-        <View>
-          <Image
-            source={{ uri: thumbnailUri }}
-            style={{ width: 160, height: 90, borderRadius: 8 }}
-            contentFit="cover"
-            transition={200}
-          />
-          {isCurrentlyPlaying && (
+      <View className="px-4 py-2">
+        <TouchableOpacity
+          onPress={() => handlePlay(item)}
+          activeOpacity={0.7}
+          className={`flex-row items-center gap-4 ${isCurrentlyPlaying ? "bg-primary/10 rounded-lg p-2" : ""}`}
+          accessibilityLabel={`Play ${item.title}`}
+          accessibilityRole="button"
+        >
+          <View>
+            <Image
+              source={{ uri: thumbnailUri }}
+              style={{ width: 160, height: 90, borderRadius: 8 }}
+              contentFit="cover"
+              transition={200}
+            />
+            {isCurrentlyPlaying && (
+              <View
+                className="absolute inset-0 items-center justify-center"
+                style={{ borderRadius: 8, backgroundColor: "rgba(0,0,0,0.4)" }}
+              >
+                <MaterialIcons name="equalizer" size={28} color={colors.primary.light} />
+              </View>
+            )}
             <View
-              className="absolute inset-0 items-center justify-center"
-              style={{ borderRadius: 16, backgroundColor: "rgba(0,0,0,0.4)" }}
+              className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded"
             >
-              <MaterialIcons name="equalizer" size={28} color={colors.primary.light} />
+              <Text className="text-white text-xs font-semibold">
+                {formatDuration(item.duration)}
+              </Text>
             </View>
-          )}
-          <View
-            className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded"
-          >
-            <Text className="text-white text-xs font-semibold">
-              {formatDuration(item.duration)}
-            </Text>
           </View>
-        </View>
-        <View className="flex-1 gap-1.5">
-          <Text
-            className={`text-base font-medium ${isCurrentlyPlaying ? "text-primary-light" : "text-white"}`}
-            numberOfLines={2}
-          >
-            {item.title}
-          </Text>
-          {item.uploader && (
-            <Text className="text-neutral-500 text-sm" numberOfLines={1}>
-              {item.uploader}
+          <View className="flex-1 gap-1.5">
+            <Text
+              className={`text-base font-medium ${isCurrentlyPlaying ? "text-primary-light" : "text-white"}`}
+              numberOfLines={2}
+            >
+              {item.title}
             </Text>
+            {item.uploader && (
+              <Text className="text-neutral-500 text-sm" numberOfLines={1}>
+                {item.uploader}
+              </Text>
+            )}
+            {isDownloading && (
+              <View className="mt-1">
+                <View className="flex-row items-center gap-2">
+                  <View className="flex-1 h-1 bg-neutral-700 rounded-full overflow-hidden">
+                    <View 
+                      className="h-full bg-primary-light"
+                      style={{ width: `${progress * 100}%` }}
+                    />
+                  </View>
+                  <Text className="text-neutral-400 text-xs">
+                    {Math.round(progress * 100)}%
+                  </Text>
+                </View>
+              </View>
+            )}
+          </View>
+        </TouchableOpacity>
+        
+        {/* Download Button */}
+        <View className="absolute right-4 top-1/2 -translate-y-1/2">
+          {isDownloading ? (
+            <View className="w-10 h-10 items-center justify-center">
+              <ActivityIndicator size="small" color={colors.primary.light} />
+            </View>
+          ) : isDownloaded ? (
+            <TouchableOpacity
+              onPress={() => handleDeleteDownload(item)}
+              className="w-10 h-10 items-center justify-center bg-red-500/20 rounded-full"
+              accessibilityLabel="Delete download"
+            >
+              <MaterialIcons name="delete" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity
+              onPress={() => handleDownload(item)}
+              className="w-10 h-10 items-center justify-center bg-primary/20 rounded-full"
+              accessibilityLabel="Download audio"
+            >
+              <MaterialIcons name="download" size={20} color={colors.primary.light} />
+            </TouchableOpacity>
           )}
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
