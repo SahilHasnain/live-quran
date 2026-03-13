@@ -5,18 +5,18 @@
  */
 
 import TrackPlayer, {
-    Capability,
-    State,
-    usePlaybackState,
+  Capability,
+  State,
+  usePlaybackState,
 } from "@weights-ai/react-native-track-player";
 import * as SplashScreen from "expo-splash-screen";
 import React, {
-    createContext,
-    useCallback,
-    useContext,
-    useEffect,
-    useRef,
-    useState,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
 } from "react";
 
 // Keep splash screen visible until first audio is ready
@@ -80,22 +80,13 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [error, setError] = useState<Error | null>(null);
   const [isSetup, setIsSetup] = useState(false);
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
-  const [shouldBePlaying, setShouldBePlaying] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const playbackState = usePlaybackState();
   const splashHiddenRef = useRef(false);
 
-  const nativeIsPlaying = playbackState.state === State.Playing;
-
-  // Sync shouldBePlaying with native state (handles notification controls)
-  useEffect(() => {
-    if (nativeIsPlaying && !shouldBePlaying) {
-      setShouldBePlaying(true);
-    } else if (!nativeIsPlaying && shouldBePlaying && !isLoading && playbackState.state === State.Paused) {
-      setShouldBePlaying(false);
-    }
-  }, [nativeIsPlaying, playbackState.state]);
+  const isPlaying = playbackState.state === State.Playing;
+  const isBuffering = playbackState.state === State.Buffering;
 
   // Get stream URL based on current mode
   const getStreamUrl = useCallback((mode: QuranMode) => {
@@ -115,13 +106,13 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const getStreamTitle = useCallback((mode: QuranMode) => {
     switch (mode) {
       case "tafseer":
-        return "Quran Tafseer Radio";
+        return "Tafseer Radio";
       case "tilawat":
-        return "Quran Tilawat Radio";
+        return "Tilawat Radio";
       case "translation":
-        return "Quran Translation Radio";
+        return "Translation Radio";
       default:
-        return "Quran Tilawat Radio";
+        return "Tilawat Radio";
     }
   }, []);
 
@@ -137,7 +128,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         !splashHiddenRef.current &&
         isSetup &&
         !isLoading &&
-        (nativeIsPlaying || error)
+        (isPlaying || error)
       ) {
         try {
           await SplashScreen.hideAsync();
@@ -151,7 +142,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     };
 
     hideSplash();
-  }, [isSetup, isLoading, nativeIsPlaying, error]);
+  }, [isSetup, isLoading, isPlaying, error]);
 
   // Setup TrackPlayer
   useEffect(() => {
@@ -181,7 +172,6 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Auto-play on mount
         await TrackPlayer.play();
-        setShouldBePlaying(true);
         console.log("[TrackPlayer] Auto-play started");
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
@@ -213,29 +203,28 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
     try {
       setError(null);
-      setShouldBePlaying(true);
       await TrackPlayer.play();
+      console.log("[TrackPlayer] Play called");
     } catch (err) {
       console.error("[TrackPlayer] Play error:", err);
-      setShouldBePlaying(false);
       setError(err as Error);
     }
   }, [isSetup]);
 
   const pause = useCallback(async () => {
     try {
-      setShouldBePlaying(false);
       await TrackPlayer.pause();
+      console.log("[TrackPlayer] Pause called");
     } catch (err) {
       console.error("[TrackPlayer] Pause error:", err);
-      setShouldBePlaying(true);
+      setError(err as Error);
     }
   }, []);
 
   const stop = useCallback(async () => {
     try {
       await TrackPlayer.stop();
-      setShouldBePlaying(false);
+      console.log("[TrackPlayer] Stop called");
     } catch (err) {
       console.error("[TrackPlayer] Stop error:", err);
     }
@@ -267,14 +256,12 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           id: "live-stream",
           url: getStreamUrl(mode),
           title: getStreamTitle(mode),
-          artist: "Quran Recitation",
           artwork: require("../assets/images/icon.png"),
           isLiveStream: true,
         });
 
         // Start playing new stream
         await TrackPlayer.play();
-        setShouldBePlaying(true);
 
         // Ensure minimum loading duration for smooth UX
         const elapsed = Date.now() - startTime;
@@ -320,7 +307,6 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setCurrentTrack(track);
 
         await TrackPlayer.play();
-        setShouldBePlaying(true);
         setIsLoading(false);
       } catch (err) {
         console.error("[TrackPlayer] playTrack error:", err);
@@ -331,12 +317,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     [getAudioUrl],
   );
 
-  // Use shouldBePlaying for immediate UI response, native state for actual status
-  const isBuffering =
-    shouldBePlaying && playbackState.state !== State.Playing;
-
   const value: TrackPlayerContextType = {
-    isPlaying: shouldBePlaying,
+    isPlaying,
     isBuffering,
     isLoading,
     error,

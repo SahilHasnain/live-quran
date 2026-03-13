@@ -1,0 +1,93 @@
+services:
+  # Tafseer Radio Stream
+  tafseer-radio:
+    build: .
+    container_name: tafseer-radio
+    restart: unless-stopped
+    ports:
+      - "8000:8000"  # Icecast
+      - "3000:3000"  # API Server
+    environment:
+      - STREAM_NAME=tafseer
+      - STREAM_TITLE=Live Quran Tafseer Radio
+      - STREAM_DESCRIPTION=24/7 Quran Tafseer Stream
+      - MOUNT_POINT=/tafseer
+      - ICECAST_PORT=8000
+      - API_PORT=3000
+      - APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+      - APPWRITE_PROJECT_ID=${APPWRITE_PROJECT_ID}
+      - APPWRITE_API_KEY=${APPWRITE_API_KEY}
+      - APPWRITE_DATABASE_ID=${APPWRITE_DATABASE_ID}
+      - APPWRITE_COLLECTION_ID=${APPWRITE_TAFSEER_COLLECTION_ID}
+      - APPWRITE_BUCKET_ID=${APPWRITE_TAFSEER_BUCKET_ID}
+    volumes:
+      - ./audio-cache/tafseer:/app/audio-cache
+      - ./logs/tafseer:/var/log/icecast
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Tilawat Radio Stream
+  tilawat-radio:
+    build: .
+    container_name: tilawat-radio
+    restart: unless-stopped
+    ports:
+      - "8001:8000"  # Icecast
+      - "3001:3000"  # API Server
+    environment:
+      - STREAM_NAME=tilawat
+      - STREAM_TITLE=Live Quran Tilawat Radio
+      - STREAM_DESCRIPTION=24/7 Quran Recitation Stream
+      - MOUNT_POINT=/tilawat
+      - ICECAST_PORT=8000
+      - API_PORT=3000
+      - APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+      - APPWRITE_PROJECT_ID=${APPWRITE_PROJECT_ID}
+      - APPWRITE_API_KEY=${APPWRITE_API_KEY}
+      - APPWRITE_DATABASE_ID=${APPWRITE_DATABASE_ID}
+      - APPWRITE_COLLECTION_ID=${APPWRITE_TILAWAT_COLLECTION_ID}
+      - APPWRITE_BUCKET_ID=${APPWRITE_TILAWAT_BUCKET_ID}
+    volumes:
+      - ./audio-cache/tilawat:/app/audio-cache
+      - ./logs/tilawat:/var/log/icecast
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Translation Radio Stream
+  translation-radio:
+    build: .
+    container_name: translation-radio
+    restart: unless-stopped
+    ports:
+      - "8002:8000"  # Icecast
+      - "3002:3000"  # API Server
+    environment:
+      - STREAM_NAME=translation
+      - STREAM_TITLE=Live Quran Translation Radio
+      - STREAM_DESCRIPTION=24/7 Quran Translation Stream
+      - MOUNT_POINT=/translation
+      - ICECAST_PORT=8000
+      - API_PORT=3000
+      - APPWRITE_ENDPOINT=${APPWRITE_ENDPOINT}
+      - APPWRITE_PROJECT_ID=${APPWRITE_PROJECT_ID}
+      - APPWRITE_API_KEY=${APPWRITE_API_KEY}
+      - APPWRITE_DATABASE_ID=${APPWRITE_DATABASE_ID}
+      - APPWRITE_COLLECTION_ID=${APPWRITE_TRANSLATION_COLLECTION_ID}
+      - APPWRITE_BUCKET_ID=${APPWRITE_TRANSLATION_BUCKET_ID}
+    volumes:
+      - ./audio-cache/translation:/app/audio-cache
+      - ./logs/translation:/var/log/icecast
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
