@@ -26,7 +26,7 @@ export default {
     splash: {
       image: "./assets/images/icon.png",
       resizeMode: "contain",
-      backgroundColor: "#064e3b",
+      backgroundColor: "#ffffff",
     },
     ios: {
       supportsTablet: true,
@@ -35,7 +35,6 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/icon.png",
-        backgroundColor: "#0f0f0f",
       },
       package: getPackageName(),
     },

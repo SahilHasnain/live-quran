@@ -20,10 +20,12 @@ import {
   ActivityIndicator,
   Alert,
   Modal,
+  Platform,
   Pressable,
   StatusBar,
   Text,
   TextInput,
+  ToastAndroid,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View
@@ -52,8 +54,8 @@ export default function AudiosScreen() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
-  const [downloadProgress, setDownloadProgress] = useState<Map<string, number>>(new Map());
   const [downloads, setDownloads] = useState<Set<string>>(new Set());
+  const [downloading, setDownloading] = useState<Set<string>>(new Set());
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [longPressedItem, setLongPressedItem] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -163,46 +165,55 @@ export default function AudiosScreen() {
   };
 
   const handleDownload = async (item: QuranAudio) => {
-    try {
-      const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${
-        mode === 'tilawat' ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID :
-        mode === 'translation' ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID :
-        process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
-      }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
+      try {
+        setDownloading(prev => new Set(prev).add(item.$id));
 
-      const result = await downloadManager.downloadAudio(
-        item.$id,
-        item.title,
-        item.duration,
-        audioUrl,
-        mode,
-        item.thumbnail || getThumbnailUrl(item.youtubeId),
-        (progress) => {
-          setDownloadProgress(prev => new Map(prev).set(item.$id, progress));
-        }
-      );
+        const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${
+          mode === 'tilawat' ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID :
+          mode === 'translation' ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID :
+          process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
+        }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
 
-      if (result) {
-        setDownloads(prev => new Set(prev).add(item.$id));
-        setDownloadProgress(prev => {
-          const newMap = new Map(prev);
-          newMap.delete(item.$id);
-          return newMap;
+        const result = await downloadManager.downloadAudio(
+          item.$id,
+          item.title,
+          item.duration,
+          audioUrl,
+          mode,
+          item.thumbnail || getThumbnailUrl(item.youtubeId)
+        );
+
+        setDownloading(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(item.$id);
+          return newSet;
         });
-        Alert.alert('Success', 'Audio downloaded successfully!');
-      } else {
-        Alert.alert('Error', 'Failed to download audio. Please try again.');
+
+        if (result) {
+          setDownloads(prev => new Set(prev).add(item.$id));
+
+          // Show native toast
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Audio downloaded successfully!', ToastAndroid.SHORT);
+          }
+        } else {
+          if (Platform.OS === 'android') {
+            ToastAndroid.show('Failed to download audio', ToastAndroid.SHORT);
+          }
+        }
+      } catch (error) {
+        console.error('[Download] Error:', error);
+        setDownloading(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(item.$id);
+          return newSet;
+        });
+
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Failed to download audio', ToastAndroid.SHORT);
+        }
       }
-    } catch (error) {
-      console.error('[Download] Error:', error);
-      Alert.alert('Error', 'Failed to download audio. Please try again.');
-      setDownloadProgress(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(item.$id);
-        return newMap;
-      });
-    }
-  };
+    };
 
   const handleDeleteDownload = (item: QuranAudio) => {
     Alert.alert(
@@ -241,8 +252,7 @@ export default function AudiosScreen() {
       const thumbnailUri = item.thumbnail || getThumbnailUrl(item.youtubeId);
       const isCurrentlyPlaying = currentTrack?.id === item.$id && isPlaying;
       const isDownloaded = downloads.has(item.$id);
-      const progress = downloadProgress.get(item.$id);
-      const isDownloading = progress !== undefined;
+      const isDownloading = downloading.has(item.$id);
       const showDownloadButton = longPressedItem === item.$id;
 
       const handleLongPress = () => {
@@ -310,21 +320,6 @@ export default function AudiosScreen() {
                     {item.uploader}
                   </Text>
                 )}
-                {isDownloading && (
-                  <View className="mt-1">
-                    <View className="flex-row items-center gap-2">
-                      <View className="flex-1 h-1 bg-neutral-700 rounded-full overflow-hidden">
-                        <View 
-                          className="h-full bg-primary-light"
-                          style={{ width: `${progress * 100}%` }}
-                        />
-                      </View>
-                      <Text className="text-neutral-400 text-xs">
-                        {Math.round(progress * 100)}%
-                      </Text>
-                    </View>
-                  </View>
-                )}
               </View>
 
               {/* Download Button - Only show when long-pressed or downloading */}
@@ -332,7 +327,7 @@ export default function AudiosScreen() {
                 <View className="absolute right-0 top-1/2" style={{ transform: [{ translateY: -20 }] }}>
                   {isDownloading ? (
                     <View className="w-10 h-10 items-center justify-center">
-                      <ActivityIndicator size="small" color={colors.primary.light} />
+                      <MaterialIcons name="schedule" size={20} color={colors.primary.light} />
                     </View>
                   ) : isDownloaded ? (
                     <View className="w-10 h-10 items-center justify-center">

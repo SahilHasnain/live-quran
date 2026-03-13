@@ -24,17 +24,9 @@ SplashScreen.preventAutoHideAsync();
 
 export type QuranMode = "tafseer" | "tilawat" | "translation";
 
-const TAFSEER_STREAM_URL =
-  process.env.EXPO_PUBLIC_TAFSEER_STREAM_URL ||
-  "https://livequran.duckdns.org/stream";
-
-const TILAWAT_STREAM_URL =
-  process.env.EXPO_PUBLIC_TILAWAT_STREAM_URL ||
-  "https://livequran.duckdns.org/tilawat";
-
-const TRANSLATION_STREAM_URL =
-  process.env.EXPO_PUBLIC_TRANSLATION_STREAM_URL ||
-  "https://livequran.duckdns.org/translation";
+const TAFSEER_STREAM_URL = "http://livequran.duckdns.org:8000/tafseer";
+const TILAWAT_STREAM_URL = "http://livequran.duckdns.org:8001/tilawat";
+const TRANSLATION_STREAM_URL = "http://livequran.duckdns.org:8002/translation";
 
 // Appwrite config for audio list feature
 const APPWRITE_ENDPOINT =
@@ -294,11 +286,15 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setCurrentMode("tilawat");
 
         await TrackPlayer.reset();
+        
+        // Check if fileId is a local file path (starts with file://)
+        const isLocalFile = track.fileId.startsWith('file://');
+        const audioUrl = isLocalFile ? track.fileId : getAudioUrl(track.fileId);
+        
         await TrackPlayer.add({
           id: track.id,
-          url: getAudioUrl(track.fileId),
+          url: audioUrl,
           title: track.title,
-          artist: track.uploader || "Quran Recitation",
           artwork: track.thumbnail || require("../assets/images/icon.png"),
           duration: track.duration,
         });
