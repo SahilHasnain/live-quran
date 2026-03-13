@@ -29,9 +29,6 @@ RUN mkdir -p \
     && chown -R nobody:nobody /var/log/icecast /config /app \
     && chmod -R 755 /var/log/icecast /config /usr/share/icecast
 
-# Copy Icecast configuration template
-COPY icecast.xml.template /config/icecast.xml.template
-
 # Expose ports
 EXPOSE 8000 3000
 
