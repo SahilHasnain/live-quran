@@ -42,17 +42,39 @@ interface TilawatTrack {
 }
 
 interface TrackPlayerContextType {
+  // Live stream state
+  isLivePlaying: boolean;
+  isLiveBuffering: boolean;
+  isLiveLoading: boolean;
+  liveError: Error | null;
+  currentMode: QuranMode;
+
+  // On-demand track state
+  isBrowsePlaying: boolean;
+  isBrowseBuffering: boolean;
+  isBrowseLoading: boolean;
+  browseError: Error | null;
+  currentTrack: TilawatTrack | null;
+
+  // Live stream controls
+  playLive: () => Promise<void>;
+  pauseLive: () => Promise<void>;
+  stopLive: () => Promise<void>;
+  switchMode: (mode: QuranMode) => Promise<void>;
+
+  // Browse track controls
+  playTrack: (track: TilawatTrack) => Promise<void>;
+  pauseBrowse: () => Promise<void>;
+  stopBrowse: () => Promise<void>;
+
+  // Legacy compatibility (will be removed)
   isPlaying: boolean;
   isBuffering: boolean;
   isLoading: boolean;
   error: Error | null;
-  currentMode: QuranMode;
-  currentTrack: TilawatTrack | null; // Only populated when playing on-demand track
   play: () => Promise<void>;
   pause: () => Promise<void>;
   stop: () => Promise<void>;
-  switchMode: (mode: QuranMode) => Promise<void>;
-  playTrack: (track: TilawatTrack) => Promise<void>;
 }
 
 const TrackPlayerContext = createContext<TrackPlayerContextType | undefined>(
@@ -62,15 +84,34 @@ const TrackPlayerContext = createContext<TrackPlayerContextType | undefined>(
 export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
-  const [isSetup, setIsSetup] = useState(false);
+  // Live stream state
+  const [isLiveLoading, setIsLiveLoading] = useState(false);
+  const [liveError, setLiveError] = useState<Error | null>(null);
+  const [isLiveSetup, setIsLiveSetup] = useState(false);
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
+
+  // Browse track state
+  const [isBrowseLoading, setIsBrowseLoading] = useState(false);
+  const [browseError, setBrowseError] = useState<Error | null>(null);
+  const [isBrowseSetup, setIsBrowseSetup] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
+
   const playbackState = usePlaybackState();
 
+  // Determine which player is active based on current track
+  const isLiveActive = currentTrack === null;
+  const isBrowseActive = currentTrack !== null;
+
+  const isLivePlaying = isLiveActive && playbackState.state === State.Playing;
+  const isLiveBuffering = isLiveActive && playbackState.state === State.Buffering;
+  const isBrowsePlaying = isBrowseActive && playbackState.state === State.Playing;
+  const isBrowseBuffering = isBrowseActive && playbackState.state === State.Buffering;
+
+  // Legacy compatibility
   const isPlaying = playbackState.state === State.Playing;
   const isBuffering = playbackState.state === State.Buffering;
+  const isLoading = isLiveLoading || isBrowseLoading;
+  const error = liveError || browseError;
 
   // Get stream URL based on current mode
   const getStreamUrl = useCallback((mode: QuranMode) => {
@@ -119,7 +160,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           notificationCapabilities: [Capability.Play, Capability.Pause],
         });
 
-        setIsSetup(true);
+        setIsLiveSetup(true);
+        setIsBrowseSetup(true);
         console.log("[TrackPlayer] Setup complete");
 
         // Add the initial stream
@@ -136,7 +178,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("[TrackPlayer] Auto-play started");
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
-        setError(err as Error);
+        setLiveError(err as Error);
       }
     };
 
@@ -147,21 +189,99 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     };
   }, []);
 
-  const play = useCallback(async () => {
-    if (!isSetup) {
-      console.warn("[TrackPlayer] Not setup yet");
+  const playLive = useCallback(async () => {
+    if (!isLiveSetup) {
+      console.warn("[TrackPlayer] Live not setup yet");
       return;
     }
 
     try {
-      setError(null);
+      setLiveError(null);
+
+      // If browse track is playing, stop it and switch to live
+      if (currentTrack) {
+        await TrackPlayer.reset();
+        setCurrentTrack(null);
+
+        // Add live stream back
+        await TrackPlayer.add({
+          id: "live-stream",
+          url: getStreamUrl(currentMode),
+          title: getStreamTitle(currentMode),
+          artwork: require("../assets/images/icon.png"),
+          isLiveStream: true,
+        });
+      }
+
       await TrackPlayer.play();
-      console.log("[TrackPlayer] Play called");
+      console.log("[TrackPlayer] Live play called");
     } catch (err) {
-      console.error("[TrackPlayer] Play error:", err);
-      setError(err as Error);
+      console.error("[TrackPlayer] Live play error:", err);
+      setLiveError(err as Error);
     }
-  }, [isSetup]);
+  }, [isLiveSetup, currentTrack, currentMode, getStreamUrl, getStreamTitle]);
+
+  const pauseLive = useCallback(async () => {
+    if (currentTrack) return; // Only pause if live is active
+
+    try {
+      await TrackPlayer.pause();
+      console.log("[TrackPlayer] Live pause called");
+    } catch (err) {
+      console.error("[TrackPlayer] Live pause error:", err);
+      setLiveError(err as Error);
+    }
+  }, [currentTrack]);
+
+  const stopLive = useCallback(async () => {
+    if (currentTrack) return; // Only stop if live is active
+
+    try {
+      await TrackPlayer.stop();
+      console.log("[TrackPlayer] Live stop called");
+    } catch (err) {
+      console.error("[TrackPlayer] Live stop error:", err);
+    }
+  }, [currentTrack]);
+
+  const pauseBrowse = useCallback(async () => {
+    if (!currentTrack) return; // Only pause if browse is active
+
+    try {
+      await TrackPlayer.pause();
+      console.log("[TrackPlayer] Browse pause called");
+    } catch (err) {
+      console.error("[TrackPlayer] Browse pause error:", err);
+      setBrowseError(err as Error);
+    }
+  }, [currentTrack]);
+
+  const stopBrowse = useCallback(async () => {
+    if (!currentTrack) return; // Only stop if browse is active
+
+    try {
+      await TrackPlayer.stop();
+      setCurrentTrack(null);
+      console.log("[TrackPlayer] Browse stop called");
+    } catch (err) {
+      console.error("[TrackPlayer] Browse stop error:", err);
+    }
+  }, [currentTrack]);
+
+  // Legacy methods for backward compatibility
+  const play = useCallback(async () => {
+    if (currentTrack) {
+      // Browse is active, play browse track
+      try {
+        await TrackPlayer.play();
+      } catch (err) {
+        setBrowseError(err as Error);
+      }
+    } else {
+      // Live is active, play live stream
+      await playLive();
+    }
+  }, [currentTrack, playLive]);
 
   const pause = useCallback(async () => {
     try {
@@ -169,26 +289,33 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("[TrackPlayer] Pause called");
     } catch (err) {
       console.error("[TrackPlayer] Pause error:", err);
-      setError(err as Error);
+      if (currentTrack) {
+        setBrowseError(err as Error);
+      } else {
+        setLiveError(err as Error);
+      }
     }
-  }, []);
+  }, [currentTrack]);
 
   const stop = useCallback(async () => {
     try {
       await TrackPlayer.stop();
+      if (currentTrack) {
+        setCurrentTrack(null);
+      }
       console.log("[TrackPlayer] Stop called");
     } catch (err) {
       console.error("[TrackPlayer] Stop error:", err);
     }
-  }, []);
+  }, [currentTrack]);
 
   const switchMode = useCallback(
     async (mode: QuranMode) => {
       if (mode === currentMode) return;
 
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsLiveLoading(true);
+        setLiveError(null);
         const startTime = Date.now();
 
         // Stop current playback
@@ -225,11 +352,11 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         console.log(`[TrackPlayer] Switched to ${mode} mode`);
-        setIsLoading(false);
+        setIsLiveLoading(false);
       } catch (err) {
         console.error("[TrackPlayer] Mode switch error:", err);
-        setError(err as Error);
-        setIsLoading(false);
+        setLiveError(err as Error);
+        setIsLiveLoading(false);
       }
     },
     [currentMode, getStreamUrl, getStreamTitle],
@@ -239,8 +366,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const playTrack = useCallback(
     async (track: TilawatTrack) => {
       try {
-        setIsLoading(true);
-        setError(null);
+        setIsBrowseLoading(true);
+        setBrowseError(null);
 
         // Switch to tilawat mode if not already
         setCurrentMode("tilawat");
@@ -263,28 +390,50 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setCurrentTrack(track);
 
         await TrackPlayer.play();
-        setIsLoading(false);
+        setIsBrowseLoading(false);
       } catch (err) {
         console.error("[TrackPlayer] playTrack error:", err);
-        setError(err as Error);
-        setIsLoading(false);
+        setBrowseError(err as Error);
+        setIsBrowseLoading(false);
       }
     },
     [getAudioUrl],
   );
 
   const value: TrackPlayerContextType = {
+    // Live stream state
+    isLivePlaying,
+    isLiveBuffering,
+    isLiveLoading,
+    liveError,
+    currentMode,
+
+    // Browse track state
+    isBrowsePlaying,
+    isBrowseBuffering,
+    isBrowseLoading,
+    browseError,
+    currentTrack,
+
+    // Live stream controls
+    playLive,
+    pauseLive,
+    stopLive,
+    switchMode,
+
+    // Browse track controls
+    playTrack,
+    pauseBrowse,
+    stopBrowse,
+
+    // Legacy compatibility
     isPlaying,
     isBuffering,
     isLoading,
     error,
-    currentMode,
-    currentTrack,
     play,
     pause,
     stop,
-    switchMode,
-    playTrack,
   };
 
   return (
