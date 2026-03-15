@@ -72,7 +72,7 @@ export default function Index() {
     <ImageBackground
       source={require("@/assets/images/quran-bg.png")}
       style={{ flex: 1 }}
-      imageStyle={{ opacity: 0.3 }}
+      imageStyle={{ opacity: 1 }}
     >
       <View
         className="absolute inset-0 bg-black/70"
@@ -127,16 +127,16 @@ export default function Index() {
               resizeMode="contain"
             />
             <ActivityIndicator size="large" color={colors.primary.light} />
-            <Text className="text-white/90 text-lg font-semibold mt-4">
+            <Text className="mt-4 text-lg font-semibold text-white/90">
               Loading {getModeDisplayName(currentMode)}...
             </Text>
-            <Text className="text-neutral-400 text-sm mt-2">Please wait</Text>
+            <Text className="mt-2 text-sm text-neutral-400">Please wait</Text>
           </View>
         </View>
       )}
 
       {/* Header */}
-      <View className="pt-14 pb-5 px-6">
+      <View className="px-6 pb-5 pt-14">
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-center gap-3">
             <Image
@@ -145,12 +145,12 @@ export default function Index() {
               resizeMode="contain"
             />
             <View>
-              <Text className="text-white/90 text-xl font-bold">
+              <Text className="text-xl font-bold text-white/90">
                 Quran Radio
               </Text>
               {/* Live Badge Below Text */}
               <View className="mt-1 self-start bg-green-500/90 px-2 py-0.5 rounded flex-row items-center">
-                <View className="w-1 h-1 bg-white rounded-full mr-1" />
+                <View className="w-1 h-1 mr-1 bg-white rounded-full" />
                 <Text className="text-white text-[8px] font-bold uppercase tracking-wider">
                   Live
                 </Text>
@@ -167,7 +167,7 @@ export default function Index() {
                 }`}
               accessibilityLabel="Select mode"
             >
-              <Text className="text-white font-semibold text-sm">
+              <Text className="text-sm font-semibold text-white">
                 {getModeLabel(currentMode)}
               </Text>
               <MaterialIcons
@@ -182,27 +182,27 @@ export default function Index() {
 
       <ScrollView className="flex-1">
         {/* Now Playing Card */}
-        <View className="mx-6 mt-6 mb-6 p-8 items-center">
+        <View className="items-center p-8 mx-6 mt-6 mb-6">
           {liveError ? (
             <View className="items-center">
-              <View className="w-20 h-20 bg-red-500/10 rounded-full items-center justify-center mb-4">
+              <View className="items-center justify-center w-20 h-20 mb-4 rounded-full bg-red-500/10">
                 <MaterialIcons name="warning" size={48} color="#ef4444" />
               </View>
-              <Text className="text-white/90 text-lg font-semibold text-center mb-2">
+              <Text className="mb-2 text-lg font-semibold text-center text-white/90">
                 Connection Error
               </Text>
-              <Text className="text-neutral-500 text-center mb-6 px-4 text-sm">
+              <Text className="px-4 mb-6 text-sm text-center text-neutral-500">
                 {liveError.message}
               </Text>
               <TouchableOpacity
                 onPress={playLive}
                 disabled={isLiveLoading}
-                className="bg-primary px-8 py-3 rounded-full"
+                className="px-8 py-3 rounded-full bg-primary"
               >
                 {isLiveLoading ? (
                   <ActivityIndicator color="white" />
                 ) : (
-                  <Text className="text-white font-semibold text-base">
+                  <Text className="text-base font-semibold text-white">
                     Try Again
                   </Text>
                 )}
@@ -210,7 +210,7 @@ export default function Index() {
             </View>
           ) : (
             <>
-              <View className="w-32 h-32 rounded-full items-center justify-center mb-6">
+              <View className="items-center justify-center w-32 h-32 mb-6 rounded-full">
                 <Image
                   source={require("@/assets/images/headphone-v1.png")}
                   style={{ width: 120, height: 120 }}
@@ -227,7 +227,7 @@ export default function Index() {
       </ScrollView>
 
       {/* Fixed Play/Pause Button at Bottom Right */}
-      <View className="absolute bottom-24 right-6 pb-8">
+      <View className="absolute pb-8 bottom-24 right-6">
         <TouchableOpacity
           onPress={isLivePlaying ? pauseLive : playLive}
           disabled={isLiveLoading}

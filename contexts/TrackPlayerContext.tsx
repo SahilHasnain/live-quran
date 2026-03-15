@@ -4,6 +4,7 @@
  * Supports multiple modes: Tafseer, Tilawat, and Translation (all live streaming)
  */
 
+import { getAudioFileUrl } from "@/services/appwrite";
 import TrackPlayer, {
   Capability,
   State,
@@ -22,14 +23,6 @@ export type QuranMode = "tafseer" | "tilawat" | "translation";
 const TAFSEER_STREAM_URL = "https://livequran.duckdns.org/tafseer";
 const TILAWAT_STREAM_URL = "https://livequran.duckdns.org/tilawat";
 const TRANSLATION_STREAM_URL = "https://livequran.duckdns.org/translation";
-
-// Appwrite config for audio list feature
-const APPWRITE_ENDPOINT =
-  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
-  "https://sgp.cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
-const APPWRITE_BUCKET_ID =
-  process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID || "";
 
 interface TilawatTrack {
   id: string;
@@ -63,7 +56,7 @@ interface TrackPlayerContextType {
   switchMode: (mode: QuranMode) => Promise<void>;
 
   // Browse track controls
-  playTrack: (track: TilawatTrack) => Promise<void>;
+  playTrack: (track: TilawatTrack, mode?: QuranMode) => Promise<void>;
   pauseBrowse: () => Promise<void>;
   stopBrowse: () => Promise<void>;
 
@@ -103,9 +96,12 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const isBrowseActive = currentTrack !== null;
 
   const isLivePlaying = isLiveActive && playbackState.state === State.Playing;
-  const isLiveBuffering = isLiveActive && playbackState.state === State.Buffering;
-  const isBrowsePlaying = isBrowseActive && playbackState.state === State.Playing;
-  const isBrowseBuffering = isBrowseActive && playbackState.state === State.Buffering;
+  const isLiveBuffering =
+    isLiveActive && playbackState.state === State.Buffering;
+  const isBrowsePlaying =
+    isBrowseActive && playbackState.state === State.Playing;
+  const isBrowseBuffering =
+    isBrowseActive && playbackState.state === State.Buffering;
 
   // Legacy compatibility
   const isPlaying = playbackState.state === State.Playing;
@@ -142,8 +138,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   // Get audio file URL from Appwrite (for on-demand playback)
-  const getAudioUrl = useCallback((fileId: string) => {
-    return `${APPWRITE_ENDPOINT}/storage/buckets/${APPWRITE_BUCKET_ID}/files/${fileId}/download?project=${APPWRITE_PROJECT_ID}`;
+  const getAudioUrl = useCallback((fileId: string, mode: QuranMode) => {
+    return getAudioFileUrl(fileId, mode);
   }, []);
 
   // Setup TrackPlayer
@@ -364,19 +360,21 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Play a specific track on demand (from audio list)
   const playTrack = useCallback(
-    async (track: TilawatTrack) => {
+    async (track: TilawatTrack, mode: QuranMode = currentMode) => {
       try {
         setIsBrowseLoading(true);
         setBrowseError(null);
 
-        // Switch to tilawat mode if not already
-        setCurrentMode("tilawat");
+        // Keep context mode aligned with selected browse/download mode.
+        setCurrentMode(mode);
 
         await TrackPlayer.reset();
 
         // Check if fileId is a local file path (starts with file://)
-        const isLocalFile = track.fileId.startsWith('file://');
-        const audioUrl = isLocalFile ? track.fileId : getAudioUrl(track.fileId);
+        const isLocalFile = track.fileId.startsWith("file://");
+        const audioUrl = isLocalFile
+          ? track.fileId
+          : getAudioUrl(track.fileId, mode);
 
         await TrackPlayer.add({
           id: track.id,
@@ -397,7 +395,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsBrowseLoading(false);
       }
     },
-    [getAudioUrl],
+    [currentMode, getAudioUrl],
   );
 
   const value: TrackPlayerContextType = {

@@ -1,3 +1,4 @@
+import { MiniPlayer } from "@/components/MiniPlayer";
 import { colors } from "@/constants/theme";
 import { useHeaderVisibility } from "@/contexts/HeaderVisibilityContext";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
@@ -28,11 +29,9 @@ import {
   ToastAndroid,
   TouchableOpacity,
   TouchableWithoutFeedback,
-  View
+  View,
 } from "react-native";
-import Animated, {
-  useAnimatedStyle
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
 const PAGE_SIZE = 25;
 const MODES: { key: AudioMode; label: string }[] = [
@@ -43,8 +42,13 @@ const MODES: { key: AudioMode; label: string }[] = [
 const TOOLTIP_KEY = "@browse_download_tooltip_shown";
 
 export default function AudiosScreen() {
-  const { playTrack, currentTrack, isBrowsePlaying, play, pauseBrowse } = useTrackPlayer();
-  const { handleScroll: handleHeaderScroll, translateY: headerTranslateY, showHeader } = useHeaderVisibility();
+  const { playTrack, currentTrack, isBrowsePlaying, play, pauseBrowse } =
+    useTrackPlayer();
+  const {
+    handleScroll: handleHeaderScroll,
+    translateY: headerTranslateY,
+    showHeader,
+  } = useHeaderVisibility();
   const { handleScroll: handleTabBarScroll } = useTabBarVisibility();
   const [mode, setMode] = useState<AudioMode>("tilawat");
   const [audios, setAudios] = useState<QuranAudio[]>([]);
@@ -65,11 +69,11 @@ export default function AudiosScreen() {
   useEffect(() => {
     downloadManager.initialize().then(() => {
       const allDownloads = downloadManager.getAllDownloads();
-      setDownloads(new Set(allDownloads.map(d => d.id)));
+      setDownloads(new Set(allDownloads.map((d) => d.id)));
     });
 
     // Check if tooltip has been shown
-    AsyncStorage.getItem(TOOLTIP_KEY).then(value => {
+    AsyncStorage.getItem(TOOLTIP_KEY).then((value) => {
       if (!value) {
         setShowTooltip(true);
         // Auto-hide after 5 seconds
@@ -87,7 +91,12 @@ export default function AudiosScreen() {
         if (offset === 0) setLoading(true);
         else setLoadingMore(true);
 
-        const result = await fetchAudios(currentMode, PAGE_SIZE, offset, search);
+        const result = await fetchAudios(
+          currentMode,
+          PAGE_SIZE,
+          offset,
+          search,
+        );
         setTotal(result.total);
 
         if (offset === 0) {
@@ -152,26 +161,32 @@ export default function AudiosScreen() {
       play(); // This will resume the current track
     } else {
       // Play new track
-      playTrack({
-        id: item.$id,
-        title: item.title,
-        duration: item.duration,
-        fileId: item.fileId,
-        thumbnail: item.thumbnail,
-        youtubeId: item.youtubeId,
-        uploader: item.uploader,
-      });
+      playTrack(
+        {
+          id: item.$id,
+          title: item.title,
+          duration: item.duration,
+          fileId: item.fileId,
+          thumbnail: item.thumbnail,
+          youtubeId: item.youtubeId,
+          uploader: item.uploader,
+        },
+        mode,
+      );
     }
   };
 
   const handleDownload = async (item: QuranAudio) => {
     try {
-      setDownloading(prev => new Set(prev).add(item.$id));
+      setDownloading((prev) => new Set(prev).add(item.$id));
 
-      const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${mode === 'tilawat' ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID :
-        mode === 'translation' ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID :
-          process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
-        }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
+      const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${
+        mode === "tilawat"
+          ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID
+          : mode === "translation"
+            ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID
+            : process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
+      }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
 
       const result = await downloadManager.downloadAudio(
         item.$id,
@@ -179,62 +194,65 @@ export default function AudiosScreen() {
         item.duration,
         audioUrl,
         mode,
-        item.thumbnail || getThumbnailUrl(item.youtubeId)
+        item.thumbnail || getThumbnailUrl(item.youtubeId),
       );
 
-      setDownloading(prev => {
+      setDownloading((prev) => {
         const newSet = new Set(prev);
         newSet.delete(item.$id);
         return newSet;
       });
 
       if (result) {
-        setDownloads(prev => new Set(prev).add(item.$id));
+        setDownloads((prev) => new Set(prev).add(item.$id));
 
         // Show native toast
-        if (Platform.OS === 'android') {
-          ToastAndroid.show('Audio downloaded successfully!', ToastAndroid.SHORT);
+        if (Platform.OS === "android") {
+          ToastAndroid.show(
+            "Audio downloaded successfully!",
+            ToastAndroid.SHORT,
+          );
         }
       } else {
-        if (Platform.OS === 'android') {
-          ToastAndroid.show('Failed to download audio', ToastAndroid.SHORT);
+        if (Platform.OS === "android") {
+          ToastAndroid.show("Failed to download audio", ToastAndroid.SHORT);
         }
       }
     } catch (error) {
-      console.error('[Download] Error:', error);
-      setDownloading(prev => {
+      console.error("[Download] Error:", error);
+      setDownloading((prev) => {
         const newSet = new Set(prev);
         newSet.delete(item.$id);
         return newSet;
       });
 
-      if (Platform.OS === 'android') {
-        ToastAndroid.show('Failed to download audio', ToastAndroid.SHORT);
+      if (Platform.OS === "android") {
+        ToastAndroid.show("Failed to download audio", ToastAndroid.SHORT);
       }
     }
   };
 
   const handleDeleteDownload = (item: QuranAudio) => {
     Alert.alert(
-      'Delete Download',
-      'Are you sure you want to delete this downloaded audio?',
+      "Delete Download",
+      "Are you sure you want to delete this downloaded audio?",
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: "Cancel", style: "cancel" },
         {
-          text: 'Delete',
-          style: 'destructive',
+          text: "Delete",
+          style: "destructive",
           onPress: async () => {
             const success = await downloadManager.deleteDownload(item.$id);
             if (success) {
-              setDownloads(prev => {
+              setDownloads((prev) => {
                 const newSet = new Set(prev);
                 newSet.delete(item.$id);
                 return newSet;
               });
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -280,7 +298,7 @@ export default function AudiosScreen() {
           onPressOut={handlePressOut}
           delayLongPress={500}
         >
-          <View className="flex-row items-center gap-4">
+          <View className="flex-row items-start gap-4">
             {/* Thumbnail */}
             <View>
               <Image
@@ -292,53 +310,68 @@ export default function AudiosScreen() {
               {isCurrentlyPlaying && (
                 <View
                   className="absolute inset-0 items-center justify-center"
-                  style={{ borderRadius: 8, backgroundColor: "rgba(0,0,0,0.4)" }}
+                  style={{
+                    borderRadius: 8,
+                    backgroundColor: "rgba(0,0,0,0.4)",
+                  }}
                 >
-                  <MaterialIcons name="equalizer" size={28} color={colors.primary.light} />
+                  <MaterialIcons
+                    name="equalizer"
+                    size={28}
+                    color={colors.primary.light}
+                  />
                 </View>
               )}
-              <View
-                className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded"
-              >
-                <Text className="text-white text-xs font-semibold">
+              <View className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded">
+                <Text className="text-xs font-semibold text-white">
                   {formatDuration(item.duration)}
                 </Text>
               </View>
             </View>
 
             {/* Text Content */}
-            <View className="flex-1 gap-1.5 pr-12">
+            <View className="flex-1 justify-start gap-1.5 pr-12">
               <Text
                 className={`text-base font-medium ${isCurrentlyPlaying ? "text-primary-light" : "text-white"}`}
                 numberOfLines={2}
               >
                 {item.title}
               </Text>
-              {item.uploader && (
-                <Text className="text-neutral-500 text-sm" numberOfLines={1}>
-                  {item.uploader}
-                </Text>
-              )}
             </View>
 
             {/* Download Button - Only show when long-pressed or downloading */}
             {(showDownloadButton || isDownloading) && (
-              <View className="absolute right-0 top-1/2" style={{ transform: [{ translateY: -20 }] }}>
+              <View
+                className="absolute right-0 top-1/2"
+                style={{ transform: [{ translateY: -20 }] }}
+              >
                 {isDownloading ? (
-                  <View className="w-10 h-10 items-center justify-center">
-                    <MaterialIcons name="schedule" size={20} color={colors.primary.light} />
+                  <View className="items-center justify-center w-10 h-10">
+                    <MaterialIcons
+                      name="schedule"
+                      size={20}
+                      color={colors.primary.light}
+                    />
                   </View>
                 ) : isDownloaded ? (
-                  <View className="w-10 h-10 items-center justify-center">
-                    <MaterialIcons name="check-circle" size={24} color={colors.primary.light} />
+                  <View className="items-center justify-center w-10 h-10">
+                    <MaterialIcons
+                      name="check-circle"
+                      size={24}
+                      color={colors.primary.light}
+                    />
                   </View>
                 ) : (
                   <TouchableOpacity
                     onPress={() => handleDownload(item)}
-                    className="w-10 h-10 items-center justify-center bg-primary/20 rounded-full"
+                    className="items-center justify-center w-10 h-10 rounded-full bg-primary/20"
                     accessibilityLabel="Download audio"
                   >
-                    <MaterialIcons name="download" size={20} color={colors.primary.light} />
+                    <MaterialIcons
+                      name="download"
+                      size={20}
+                      color={colors.primary.light}
+                    />
                   </TouchableOpacity>
                 )}
               </View>
@@ -352,15 +385,17 @@ export default function AudiosScreen() {
   const renderFooter = () => {
     if (!loadingMore) return null;
     return (
-      <View className="py-4 items-center">
+      <View className="items-center py-4">
         <ActivityIndicator color={colors.primary.light} />
       </View>
     );
   };
 
   const getModeLabel = (m: AudioMode) => {
-    return MODES.find(mode => mode.key === m)?.label || "Tilawat";
+    return MODES.find((mode) => mode.key === m)?.label || "Tilawat";
   };
+
+  const miniPlayerPadding = currentTrack ? 132 : 32;
 
   return (
     <View className="flex-1 bg-[#0f0f0f]">
@@ -381,18 +416,26 @@ export default function AudiosScreen() {
                   <TouchableOpacity
                     key={m.key}
                     onPress={() => switchMode(m.key)}
-                    className={`px-4 py-3 flex-row items-center justify-between ${index < MODES.length - 1 ? "border-b border-neutral-800" : ""
-                      } ${mode === m.key ? "bg-primary/20" : ""}`}
+                    className={`px-4 py-3 flex-row items-center justify-between ${
+                      index < MODES.length - 1
+                        ? "border-b border-neutral-800"
+                        : ""
+                    } ${mode === m.key ? "bg-primary/20" : ""}`}
                     style={{ minWidth: 140 }}
                   >
                     <Text
-                      className={`font-medium ${mode === m.key ? "text-primary-light" : "text-white"
-                        }`}
+                      className={`font-medium ${
+                        mode === m.key ? "text-primary-light" : "text-white"
+                      }`}
                     >
                       {m.label}
                     </Text>
                     {mode === m.key && (
-                      <MaterialIcons name="check" size={18} color={colors.primary.light} />
+                      <MaterialIcons
+                        name="check"
+                        size={18}
+                        color={colors.primary.light}
+                      />
                     )}
                   </TouchableOpacity>
                 ))}
@@ -408,7 +451,7 @@ export default function AudiosScreen() {
         className="absolute top-0 left-0 right-0 z-50 bg-[#0f0f0f]"
       >
         {/* Header with Logo, Search, and Mode Selector */}
-        <View className="pt-14 pb-3 px-4">
+        <View className="px-4 pb-3 pt-14">
           <View className="flex-row items-center gap-3">
             <Image
               source={require("@/assets/images/icon.png")}
@@ -422,14 +465,17 @@ export default function AudiosScreen() {
                 onChangeText={onSearchChange}
                 placeholder="Search audios..."
                 placeholderTextColor="#525252"
-                className="flex-1 text-white text-sm py-3"
+                className="flex-1 py-3 text-sm text-white"
                 autoCapitalize="none"
                 autoCorrect={false}
                 returnKeyType="search"
                 accessibilityLabel="Search audios"
               />
               {searchQuery.length > 0 && (
-                <TouchableOpacity onPress={clearSearch} accessibilityLabel="Clear search">
+                <TouchableOpacity
+                  onPress={clearSearch}
+                  accessibilityLabel="Clear search"
+                >
                   <MaterialIcons name="close" size={18} color="#525252" />
                 </TouchableOpacity>
               )}
@@ -441,11 +487,13 @@ export default function AudiosScreen() {
               className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center gap-2"
               accessibilityLabel="Select mode"
             >
-              <Text className="text-white font-semibold text-sm">
+              <Text className="text-sm font-semibold text-white">
                 {getModeLabel(mode)}
               </Text>
               <MaterialIcons
-                name={showModeMenu ? "keyboard-arrow-up" : "keyboard-arrow-down"}
+                name={
+                  showModeMenu ? "keyboard-arrow-up" : "keyboard-arrow-down"
+                }
                 size={20}
                 color="white"
               />
@@ -456,19 +504,25 @@ export default function AudiosScreen() {
 
       {/* Content */}
       {loading ? (
-        <View className="flex-1 items-center justify-center" style={{ paddingTop: 80 }}>
+        <View
+          className="items-center justify-center flex-1"
+          style={{ paddingTop: 80 }}
+        >
           <ActivityIndicator size="large" color={colors.primary.light} />
-          <Text className="text-neutral-400 mt-3">Loading audios...</Text>
+          <Text className="mt-3 text-neutral-400">Loading audios...</Text>
         </View>
       ) : error ? (
-        <View className="flex-1 items-center justify-center px-6" style={{ paddingTop: 80 }}>
+        <View
+          className="items-center justify-center flex-1 px-6"
+          style={{ paddingTop: 80 }}
+        >
           <MaterialIcons name="error-outline" size={48} color="#ef4444" />
-          <Text className="text-neutral-400 text-center mt-3">{error}</Text>
+          <Text className="mt-3 text-center text-neutral-400">{error}</Text>
           <TouchableOpacity
             onPress={() => loadAudios()}
-            className="mt-4 bg-primary px-6 py-3 rounded-full"
+            className="px-6 py-3 mt-4 rounded-full bg-primary"
           >
-            <Text className="text-white font-semibold">Retry</Text>
+            <Text className="font-semibold text-white">Retry</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -484,24 +538,29 @@ export default function AudiosScreen() {
           ListEmptyComponent={
             <View className="items-center justify-center py-16">
               <MaterialIcons name="search-off" size={48} color="#525252" />
-              <Text className="text-neutral-500 mt-3">No audios found</Text>
+              <Text className="mt-3 text-neutral-500">No audios found</Text>
             </View>
           }
-          contentContainerStyle={{ paddingTop: 96, paddingBottom: 32 }}
+          contentContainerStyle={{
+            paddingTop: 96,
+            paddingBottom: miniPlayerPadding,
+          }}
           showsVerticalScrollIndicator={false}
         />
       )}
 
+      <MiniPlayer />
+
       {/* First-time Tooltip */}
       {showTooltip && (
-        <View className="absolute bottom-32 left-0 right-0 px-6">
-          <View className="bg-primary/95 p-4 rounded-xl flex-row items-center gap-3 shadow-lg">
+        <View className="absolute left-0 right-0 px-6 bottom-32">
+          <View className="flex-row items-center gap-3 p-4 shadow-lg bg-primary/95 rounded-xl">
             <MaterialIcons name="info" size={24} color="white" />
             <View className="flex-1">
-              <Text className="text-white font-semibold text-sm">
+              <Text className="text-sm font-semibold text-white">
                 Tip: Long press to download
               </Text>
-              <Text className="text-white/80 text-xs mt-1">
+              <Text className="mt-1 text-xs text-white/80">
                 Press and hold any audio to reveal the download button
               </Text>
             </View>

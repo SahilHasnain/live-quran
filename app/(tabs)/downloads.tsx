@@ -1,35 +1,39 @@
+import { MiniPlayer } from "@/components/MiniPlayer";
 import { colors } from "@/constants/theme";
 import { useHeaderVisibility } from "@/contexts/HeaderVisibilityContext";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { formatDuration, type AudioMode } from "@/services/appwrite";
-import { downloadManager, type DownloadedAudio } from "@/services/downloadManager";
+import {
+  downloadManager,
+  type DownloadedAudio,
+} from "@/services/downloadManager";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    Pressable,
-    StatusBar,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    TouchableWithoutFeedback,
-    View,
+  ActivityIndicator,
+  Modal,
+  Pressable,
+  StatusBar,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+  View,
 } from "react-native";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    runOnJS,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
-    withTiming,
+  runOnJS,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
 } from "react-native-reanimated";
 
 const MODES: { key: AudioMode; label: string }[] = [
@@ -101,7 +105,7 @@ function SwipeableDownloadCard({
       {/* Delete icon */}
       <Animated.View
         style={deleteButtonStyle}
-        className="absolute right-6 top-0 bottom-0 justify-center z-10"
+        className="absolute top-0 bottom-0 z-10 justify-center right-6"
       >
         <Pressable
           onPress={handleDelete}
@@ -125,7 +129,9 @@ function SwipeableDownloadCard({
             >
               <View>
                 <Image
-                  source={{ uri: item.thumbnail || require("@/assets/images/icon.png") }}
+                  source={{
+                    uri: item.thumbnail || require("@/assets/images/icon.png"),
+                  }}
                   style={{ width: 160, height: 90, borderRadius: 8 }}
                   contentFit="cover"
                   transition={200}
@@ -133,15 +139,20 @@ function SwipeableDownloadCard({
                 {isCurrentlyPlaying && (
                   <View
                     className="absolute inset-0 items-center justify-center"
-                    style={{ borderRadius: 8, backgroundColor: "rgba(0,0,0,0.4)" }}
+                    style={{
+                      borderRadius: 8,
+                      backgroundColor: "rgba(0,0,0,0.4)",
+                    }}
                   >
-                    <MaterialIcons name="equalizer" size={28} color={colors.primary.light} />
+                    <MaterialIcons
+                      name="equalizer"
+                      size={28}
+                      color={colors.primary.light}
+                    />
                   </View>
                 )}
-                <View
-                  className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded"
-                >
-                  <Text className="text-white text-xs font-semibold">
+                <View className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded">
+                  <Text className="text-xs font-semibold text-white">
                     {formatDuration(item.duration)}
                   </Text>
                 </View>
@@ -163,8 +174,12 @@ function SwipeableDownloadCard({
                 {item.title}
               </Text>
               <View className="flex-row items-center gap-1.5">
-                <MaterialIcons name="check-circle" size={14} color={colors.primary.light} />
-                <Text className="text-primary-light text-xs font-medium">
+                <MaterialIcons
+                  name="check-circle"
+                  size={14}
+                  color={colors.primary.light}
+                />
+                <Text className="text-xs font-medium text-primary-light">
                   Saved
                 </Text>
               </View>
@@ -178,11 +193,17 @@ function SwipeableDownloadCard({
 
 export default function DownloadsScreen() {
   const { playTrack, currentTrack, isPlaying, play, pause } = useTrackPlayer();
-  const { handleScroll: handleHeaderScroll, translateY: headerTranslateY, showHeader } = useHeaderVisibility();
+  const {
+    handleScroll: handleHeaderScroll,
+    translateY: headerTranslateY,
+    showHeader,
+  } = useHeaderVisibility();
   const { handleScroll: handleTabBarScroll } = useTabBarVisibility();
   const [mode, setMode] = useState<AudioMode>("tilawat");
   const [downloads, setDownloads] = useState<DownloadedAudio[]>([]);
-  const [filteredDownloads, setFilteredDownloads] = useState<DownloadedAudio[]>([]);
+  const [filteredDownloads, setFilteredDownloads] = useState<DownloadedAudio[]>(
+    [],
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -192,9 +213,9 @@ export default function DownloadsScreen() {
     setLoading(true);
     const allDownloads = downloadManager.getAllDownloads();
     setDownloads(allDownloads);
-    
+
     // Filter by mode
-    const filtered = allDownloads.filter(d => d.mode === mode);
+    const filtered = allDownloads.filter((d) => d.mode === mode);
     setFilteredDownloads(filtered);
     setLoading(false);
   }, [mode]);
@@ -213,12 +234,12 @@ export default function DownloadsScreen() {
   // Filter downloads by search query
   useEffect(() => {
     if (searchQuery.trim() === "") {
-      const filtered = downloads.filter(d => d.mode === mode);
+      const filtered = downloads.filter((d) => d.mode === mode);
       setFilteredDownloads(filtered);
     } else {
       const query = searchQuery.toLowerCase();
       const filtered = downloads.filter(
-        d => d.mode === mode && d.title.toLowerCase().includes(query)
+        (d) => d.mode === mode && d.title.toLowerCase().includes(query),
       );
       setFilteredDownloads(filtered);
     }
@@ -243,15 +264,18 @@ export default function DownloadsScreen() {
       play();
     } else {
       // Play downloaded track (use local URI)
-      playTrack({
-        id: item.id,
-        title: item.title,
-        duration: item.duration,
-        fileId: item.localUri, // Use local file path
-        thumbnail: item.thumbnail || null,
-        youtubeId: "",
-        uploader: null,
-      });
+      playTrack(
+        {
+          id: item.id,
+          title: item.title,
+          duration: item.duration,
+          fileId: item.localUri, // Use local file path
+          thumbnail: item.thumbnail || null,
+          youtubeId: "",
+          uploader: null,
+        },
+        item.mode,
+      );
     }
   };
 
@@ -272,8 +296,10 @@ export default function DownloadsScreen() {
   }));
 
   const getModeLabel = (m: AudioMode) => {
-    return MODES.find(mode => mode.key === m)?.label || "Tilawat";
+    return MODES.find((mode) => mode.key === m)?.label || "Tilawat";
   };
+
+  const miniPlayerPadding = currentTrack ? 132 : 32;
 
   const renderItem = ({ item }: { item: DownloadedAudio }) => {
     const isCurrentlyPlaying = currentTrack?.id === item.id && isPlaying;
@@ -311,7 +337,9 @@ export default function DownloadsScreen() {
                       key={m.key}
                       onPress={() => switchMode(m.key)}
                       className={`px-4 py-3 flex-row items-center justify-between ${
-                        index < MODES.length - 1 ? "border-b border-neutral-800" : ""
+                        index < MODES.length - 1
+                          ? "border-b border-neutral-800"
+                          : ""
                       } ${mode === m.key ? "bg-primary/20" : ""}`}
                       style={{ minWidth: 140 }}
                     >
@@ -323,7 +351,11 @@ export default function DownloadsScreen() {
                         {m.label}
                       </Text>
                       {mode === m.key && (
-                        <MaterialIcons name="check" size={18} color={colors.primary.light} />
+                        <MaterialIcons
+                          name="check"
+                          size={18}
+                          color={colors.primary.light}
+                        />
                       )}
                     </TouchableOpacity>
                   ))}
@@ -339,7 +371,7 @@ export default function DownloadsScreen() {
           className="absolute top-0 left-0 right-0 z-50 bg-[#0f0f0f]"
         >
           {/* Header with Logo, Search, and Mode Selector */}
-          <View className="pt-14 pb-3 px-4">
+          <View className="px-4 pb-3 pt-14">
             <View className="flex-row items-center gap-3">
               <Image
                 source={require("@/assets/images/icon.png")}
@@ -353,39 +385,44 @@ export default function DownloadsScreen() {
                   onChangeText={setSearchQuery}
                   placeholder="Search downloads..."
                   placeholderTextColor="#525252"
-                  className="flex-1 text-white text-sm py-3"
+                  className="flex-1 py-3 text-sm text-white"
                   autoCapitalize="none"
                   autoCorrect={false}
                   returnKeyType="search"
                   accessibilityLabel="Search downloads"
                 />
                 {searchQuery.length > 0 && (
-                  <TouchableOpacity onPress={clearSearch} accessibilityLabel="Clear search">
+                  <TouchableOpacity
+                    onPress={clearSearch}
+                    accessibilityLabel="Clear search"
+                  >
                     <MaterialIcons name="close" size={18} color="#525252" />
                   </TouchableOpacity>
                 )}
               </View>
-              
+
               {/* Mode Selector Button */}
               <TouchableOpacity
                 onPress={() => setShowModeMenu(!showModeMenu)}
                 className="bg-primary px-4 py-2.5 rounded-xl flex-row items-center gap-2"
                 accessibilityLabel="Select mode"
               >
-                <Text className="text-white font-semibold text-sm">
+                <Text className="text-sm font-semibold text-white">
                   {getModeLabel(mode)}
                 </Text>
-                <MaterialIcons 
-                  name={showModeMenu ? "keyboard-arrow-up" : "keyboard-arrow-down"} 
-                  size={20} 
-                  color="white" 
+                <MaterialIcons
+                  name={
+                    showModeMenu ? "keyboard-arrow-up" : "keyboard-arrow-down"
+                  }
+                  size={20}
+                  color="white"
                 />
               </TouchableOpacity>
             </View>
 
             {/* Title */}
-            <View className="mt-3 px-1">
-              <Text className="text-white text-lg font-semibold">
+            <View className="px-1 mt-3">
+              <Text className="text-lg font-semibold text-white">
                 Your Downloads
               </Text>
             </View>
@@ -394,9 +431,12 @@ export default function DownloadsScreen() {
 
         {/* Content */}
         {loading ? (
-          <View className="flex-1 items-center justify-center" style={{ paddingTop: 120 }}>
+          <View
+            className="items-center justify-center flex-1"
+            style={{ paddingTop: 120 }}
+          >
             <ActivityIndicator size="large" color={colors.primary.light} />
-            <Text className="text-neutral-400 mt-3">Loading downloads...</Text>
+            <Text className="mt-3 text-neutral-400">Loading downloads...</Text>
           </View>
         ) : (
           <Animated.FlatList
@@ -408,16 +448,23 @@ export default function DownloadsScreen() {
             ListEmptyComponent={
               <View className="items-center justify-center py-16">
                 <MaterialIcons name="download-done" size={64} color="#525252" />
-                <Text className="text-neutral-500 mt-4 text-lg font-medium">No downloads yet</Text>
-                <Text className="text-neutral-600 mt-2 text-center px-8">
+                <Text className="mt-4 text-lg font-medium text-neutral-500">
+                  No downloads yet
+                </Text>
+                <Text className="px-8 mt-2 text-center text-neutral-600">
                   Download audios from the Browse tab to listen offline
                 </Text>
               </View>
             }
-            contentContainerStyle={{ paddingTop: 130, paddingBottom: 32 }}
+            contentContainerStyle={{
+              paddingTop: 130,
+              paddingBottom: miniPlayerPadding,
+            }}
             showsVerticalScrollIndicator={false}
           />
         )}
+
+        <MiniPlayer />
       </View>
     </GestureHandlerRootView>
   );
