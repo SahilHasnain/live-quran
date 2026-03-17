@@ -87,7 +87,7 @@ export function MiniPlayer() {
             >
               <Image
                 source={thumbnailSource}
-                style={{ width: 80, aspectRatio: 16 / 9, borderRadius: 8 }}
+                style={{ width: 80, aspectRatio: 16 / 9, borderRadius: 4 }}
                 contentFit="cover"
                 transition={200}
               />

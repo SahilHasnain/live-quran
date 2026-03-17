@@ -106,7 +106,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
                 width: "100%",
                 maxWidth: 420,
                 aspectRatio: 16 / 9,
-                borderRadius: 16,
+                borderRadius: 14,
               }}
               contentFit="cover"
               transition={200}
