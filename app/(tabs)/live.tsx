@@ -223,14 +223,17 @@ export default function Index() {
         <TouchableOpacity
           onPress={isLivePlaying ? pauseLive : playLive}
           disabled={isLiveLoading}
-          className={`${isLivePlaying ? "bg-primary-dark" : "bg-primary"
-            } w-16 h-16 rounded-full items-center justify-center shadow-2xl`}
+          className={`w-16 h-16 rounded-full items-center justify-center border border-primary/30 ${isLiveLoading ? "opacity-50" : ""}`}
         >
-          <MaterialIcons
-            name={isLivePlaying ? "pause" : "play-arrow"}
-            size={36}
-            color="white"
-          />
+          {isLiveLoading ? (
+            <ActivityIndicator size="small" color={colors.primary.light} />
+          ) : (
+            <MaterialIcons
+              name={isLivePlaying ? "pause" : "play-arrow"}
+              size={40}
+              color="white"
+            />
+          )}
         </TouchableOpacity>
       </View>
     </ImageBackground>

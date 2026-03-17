@@ -110,7 +110,7 @@ export function MiniPlayer() {
               accessibilityLabel={
                 isBrowsePlaying ? "Pause audio" : "Resume audio"
               }
-              className="items-center justify-center w-10 h-10 border rounded-full border-black/35 bg-primary/20"
+              className="items-center justify-center w-10 h-10 rounded-full border border-primary/30"
               activeOpacity={0.8}
             >
               {isBrowseBuffering ? (
@@ -118,8 +118,8 @@ export function MiniPlayer() {
               ) : (
                 <MaterialIcons
                   name={isBrowsePlaying ? "pause" : "play-arrow"}
-                  size={24}
-                  color={colors.primary.light}
+                  size={26}
+                  color="white"
                 />
               )}
             </TouchableOpacity>
