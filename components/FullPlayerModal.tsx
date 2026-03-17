@@ -123,9 +123,9 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
                 accessibilityLabel="Seek audio position"
                 accessibilityHint="Tap the progress bar to jump to a specific time"
               >
-                <View className="h-2 overflow-hidden rounded-full bg-white/15">
+                <View className="h-[2px] overflow-hidden rounded-full bg-white/10">
                   <View
-                    className="h-2 rounded-full bg-primary"
+                    className="h-[2px] rounded-full bg-primary/60"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </View>
@@ -150,7 +150,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
               onPress={() => {
                 void (isBrowsePlaying ? pauseBrowse() : play());
               }}
-              className="items-center justify-center w-20 h-20 rounded-full bg-primary"
+              className="items-center justify-center w-20 h-20 rounded-full border border-primary/30"
               accessibilityRole="button"
               accessibilityLabel={
                 isBrowsePlaying ? "Pause track" : "Play track"
@@ -161,7 +161,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
               ) : (
                 <MaterialIcons
                   name={isBrowsePlaying ? "pause" : "play-arrow"}
-                  size={40}
+                  size={48}
                   color="white"
                 />
               )}
