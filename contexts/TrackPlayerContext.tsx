@@ -26,6 +26,7 @@ export type QuranMode = "tafseer" | "tilawat" | "translation";
 const TAFSEER_STREAM_URL = "https://livequran.duckdns.org/tafseer";
 const TILAWAT_STREAM_URL = "https://livequran.duckdns.org/tilawat";
 const TRANSLATION_STREAM_URL = "https://livequran.duckdns.org/translation";
+const LIVE_MODE_KEY = "@mode_live";
 
 interface TilawatTrack {
   id: string;
@@ -89,6 +90,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [liveError, setLiveError] = useState<Error | null>(null);
   const [isLiveSetup, setIsLiveSetup] = useState(false);
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
+  const [liveModePersisted, setLiveModePersisted] = useState(false);
 
   // Browse track state
   const [isBrowseLoading, setIsBrowseLoading] = useState(false);
@@ -186,8 +188,17 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     return getAudioFileUrl(fileId, mode);
   }, []);
 
-  // Setup TrackPlayer
+  // Load persisted live mode
   useEffect(() => {
+    AsyncStorage.getItem(LIVE_MODE_KEY).then((saved) => {
+      if (saved) setCurrentMode(saved as QuranMode);
+      setLiveModePersisted(true);
+    });
+  }, []);
+
+  // Setup TrackPlayer — wait until persisted mode is loaded
+  useEffect(() => {
+    if (!liveModePersisted) return;
     const setup = async () => {
       try {
         await TrackPlayer.setupPlayer({
@@ -223,7 +234,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     return () => {
       TrackPlayer.reset();
     };
-  }, []);
+  }, [liveModePersisted]);
 
   const playLive = useCallback(async () => {
     if (!isLiveSetup) {
@@ -365,8 +376,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Update mode
         setCurrentMode(mode);
-
-        // Add new stream
+        AsyncStorage.setItem(LIVE_MODE_KEY, mode);
         await TrackPlayer.add({
           id: "live-stream",
           url: getStreamUrl(mode),

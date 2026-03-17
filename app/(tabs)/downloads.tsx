@@ -9,6 +9,7 @@ import {
   type DownloadedAudio,
 } from "@/services/downloadManager";
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
@@ -41,6 +42,7 @@ const MODES: { key: AudioMode; label: string }[] = [
   { key: "translation", label: "Translation" },
   { key: "tafseer", label: "Tafseer" },
 ];
+const MODE_KEY = "@mode_downloads";
 
 // Swipeable card component
 function SwipeableDownloadCard({
@@ -199,7 +201,7 @@ export default function DownloadsScreen() {
     showHeader,
   } = useHeaderVisibility();
   const { handleScroll: handleTabBarScroll } = useTabBarVisibility();
-  const [mode, setMode] = useState<AudioMode>("tilawat");
+  const [mode, setMode] = useState<AudioMode | null>(null);
   const [downloads, setDownloads] = useState<DownloadedAudio[]>([]);
   const [filteredDownloads, setFilteredDownloads] = useState<DownloadedAudio[]>(
     [],
@@ -208,6 +210,13 @@ export default function DownloadsScreen() {
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Load persisted mode on mount
+  useEffect(() => {
+    AsyncStorage.getItem(MODE_KEY).then((saved) => {
+      setMode((saved as AudioMode) || "tilawat");
+    });
+  }, []);
+
   // Load downloads
   const loadDownloads = useCallback(() => {
     setLoading(true);
@@ -215,7 +224,7 @@ export default function DownloadsScreen() {
     setDownloads(allDownloads);
 
     // Filter by mode
-    const filtered = allDownloads.filter((d) => d.mode === mode);
+    const filtered = allDownloads.filter((d) => d.mode === (mode ?? "tilawat"));
     setFilteredDownloads(filtered);
     setLoading(false);
   }, [mode]);
@@ -248,6 +257,7 @@ export default function DownloadsScreen() {
   const switchMode = (newMode: AudioMode) => {
     if (newMode === mode) return;
     setMode(newMode);
+    AsyncStorage.setItem(MODE_KEY, newMode);
     setSearchQuery("");
     setShowModeMenu(false);
   };
@@ -300,6 +310,8 @@ export default function DownloadsScreen() {
   };
 
   const miniPlayerPadding = currentTrack ? 132 : 32;
+
+  if (mode === null) return null;
 
   const renderItem = ({ item }: { item: DownloadedAudio }) => {
     const isCurrentlyPlaying = currentTrack?.id === item.id && isPlaying;

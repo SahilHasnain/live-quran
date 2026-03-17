@@ -40,6 +40,7 @@ const MODES: { key: AudioMode; label: string }[] = [
   { key: "tafseer", label: "Tafseer" },
 ];
 const TOOLTIP_KEY = "@browse_download_tooltip_shown";
+const MODE_KEY = "@mode_browse";
 
 export default function AudiosScreen() {
   const {
@@ -57,7 +58,7 @@ export default function AudiosScreen() {
     showHeader,
   } = useHeaderVisibility();
   const { handleScroll: handleTabBarScroll } = useTabBarVisibility();
-  const [mode, setMode] = useState<AudioMode>("tilawat");
+  const [mode, setMode] = useState<AudioMode | null>(null);
   const [audios, setAudios] = useState<QuranAudio[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -112,8 +113,12 @@ export default function AudiosScreen() {
     );
   }, [isBrowseEnded]);
 
-  // Initialize download manager and check tooltip
+  // Initialize download manager, load persisted mode, and check tooltip
   useEffect(() => {
+    AsyncStorage.getItem(MODE_KEY).then((saved) => {
+      setMode((saved as AudioMode) || "tilawat");
+    });
+
     downloadManager.initialize().then(() => {
       const allDownloads = downloadManager.getAllDownloads();
       setDownloads(new Set(allDownloads.map((d) => d.id)));
@@ -133,7 +138,7 @@ export default function AudiosScreen() {
   }, []);
 
   const loadAudios = useCallback(
-    async (offset = 0, search = activeSearch, currentMode = mode) => {
+    async (offset = 0, search = activeSearch, currentMode = mode ?? "tilawat") => {
       try {
         if (offset === 0) setLoading(true);
         else setLoadingMore(true);
@@ -164,6 +169,7 @@ export default function AudiosScreen() {
   );
 
   useEffect(() => {
+    if (mode === null) return;
     loadAudios(0, activeSearch, mode);
   }, [activeSearch, mode, loadAudios]);
 
@@ -200,6 +206,7 @@ export default function AudiosScreen() {
   const switchMode = (newMode: AudioMode) => {
     if (newMode === mode) return;
     setMode(newMode);
+    AsyncStorage.setItem(MODE_KEY, newMode);
     setSearchQuery("");
     setActiveSearch("");
     setShowModeMenu(false);
@@ -484,6 +491,8 @@ export default function AudiosScreen() {
   };
 
   const miniPlayerPadding = currentTrack ? 132 : 32;
+
+  if (mode === null) return null;
 
   return (
     <View className="flex-1 bg-[#0f0f0f]">
