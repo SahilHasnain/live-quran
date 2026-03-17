@@ -1,4 +1,3 @@
-import { colors } from "@/constants/theme";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { formatDuration } from "@/services/appwrite";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -33,7 +32,8 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
     isBrowseBuffering,
     pauseBrowse,
     play,
-    stopBrowse,
+    isAutoplay,
+    setIsAutoplay,
   } = useTrackPlayer();
 
   if (!currentTrack) {
@@ -77,106 +77,75 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-[#080808]" style={{ paddingTop: insets.top }}>
-        <View className="absolute top-20 right-[-80] h-72 w-72 rounded-full bg-primary/15" />
-        <View className="absolute bottom-20 left-[-60] h-60 w-60 rounded-full bg-cyan-400/10" />
-
-        <View className="px-5 pt-3 pb-2">
+        <View className="absolute left-6 z-20" style={{ top: insets.top + 10 }}>
           <TouchableOpacity
-            onPress={onClose}
-            className="items-center justify-center w-10 h-10 rounded-full bg-white/10"
+            onPress={() => setIsAutoplay(!isAutoplay)}
+            className={`h-10 px-4 items-center justify-center rounded-full border border-black/40 ${
+              isAutoplay ? "bg-emerald-400/10" : "bg-black/35"
+            }`}
             accessibilityRole="button"
-            accessibilityLabel="Close full player"
+            accessibilityLabel={
+              isAutoplay ? "Disable autoplay" : "Enable autoplay"
+            }
           >
-            <MaterialIcons name="keyboard-arrow-down" size={28} color="white" />
+            <Text
+              className={`text-sm font-semibold ${
+                isAutoplay ? "text-emerald-200" : "text-white/75"
+              }`}
+            >
+              Autoplay
+            </Text>
           </TouchableOpacity>
         </View>
 
-        <View className="justify-between flex-1 px-6 pb-8">
-          <View className="items-center mt-8">
-            <View className="rounded-3xl border border-neutral-700 bg-[#121212] p-2 shadow-2xl">
-              <Image
-                source={thumbnailSource}
-                style={{ width: 300, height: 300, borderRadius: 20 }}
-                contentFit="cover"
-                transition={200}
-              />
-            </View>
+        <View className="flex-1 px-6 pb-8">
+          <View className="items-center justify-end flex-1">
+            <Image
+              source={thumbnailSource}
+              style={{
+                width: "100%",
+                maxWidth: 420,
+                aspectRatio: 16 / 9,
+                borderRadius: 18,
+              }}
+              contentFit="cover"
+              transition={200}
+            />
 
-            <View className="mt-8 w-full rounded-2xl border border-neutral-800 bg-[#111111]/95 px-4 py-4">
-              <Text className="text-[11px] uppercase tracking-widest text-primary-light/90">
-                Full Player
-              </Text>
-              <Text
-                className="mt-2 text-2xl font-semibold text-white"
-                numberOfLines={2}
+            <View className="w-full mt-8">
+              <Pressable
+                onLayout={(event) => {
+                  setSeekBarWidth(event.nativeEvent.layout.width);
+                }}
+                onPress={handleSeekPress}
+                className="justify-center h-5"
+                accessibilityRole="adjustable"
+                accessibilityLabel="Seek audio position"
+                accessibilityHint="Tap the progress bar to jump to a specific time"
               >
-                {currentTrack.title}
-              </Text>
-
-              {currentTrack.uploader ? (
-                <Text className="mt-2 text-sm text-neutral-300">
-                  {currentTrack.uploader}
-                </Text>
-              ) : null}
-
-              <View className="flex-row items-center mt-3">
-                <MaterialIcons
-                  name="schedule"
-                  size={16}
-                  color={colors.text.secondary}
-                />
-                <Text className="ml-1.5 text-sm text-neutral-400">
-                  {formatDuration(currentTrack.duration)}
-                </Text>
-              </View>
-
-              <View className="mt-5">
-                <Pressable
-                  onLayout={(event) => {
-                    setSeekBarWidth(event.nativeEvent.layout.width);
-                  }}
-                  onPress={handleSeekPress}
-                  className="justify-center h-5"
-                  accessibilityRole="adjustable"
-                  accessibilityLabel="Seek audio position"
-                  accessibilityHint="Tap the progress bar to jump to a specific time"
-                >
-                  <View className="h-2 overflow-hidden rounded-full bg-neutral-700/80">
-                    <View
-                      className="h-2 rounded-full bg-primary"
-                      style={{ width: `${progressPercent}%` }}
-                    />
-                  </View>
-                </Pressable>
-
-                <View className="flex-row items-center justify-between mt-2">
-                  <Text className="text-xs text-neutral-300">
-                    {formatDuration(Math.floor(safePosition))}
-                  </Text>
-                  <Text className="text-xs text-neutral-400">
-                    -{formatDuration(Math.floor(remainingSeconds))}
-                  </Text>
+                <View className="h-2 overflow-hidden rounded-full bg-white/15">
+                  <View
+                    className="h-2 rounded-full bg-green-500"
+                    style={{ width: `${progressPercent}%` }}
+                  />
                 </View>
+              </Pressable>
+
+              <View className="flex-row items-center justify-between mt-2">
+                <Text className="text-xs text-neutral-300">
+                  {formatDuration(Math.floor(safePosition))}
+                </Text>
+                <Text className="text-xs text-neutral-400">
+                  -{formatDuration(Math.floor(remainingSeconds))}
+                </Text>
               </View>
             </View>
           </View>
 
           <View
-            className="flex-row items-center justify-center gap-6 mb-4"
+            className="items-center mt-8"
             style={{ paddingBottom: insets.bottom + 4 }}
           >
-            <TouchableOpacity
-              onPress={() => {
-                void stopBrowse();
-                onClose();
-              }}
-              className="h-14 w-14 items-center justify-center rounded-full border border-neutral-700 bg-[#161616]"
-              accessibilityRole="button"
-              accessibilityLabel="Stop track"
-            >
-              <MaterialIcons name="stop" size={24} color="white" />
-            </TouchableOpacity>
-
             <TouchableOpacity
               onPress={() => {
                 void (isBrowsePlaying ? pauseBrowse() : play());

@@ -5,16 +5,19 @@
  */
 
 import { getAudioFileUrl } from "@/services/appwrite";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import TrackPlayer, {
   Capability,
   State,
   usePlaybackState,
+  useProgress,
 } from "@weights-ai/react-native-track-player";
 import React, {
   createContext,
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react";
 
@@ -59,6 +62,10 @@ interface TrackPlayerContextType {
   playTrack: (track: TilawatTrack, mode?: QuranMode) => Promise<void>;
   pauseBrowse: () => Promise<void>;
   stopBrowse: () => Promise<void>;
+  isBrowseEnded: boolean;
+  isAutoplay: boolean;
+  setIsAutoplay: (value: boolean) => void;
+  browseProgressPercent: number;
 
   // Legacy compatibility (will be removed)
   isPlaying: boolean;
@@ -88,6 +95,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [browseError, setBrowseError] = useState<Error | null>(null);
   const [isBrowseSetup, setIsBrowseSetup] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
+  const [isAutoplay, setIsAutoplay] = useState(false);
 
   const playbackState = usePlaybackState();
 
@@ -102,6 +110,42 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     isBrowseActive && playbackState.state === State.Playing;
   const isBrowseBuffering =
     isBrowseActive && playbackState.state === State.Buffering;
+  const isBrowseEnded = isBrowseActive && playbackState.state === State.Ended;
+
+  // Progress tracking for browse tracks
+  const browseProgress = useProgress(1000);
+  const lastSavedPositionRef = useRef(0);
+
+  const browseProgressPercent = (() => {
+    if (!isBrowseActive || browseProgress.position <= 0) return 0;
+    const d =
+      browseProgress.duration > 0
+        ? browseProgress.duration
+        : (currentTrack?.duration ?? 0);
+    return d > 0 ? Math.min((browseProgress.position / d) * 100, 100) : 0;
+  })();
+
+  // Persist progress to AsyncStorage every ~5 seconds while playing
+  useEffect(() => {
+    if (!isBrowsePlaying || !currentTrack || browseProgress.position <= 0)
+      return;
+    if (browseProgress.position - lastSavedPositionRef.current < 5) return;
+    lastSavedPositionRef.current = browseProgress.position;
+    const d =
+      browseProgress.duration > 0
+        ? browseProgress.duration
+        : currentTrack.duration;
+    if (d <= 0) return;
+    AsyncStorage.setItem(
+      `@audio_progress_${currentTrack.id}`,
+      JSON.stringify({ position: browseProgress.position, duration: d }),
+    );
+  }, [
+    browseProgress.position,
+    browseProgress.duration,
+    isBrowsePlaying,
+    currentTrack,
+  ]);
 
   // Legacy compatibility
   const isPlaying = playbackState.state === State.Playing;
@@ -168,10 +212,6 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           artwork: require("../assets/images/icon.png"),
           isLiveStream: true,
         });
-
-        // Auto-play on mount
-        await TrackPlayer.play();
-        console.log("[TrackPlayer] Auto-play started");
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
         setLiveError(err as Error);
@@ -384,7 +424,46 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
           duration: track.duration,
         });
 
-        await TrackPlayer.seekTo(0);
+        let resumePosition = 0;
+        try {
+          const savedProgressRaw = await AsyncStorage.getItem(
+            `@audio_progress_${track.id}`,
+          );
+
+          if (savedProgressRaw) {
+            const savedProgress = JSON.parse(savedProgressRaw) as {
+              position?: number;
+              duration?: number;
+            };
+
+            const savedPosition =
+              typeof savedProgress.position === "number"
+                ? savedProgress.position
+                : 0;
+            const savedDuration =
+              typeof savedProgress.duration === "number"
+                ? savedProgress.duration
+                : 0;
+            const effectiveDuration =
+              track.duration > 0 ? track.duration : savedDuration;
+
+            if (savedPosition > 0) {
+              // Keep seek position inside the valid media range.
+              resumePosition =
+                effectiveDuration > 0
+                  ? Math.min(savedPosition, Math.max(effectiveDuration - 1, 0))
+                  : savedPosition;
+            }
+          }
+        } catch (progressErr) {
+          console.warn(
+            "[TrackPlayer] Failed to read saved progress:",
+            progressErr,
+          );
+        }
+
+        await TrackPlayer.seekTo(resumePosition);
+        lastSavedPositionRef.current = resumePosition;
         setCurrentTrack(track);
 
         await TrackPlayer.play();
@@ -423,6 +502,10 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     playTrack,
     pauseBrowse,
     stopBrowse,
+    isBrowseEnded,
+    isAutoplay,
+    setIsAutoplay,
+    browseProgressPercent,
 
     // Legacy compatibility
     isPlaying,

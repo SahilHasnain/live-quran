@@ -17,18 +17,18 @@ export default function TabLayout() {
           <Tabs.Screen
             name="index"
             options={{
-              title: "Live",
+              title: "Browse",
               tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="radio" size={size} color={color} />
+                <MaterialIcons name="menu-book" size={size} color={color} />
               ),
             }}
           />
           <Tabs.Screen
-            name="audios"
+            name="live"
             options={{
-              title: "Browse",
+              title: "Live",
               tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="menu-book" size={size} color={color} />
+                <MaterialIcons name="radio" size={size} color={color} />
               ),
             }}
           />

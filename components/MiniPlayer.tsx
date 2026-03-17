@@ -2,7 +2,6 @@ import { FullPlayerModal } from "@/components/FullPlayerModal";
 import { colors } from "@/constants/theme";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
-import { formatDuration } from "@/services/appwrite";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import React, { useEffect, useState } from "react";
@@ -20,12 +19,22 @@ export function MiniPlayer() {
     currentTrack,
     isBrowsePlaying,
     isBrowseBuffering,
+    browseProgressPercent,
     pauseBrowse,
     play,
+    stopBrowse,
   } = useTrackPlayer();
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: translateY.value }],
+    // Keep mini player within safe area when tab bar hides.
+    transform: [
+      {
+        translateY: Math.max(
+          0,
+          Math.min(translateY.value, TAB_BAR_BASE_HEIGHT),
+        ),
+      },
+    ],
   }));
 
   useEffect(() => {
@@ -48,48 +57,49 @@ export function MiniPlayer() {
         style={[
           {
             position: "absolute",
-            left: 12,
-            right: 12,
-            bottom: TAB_BAR_BASE_HEIGHT + insets.bottom + 8,
+            left: 0,
+            right: 0,
+            bottom: TAB_BAR_BASE_HEIGHT + insets.bottom,
             zIndex: 40,
           },
           animatedStyle,
         ]}
         pointerEvents="box-none"
       >
-        <View className="rounded-2xl border border-neutral-800 bg-[#141414] px-3 py-2 shadow-lg">
-          <View className="flex-row items-center">
+        <View className="border border-black/45 bg-[#101010]/95 px-3.5 py-2.5 shadow-lg">
+          <View
+            className="absolute top-0 left-0 right-0 bg-white/5"
+            style={{ height: 1 }}
+          >
+            <View
+              className="h-full bg-green-400/70"
+              style={{ width: `${browseProgressPercent}%` }}
+            />
+          </View>
+
+          <View className="flex-row items-center gap-2">
             <TouchableOpacity
               onPress={() => setIsFullPlayerVisible(true)}
-              className="flex-1 flex-row items-center"
+              className="flex-row items-center flex-1"
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel="Open full player"
             >
               <Image
                 source={thumbnailSource}
-                style={{ width: 44, height: 44, borderRadius: 8 }}
+                style={{ width: 80, aspectRatio: 16 / 9, borderRadius: 8 }}
                 contentFit="cover"
                 transition={200}
               />
 
-              <View className="ml-3 flex-1">
-                <Text className="text-[10px] uppercase tracking-widest text-primary-light/90">
-                  Now Playing
-                </Text>
-                <Text className="mt-0.5 text-white" numberOfLines={1}>
+              <View className="flex-1 ml-3">
+                <Text
+                  className="text-[13px] font-medium text-white/95"
+                  numberOfLines={1}
+                >
                   {currentTrack.title}
                 </Text>
-                <Text className="mt-0.5 text-xs text-neutral-400">
-                  {formatDuration(currentTrack.duration)}
-                </Text>
               </View>
-
-              <MaterialIcons
-                name="keyboard-arrow-up"
-                size={20}
-                color={colors.text.secondary}
-              />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -100,7 +110,7 @@ export function MiniPlayer() {
               accessibilityLabel={
                 isBrowsePlaying ? "Pause audio" : "Resume audio"
               }
-              className="ml-3 h-10 w-10 items-center justify-center rounded-full bg-primary/20"
+              className="items-center justify-center w-10 h-10 border rounded-full border-black/35 bg-primary/20"
               activeOpacity={0.8}
             >
               {isBrowseBuffering ? (
@@ -112,6 +122,19 @@ export function MiniPlayer() {
                   color={colors.primary.light}
                 />
               )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => {
+                setIsFullPlayerVisible(false);
+                void stopBrowse();
+              }}
+              accessibilityRole="button"
+              accessibilityLabel="Close mini player"
+              className="items-center justify-center border rounded-full h-9 w-9 border-black/35 bg-black/30"
+              activeOpacity={0.85}
+            >
+              <MaterialIcons name="close" size={18} color="#cfcfcf" />
             </TouchableOpacity>
           </View>
         </View>
