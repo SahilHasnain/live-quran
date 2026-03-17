@@ -75,7 +75,7 @@ export default function Index() {
       imageStyle={{ opacity: 1 }}
     >
       <View
-        className="absolute inset-0 bg-black/70"
+        className="absolute inset-0 bg-[#080f0a]/75"
       />
       <StatusBar barStyle="light-content" />
 
@@ -89,7 +89,7 @@ export default function Index() {
         <TouchableWithoutFeedback onPress={() => setShowModeMenu(false)}>
           <View className="flex-1 bg-black/50">
             <TouchableWithoutFeedback>
-              <View className="absolute top-[72px] right-4 bg-[#1a1a1a] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+              <View className="absolute top-[72px] right-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                 {MODES.map((m, index) => (
                   <TouchableOpacity
                     key={m.key}
@@ -119,7 +119,7 @@ export default function Index() {
 
       {/* Loading Overlay */}
       {isLiveLoading && (
-        <View className="absolute inset-0 bg-[#0f0f0f]/95 z-50 items-center justify-center">
+        <View className="absolute inset-0 bg-[#080f0a]/95 z-50 items-center justify-center">
           <View className="items-center">
             <Image
               source={require("@/assets/images/headphone-v1.png")}

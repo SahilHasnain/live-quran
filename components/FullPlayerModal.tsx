@@ -76,7 +76,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-[#080808]" style={{ paddingTop: insets.top }}>
+      <View className="flex-1 bg-[#080f0a]" style={{ paddingTop: insets.top }}>
         <View className="absolute left-6 z-20" style={{ top: insets.top + 10 }}>
           <TouchableOpacity
             onPress={() => setIsAutoplay(!isAutoplay)}
@@ -125,7 +125,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
               >
                 <View className="h-2 overflow-hidden rounded-full bg-white/15">
                   <View
-                    className="h-2 rounded-full bg-green-500"
+                    className="h-2 rounded-full bg-primary"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </View>

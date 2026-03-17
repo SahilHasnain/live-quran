@@ -330,7 +330,7 @@ export default function DownloadsScreen() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <View className="flex-1 bg-[#0f0f0f]">
+      <View className="flex-1 bg-[#080f0a]">
         <StatusBar barStyle="light-content" />
 
         {/* Mode Dropdown Modal */}
@@ -343,7 +343,7 @@ export default function DownloadsScreen() {
           <TouchableWithoutFeedback onPress={() => setShowModeMenu(false)}>
             <View className="flex-1 bg-black/50">
               <TouchableWithoutFeedback>
-                <View className="absolute top-[72px] right-4 bg-[#1a1a1a] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+                <View className="absolute top-[72px] right-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                   {MODES.map((m, index) => (
                     <TouchableOpacity
                       key={m.key}
@@ -380,7 +380,7 @@ export default function DownloadsScreen() {
         {/* Animated Header */}
         <Animated.View
           style={[headerAnimatedStyle]}
-          className="absolute top-0 left-0 right-0 z-50 bg-[#0f0f0f]"
+          className="absolute top-0 left-0 right-0 z-50 bg-[#080f0a]"
         >
           {/* Header with Logo, Search, and Mode Selector */}
           <View className="px-4 pb-3 pt-14">
@@ -390,7 +390,7 @@ export default function DownloadsScreen() {
                 style={{ width: 32, height: 32 }}
                 contentFit="contain"
               />
-              <View className="flex-1 flex-row items-center bg-[#1a1a1a] rounded-xl px-3 gap-2">
+              <View className="flex-1 flex-row items-center bg-[#0f1a12] rounded-xl px-3 gap-2">
                 <MaterialIcons name="search" size={20} color="#525252" />
                 <TextInput
                   value={searchQuery}

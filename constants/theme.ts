@@ -6,16 +6,16 @@
 export const colors = {
   // Primary colors (matches tailwind.config.js)
   primary: {
-    DEFAULT: "#0891b2", // cyan-600
-    dark: "#0e7490", // cyan-700
-    light: "#06b6d4", // cyan-500
+    DEFAULT: "#059669", // emerald-600
+    dark: "#047857", // emerald-700
+    light: "#10b981", // emerald-500
   },
 
   // Background colors
   background: {
-    primary: "#0f0f0f",
-    secondary: "#1a1a1a",
-    tertiary: "#222222",
+    primary: "#080f0a",
+    secondary: "#0f1a12",
+    tertiary: "#162019",
   },
 
   // Text colors
@@ -33,7 +33,7 @@ export const colors = {
 
   // Accent colors
   accent: {
-    gold: "#fbbf24", // amber-400
+    gold: "#d4a843", // islamic gold
   },
 };
 
