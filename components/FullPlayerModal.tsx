@@ -77,7 +77,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
       onRequestClose={onClose}
     >
       <View className="flex-1 bg-[#080f0a]" style={{ paddingTop: insets.top }}>
-        <View className="absolute left-6 z-20" style={{ top: insets.top + 10 }}>
+        <View className="absolute z-20 left-6" style={{ top: insets.top + 10 }}>
           <TouchableOpacity
             onPress={() => setIsAutoplay(!isAutoplay)}
             className={`h-10 px-4 items-center justify-center rounded-full border border-black/40 ${
@@ -150,7 +150,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
               onPress={() => {
                 void (isBrowsePlaying ? pauseBrowse() : play());
               }}
-              className="items-center justify-center w-20 h-20 rounded-full border border-primary/30"
+              className="items-center justify-center w-20 h-20 border rounded-full border-primary/30"
               accessibilityRole="button"
               accessibilityLabel={
                 isBrowsePlaying ? "Pause track" : "Play track"
