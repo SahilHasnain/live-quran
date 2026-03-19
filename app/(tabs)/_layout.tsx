@@ -33,6 +33,15 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="history"
+            options={{
+              title: "History",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="history" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
             name="downloads"
             options={{
               title: "Downloads",

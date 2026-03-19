@@ -5,6 +5,7 @@
  */
 
 import { getAudioFileUrl } from "@/services/appwrite";
+import { historyManager } from "@/services/historyManager";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TrackPlayer, {
   Capability,
@@ -194,6 +195,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       if (saved) setCurrentMode(saved as QuranMode);
       setLiveModePersisted(true);
     });
+
+    historyManager.initialize();
   }, []);
 
   // Setup TrackPlayer — wait until persisted mode is loaded
@@ -475,6 +478,16 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         await TrackPlayer.seekTo(resumePosition);
         lastSavedPositionRef.current = resumePosition;
         setCurrentTrack(track);
+
+        await historyManager.addEntry({
+          id: track.id,
+          title: track.title,
+          duration: track.duration,
+          fileId: track.fileId,
+          thumbnail: track.thumbnail,
+          mode,
+          source: track.fileId.startsWith("file://") ? "downloads" : "browse",
+        });
 
         await TrackPlayer.play();
         setIsBrowseLoading(false);

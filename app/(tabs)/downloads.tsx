@@ -50,11 +50,13 @@ function SwipeableDownloadCard({
   onPress,
   onDelete,
   isCurrentlyPlaying,
+  progressPercent,
 }: {
   item: DownloadedAudio;
   onPress: () => void;
   onDelete: () => void;
   isCurrentlyPlaying: boolean;
+  progressPercent: number;
 }) {
   const translateX = useSharedValue(0);
   const itemHeight = useSharedValue(1);
@@ -153,6 +155,22 @@ function SwipeableDownloadCard({
                     />
                   </View>
                 )}
+                {progressPercent > 0 && (
+                  <View
+                    className="absolute bottom-0 left-0 right-0 overflow-hidden"
+                    style={{
+                      height: 3,
+                      borderBottomLeftRadius: 8,
+                      borderBottomRightRadius: 8,
+                    }}
+                  >
+                    <View className="absolute inset-0 bg-black/40" />
+                    <View
+                      className="h-full bg-green-500"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </View>
+                )}
                 <View className="absolute bottom-1 right-1 bg-black/80 px-1.5 py-0.5 rounded">
                   <Text className="text-xs font-semibold text-white">
                     {formatDuration(item.duration)}
@@ -209,6 +227,9 @@ export default function DownloadsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [audioProgress, setAudioProgress] = useState<Record<string, number>>(
+    {},
+  );
 
   // Load persisted mode on mount
   useEffect(() => {
@@ -232,6 +253,36 @@ export default function DownloadsScreen() {
   useEffect(() => {
     loadDownloads();
   }, [loadDownloads]);
+
+  useEffect(() => {
+    if (filteredDownloads.length === 0) {
+      setAudioProgress({});
+      return;
+    }
+
+    const keys = filteredDownloads.map((item) => `@audio_progress_${item.id}`);
+    AsyncStorage.multiGet(keys).then((pairs) => {
+      const map: Record<string, number> = {};
+      pairs.forEach(([key, value]) => {
+        if (!value) return;
+        try {
+          const { position, duration } = JSON.parse(value) as {
+            position?: number;
+            duration?: number;
+          };
+          if (duration && duration > 0 && position && position > 0) {
+            map[key.replace("@audio_progress_", "")] = Math.min(
+              (position / duration) * 100,
+              100,
+            );
+          }
+        } catch {
+          // ignore malformed progress entries
+        }
+      });
+      setAudioProgress(map);
+    });
+  }, [filteredDownloads]);
 
   useFocusEffect(
     useCallback(() => {
@@ -315,6 +366,7 @@ export default function DownloadsScreen() {
 
   const renderItem = ({ item }: { item: DownloadedAudio }) => {
     const isCurrentlyPlaying = currentTrack?.id === item.id && isPlaying;
+    const progressPercent = audioProgress[item.id] ?? 0;
 
     return (
       <View className="px-4 py-2">
@@ -323,6 +375,7 @@ export default function DownloadsScreen() {
           onPress={() => handlePlay(item)}
           onDelete={() => handleDelete(item)}
           isCurrentlyPlaying={isCurrentlyPlaying}
+          progressPercent={progressPercent}
         />
       </View>
     );
