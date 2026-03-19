@@ -26,27 +26,17 @@ export async function PlaybackService() {
     // Handle previous track if needed
   });
 
-  // Handle track changes in the live stream playlist
-  TrackPlayer.addEventListener(Event.PlaybackTrackChanged, async () => {
-    console.log("[TrackPlayer] Track changed in playlist, continuing playback");
-    // Ensure playback continues when server switches tracks
-    const state = await TrackPlayer.getState();
-    if (state !== "playing") {
-      await TrackPlayer.play();
-    }
+  // Keep these listeners observational only so playback never starts
+  // unless a user explicitly presses play.
+  TrackPlayer.addEventListener(Event.PlaybackTrackChanged, () => {
+    console.log("[TrackPlayer] Track changed in playlist");
   });
 
-  // Handle queue ended (when playlist track finishes)
-  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, async () => {
-    console.log("[TrackPlayer] Queue ended, restarting playback");
-    // Restart playback when a track ends
-    await TrackPlayer.play();
+  TrackPlayer.addEventListener(Event.PlaybackQueueEnded, () => {
+    console.log("[TrackPlayer] Queue ended");
   });
 
-  // Handle playback errors
-  TrackPlayer.addEventListener(Event.PlaybackError, async (error) => {
+  TrackPlayer.addEventListener(Event.PlaybackError, (error) => {
     console.error("[TrackPlayer] Playback error:", error);
-    // Try to recover by restarting playback
-    await TrackPlayer.play();
   });
 }
