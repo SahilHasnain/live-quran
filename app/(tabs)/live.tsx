@@ -3,14 +3,15 @@ import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import { QuranMode, useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect } from "expo-router";
 import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  ImageBackground,
   Modal,
   ScrollView,
   StatusBar,
+  StyleSheet,
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
@@ -69,13 +70,30 @@ export default function Index() {
   };
 
   return (
-    <ImageBackground
-      source={require("@/assets/images/quran-bg.png")}
-      style={{ flex: 1 }}
-      imageStyle={{ opacity: 1 }}
-    >
-      <View
-        className="absolute inset-0 bg-[#080f0a]/75"
+    <View className="flex-1 bg-[#080f0a]">
+      <Image
+        source={require("@/assets/images/quran-bg-v2.jpg")}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="cover"
+        blurRadius={22}
+        transition={200}
+      />
+      <Image
+        source={require("@/assets/images/quran-bg-v2.jpg")}
+        style={StyleSheet.absoluteFillObject}
+        contentFit="contain"
+        contentPosition="center"
+        transition={200}
+      />
+      <LinearGradient
+        colors={["rgba(5,10,7,0.08)", "rgba(8,15,10,0.22)", "rgba(8,15,10,0.48)"]}
+        locations={[0, 0.45, 1]}
+        style={StyleSheet.absoluteFillObject}
+      />
+      <LinearGradient
+        colors={["rgba(16,185,129,0.06)", "rgba(16,185,129,0)", "rgba(0,0,0,0.08)"]}
+        locations={[0, 0.35, 1]}
+        style={StyleSheet.absoluteFillObject}
       />
       <StatusBar barStyle="light-content" />
 
@@ -236,6 +254,6 @@ export default function Index() {
           )}
         </TouchableOpacity>
       </View>
-    </ImageBackground>
+    </View>
   );
 }
