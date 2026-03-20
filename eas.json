@@ -1,7 +1,7 @@
 {
   "cli": {
     "version": ">= 16.28.0",
-    "appVersionSource": "remote"
+    "appVersionSource": "local"
   },
   "build": {
     "development": {
@@ -30,7 +30,7 @@
       }
     },
     "production": {
-      "autoIncrement": true,
+      "autoIncrement": false,
       "credentialsSource": "local",
       "env": {
         "EXPO_PUBLIC_TAFSEER_STREAM_URL": "https://livequran.duckdns.org/stream",

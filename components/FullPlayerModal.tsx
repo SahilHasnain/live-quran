@@ -126,12 +126,6 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
 
           <View className="flex-1 px-6 pb-8">
             <View className="items-center justify-end flex-1">
-              <View className="w-full max-w-[420px]">
-                <Text className="text-center text-[30px] font-semibold leading-10 text-white">
-                  {currentTrack.title}
-                </Text>
-              </View>
-
               <View className="w-full mt-8">
                 <Pressable
                   onLayout={(event) => {
