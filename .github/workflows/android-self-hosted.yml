@@ -70,12 +70,12 @@ jobs:
             android/app/build/outputs/**/*.aab
             android/app/build/outputs/**/*.apk
       - name: Fastlane deploy
-        if: ${{ github.event_name == 'workflow_dispatch' && env.APP_VARIANT == 'production' }}
+        if: ${{ env.APP_VARIANT == 'production' }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SUPPLY_JSON_KEY: ${{ vars.PLAY_STORE_JSON_KEY_PATH || '/home/Sahilhasnain/android-secrets/play-store-key.json' }}
           ANDROID_APPLICATION_ID: ${{ vars.ANDROID_APPLICATION_ID || 'com.livequran' }}
-          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'internal' }}
+          PLAY_TRACK: ${{ vars.PLAY_TRACK || 'alpha' }}
           SKIP_ANDROID_BUILD: "true"
           ANDROID_KEYSTORE_PATH: ${{ vars.ANDROID_KEYSTORE_PATH || '/home/Sahilhasnain/android-secrets/live-quran/release.keystore' }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -85,3 +85,10 @@ jobs:
           cd android
           bundle install
           fastlane android deploy
+
+      - name: Cleanup build artifacts
+        if: always()
+        run: |
+          cd android
+          ./gradlew clean
+          rm -rf ~/.gradle/caches/build-cache-*
