@@ -4,6 +4,7 @@ import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import {
   fetchAudios,
   formatDuration,
+  getAudioViewUrl,
   getThumbnailUrl,
   type AudioMode,
   type QuranAudio,
@@ -192,13 +193,7 @@ export default function BrowseWebScreen() {
     const currentMode = mode ?? "tilawat";
     try {
       setDownloading((prev) => new Set(prev).add(item.$id));
-      const audioUrl = `${process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT}/storage/buckets/${
-        currentMode === "tilawat"
-          ? process.env.EXPO_PUBLIC_APPWRITE_TILAWAT_BUCKET_ID
-          : currentMode === "translation"
-            ? process.env.EXPO_PUBLIC_APPWRITE_TRANSLATION_BUCKET_ID
-            : process.env.EXPO_PUBLIC_APPWRITE_TAFSEER_BUCKET_ID
-      }/files/${item.fileId}/view?project=${process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID}`;
+      const audioUrl = getAudioViewUrl(item.fileId, currentMode);
 
       const result = await downloadManager.downloadAudio(
         item.$id,

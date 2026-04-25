@@ -1,9 +1,7 @@
 import { Client, Databases, Query } from "appwrite";
 
-const APPWRITE_ENDPOINT =
-  process.env.EXPO_PUBLIC_APPWRITE_ENDPOINT ||
-  "https://sgp.cloud.appwrite.io/v1";
-const APPWRITE_PROJECT_ID = process.env.EXPO_PUBLIC_APPWRITE_PROJECT_ID || "";
+const APPWRITE_ENDPOINT = "https://sgp.cloud.appwrite.io/v1";
+const APPWRITE_PROJECT_ID = "698e91f800372012b43e";
 const DATABASE_ID = "698e92a6000bac6e6ccd";
 
 const COLLECTIONS = {
@@ -47,6 +45,14 @@ export function getThumbnailUrl(youtubeId: string): string {
 export function getAudioFileUrl(fileId: string, mode: AudioMode = "tilawat"): string {
   const bucketId = BUCKETS[mode];
   return `${APPWRITE_ENDPOINT}/storage/buckets/${bucketId}/files/${fileId}/download?project=${APPWRITE_PROJECT_ID}`;
+}
+
+export function getAudioViewUrl(
+  fileId: string,
+  mode: AudioMode = "tilawat",
+): string {
+  const bucketId = BUCKETS[mode];
+  return `${APPWRITE_ENDPOINT}/storage/buckets/${bucketId}/files/${fileId}/view?project=${APPWRITE_PROJECT_ID}`;
 }
 
 export function formatDuration(seconds: number): string {
