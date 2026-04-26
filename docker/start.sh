@@ -52,11 +52,6 @@ cat > /config/icecast.xml << EOF
         <stream-name>${STREAM_TITLE}</stream-name>
         <stream-description>${STREAM_DESCRIPTION}</stream-description>
         <stream-genre>Islamic</stream-genre>
-        <http-headers>
-            <header name="Access-Control-Allow-Origin" value="*" />
-            <header name="Access-Control-Allow-Headers" value="Origin, Accept, X-Requested-With, Content-Type" />
-            <header name="Access-Control-Allow-Methods" value="GET, OPTIONS, HEAD" />
-        </http-headers>
     </mount>
 
     <fileserve>1</fileserve>

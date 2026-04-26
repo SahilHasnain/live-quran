@@ -11,6 +11,7 @@
     "build:dev": "eas build -p android --profile development",
     "build:prev": "eas build -p android --profile preview",
     "build:prod": "eas build -p android --profile production",
+    "ssh:radio": "ssh root@142.93.219.143",
     "postinstall": "patch-package",
     "upload-tafseer": "node scripts/upload-quran-audio.js",
     "upload-tilawat": "node scripts/upload-tilawat-audio.js",
