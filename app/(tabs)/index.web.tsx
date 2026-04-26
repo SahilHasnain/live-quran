@@ -26,6 +26,16 @@ import {
 
 const PAGE_SIZE = 25;
 const MODE_KEY = "@mode_browse";
+
+function shuffleArray<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
 const MODES: { key: AudioMode; label: string; blurb: string }[] = [
   {
     key: "tilawat",
@@ -56,6 +66,7 @@ export default function BrowseWebScreen() {
   } = useTrackPlayer();
   const [mode, setMode] = useState<AudioMode | null>(null);
   const [audios, setAudios] = useState<QuranAudio[]>([]);
+  const [orderedAudios, setOrderedAudios] = useState<QuranAudio[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -64,6 +75,7 @@ export default function BrowseWebScreen() {
   const [activeSearch, setActiveSearch] = useState("");
   const [downloads, setDownloads] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState<Set<string>>(new Set());
+  const [isShuffled, setIsShuffled] = useState(false);
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoplayRef = useRef({
@@ -116,7 +128,8 @@ export default function BrowseWebScreen() {
       try {
         setLoading(true);
         const result = await fetchAudios(mode, PAGE_SIZE, 0, activeSearch);
-        setAudios(result.documents);
+        setOrderedAudios(result.documents);
+        setAudios(isShuffled ? shuffleArray(result.documents) : result.documents);
         setTotal(result.total);
         setError(null);
       } catch (fetchError) {
@@ -127,7 +140,7 @@ export default function BrowseWebScreen() {
       }
     };
     loadAudios();
-  }, [activeSearch, mode]);
+  }, [activeSearch, isShuffled, mode]);
 
   useEffect(() => {
     if (audios.length === 0) return;
@@ -164,6 +177,17 @@ export default function BrowseWebScreen() {
     if (newMode === mode) return;
     setMode(newMode);
     AsyncStorage.setItem(MODE_KEY, newMode);
+  };
+
+  const handleShuffle = () => {
+    if (isShuffled) {
+      setAudios(orderedAudios);
+      setIsShuffled(false);
+      return;
+    }
+
+    setAudios(shuffleArray(orderedAudios));
+    setIsShuffled(true);
   };
 
   const handlePlay = (item: QuranAudio) => {
@@ -223,7 +247,11 @@ export default function BrowseWebScreen() {
     try {
       setLoadingMore(true);
       const result = await fetchAudios(mode, PAGE_SIZE, audios.length, activeSearch);
-      setAudios((prev) => [...prev, ...result.documents]);
+      setOrderedAudios((prev) => {
+        const merged = [...prev, ...result.documents];
+        setAudios(isShuffled ? shuffleArray(merged) : merged);
+        return merged;
+      });
     } catch (fetchError) {
       console.error("[Browse:web] Load more error:", fetchError);
     } finally {
@@ -248,15 +276,31 @@ export default function BrowseWebScreen() {
           </View>
 
           <View className="w-[340px] rounded-[28px] border border-white/10 bg-[#0a140e] p-5">
-            <View className="mt-4 flex-row items-center rounded-2xl border border-white/10 bg-black/20 px-4">
-              <MaterialIcons name="search" size={20} color="#737373" />
-              <TextInput
-                value={searchQuery}
-                onChangeText={onSearchChange}
-                placeholder="Search audios..."
-                placeholderTextColor="#737373"
-                className="flex-1 py-4 pl-3 text-sm text-white"
-              />
+            <View className="mt-4 flex-row items-center gap-3">
+              <View className="flex-1 flex-row items-center rounded-2xl border border-white/10 bg-black/20 px-4">
+                <MaterialIcons name="search" size={20} color="#737373" />
+                <TextInput
+                  value={searchQuery}
+                  onChangeText={onSearchChange}
+                  placeholder="Search audios..."
+                  placeholderTextColor="#737373"
+                  className="flex-1 py-4 pl-3 text-sm text-white"
+                />
+              </View>
+              <TouchableOpacity
+                onPress={handleShuffle}
+                className={`h-14 w-14 items-center justify-center rounded-2xl border ${
+                  isShuffled
+                    ? "border-emerald-400/30 bg-emerald-500/10"
+                    : "border-white/10 bg-black/20"
+                }`}
+              >
+                <MaterialIcons
+                  name="shuffle"
+                  size={22}
+                  color={isShuffled ? colors.primary.light : "#d4d4d4"}
+                />
+              </TouchableOpacity>
             </View>
           </View>
         </View>

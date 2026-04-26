@@ -43,6 +43,15 @@ const MODES: { key: AudioMode; label: string }[] = [
 const TOOLTIP_KEY = "@browse_download_tooltip_shown";
 const MODE_KEY = "@mode_browse";
 
+function shuffleArray<T>(items: T[]): T[] {
+  const next = [...items];
+  for (let i = next.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [next[i], next[j]] = [next[j], next[i]];
+  }
+  return next;
+}
+
 export default function AudiosScreen() {
   const {
     playTrack,
@@ -61,6 +70,7 @@ export default function AudiosScreen() {
   const { handleScroll: handleTabBarScroll } = useTabBarVisibility();
   const [mode, setMode] = useState<AudioMode | null>(null);
   const [audios, setAudios] = useState<QuranAudio[]>([]);
+  const [orderedAudios, setOrderedAudios] = useState<QuranAudio[]>([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -72,6 +82,7 @@ export default function AudiosScreen() {
   const [showModeMenu, setShowModeMenu] = useState(false);
   const [longPressedItem, setLongPressedItem] = useState<string | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [isShuffled, setIsShuffled] = useState(false);
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>(
     {},
   );
@@ -153,9 +164,14 @@ export default function AudiosScreen() {
         setTotal(result.total);
 
         if (offset === 0) {
-          setAudios(result.documents);
+          setOrderedAudios(result.documents);
+          setAudios(isShuffled ? shuffleArray(result.documents) : result.documents);
         } else {
-          setAudios((prev) => [...prev, ...result.documents]);
+          setOrderedAudios((prev) => {
+            const merged = [...prev, ...result.documents];
+            setAudios(isShuffled ? shuffleArray(merged) : merged);
+            return merged;
+          });
         }
         setError(null);
       } catch (err) {
@@ -166,7 +182,7 @@ export default function AudiosScreen() {
         setLoadingMore(false);
       }
     },
-    [activeSearch, mode],
+    [activeSearch, isShuffled, mode],
   );
 
   useEffect(() => {
@@ -224,6 +240,17 @@ export default function AudiosScreen() {
   const clearSearch = () => {
     setSearchQuery("");
     setActiveSearch("");
+  };
+
+  const handleShuffle = () => {
+    if (isShuffled) {
+      setAudios(orderedAudios);
+      setIsShuffled(false);
+      return;
+    }
+
+    setAudios(shuffleArray(orderedAudios));
+    setIsShuffled(true);
   };
 
   const loadMore = () => {
@@ -572,6 +599,20 @@ export default function AudiosScreen() {
                 </TouchableOpacity>
               )}
             </View>
+
+            <TouchableOpacity
+              onPress={handleShuffle}
+              className={`h-11 w-11 items-center justify-center rounded-xl ${
+                isShuffled ? "bg-primary/20" : "bg-[#0f1a12]"
+              }`}
+              accessibilityLabel="Shuffle list"
+            >
+              <MaterialIcons
+                name="shuffle"
+                size={20}
+                color={isShuffled ? colors.primary.light : "#a3a3a3"}
+              />
+            </TouchableOpacity>
 
             {/* Mode Selector Button */}
             <TouchableOpacity
