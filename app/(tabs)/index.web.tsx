@@ -4,12 +4,10 @@ import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import {
   fetchAudios,
   formatDuration,
-  getAudioViewUrl,
   getThumbnailUrl,
   type AudioMode,
   type QuranAudio,
 } from "@/services/appwrite";
-import { downloadManager } from "@/services/downloadManager";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
@@ -34,6 +32,45 @@ function shuffleArray<T>(items: T[]): T[] {
     [next[i], next[j]] = [next[j], next[i]];
   }
   return next;
+}
+
+function hashString(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+  }
+  return hash;
+}
+
+function getFeaturedAudios(items: QuranAudio[], mode: AudioMode | null): QuranAudio[] {
+  if (items.length <= 3) return items;
+
+  const now = new Date();
+  const dayKey = `${now.getFullYear()}-${now.getMonth() + 1}-${now.getDate()}-${mode ?? "tilawat"}`;
+  const seed = hashString(dayKey);
+  const step = Math.max(1, Math.floor(items.length / 3));
+  const start = seed % items.length;
+  const selected: QuranAudio[] = [];
+  const usedIds = new Set<string>();
+
+  for (let i = 0; i < items.length && selected.length < 3; i += 1) {
+    const index = (start + i * step) % items.length;
+    const item = items[index];
+    if (usedIds.has(item.$id)) continue;
+    usedIds.add(item.$id);
+    selected.push(item);
+  }
+
+  if (selected.length < 3) {
+    for (const item of items) {
+      if (usedIds.has(item.$id)) continue;
+      usedIds.add(item.$id);
+      selected.push(item);
+      if (selected.length === 3) break;
+    }
+  }
+
+  return selected;
 }
 
 const MODES: { key: AudioMode; label: string; blurb: string }[] = [
@@ -73,8 +110,6 @@ export default function BrowseWebScreen() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
-  const [downloads, setDownloads] = useState<Set<string>>(new Set());
-  const [downloading, setDownloading] = useState<Set<string>>(new Set());
   const [isShuffled, setIsShuffled] = useState(false);
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>({});
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -115,10 +150,6 @@ export default function BrowseWebScreen() {
   useEffect(() => {
     AsyncStorage.getItem(MODE_KEY).then((saved) => {
       setMode((saved as AudioMode) || "tilawat");
-    });
-    downloadManager.initialize().then(() => {
-      const allDownloads = downloadManager.getAllDownloads();
-      setDownloads(new Set(allDownloads.map((item) => item.id)));
     });
   }, []);
 
@@ -165,7 +196,10 @@ export default function BrowseWebScreen() {
     });
   }, [audios]);
 
-  const featured = useMemo(() => audios.slice(0, 3), [audios]);
+  const featured = useMemo(
+    () => getFeaturedAudios(orderedAudios, mode),
+    [mode, orderedAudios],
+  );
 
   const onSearchChange = (text: string) => {
     setSearchQuery(text);
@@ -211,35 +245,6 @@ export default function BrowseWebScreen() {
       },
       mode ?? "tilawat",
     );
-  };
-
-  const handleDownload = async (item: QuranAudio) => {
-    const currentMode = mode ?? "tilawat";
-    try {
-      setDownloading((prev) => new Set(prev).add(item.$id));
-      const audioUrl = getAudioViewUrl(item.fileId, currentMode);
-
-      const result = await downloadManager.downloadAudio(
-        item.$id,
-        item.title,
-        item.duration,
-        audioUrl,
-        currentMode,
-        item.thumbnail || getThumbnailUrl(item.youtubeId),
-      );
-
-      if (result) {
-        setDownloads((prev) => new Set(prev).add(item.$id));
-      }
-    } catch (downloadError) {
-      console.error("[Browse:web] Download error:", downloadError);
-    } finally {
-      setDownloading((prev) => {
-        const next = new Set(prev);
-        next.delete(item.$id);
-        return next;
-      });
-    }
   };
 
   const loadMore = async () => {
@@ -367,15 +372,10 @@ export default function BrowseWebScreen() {
                           <Text className="text-xl font-semibold text-white" numberOfLines={2}>
                             {item.title}
                           </Text>
-                          <Text className="mt-2 text-sm text-neutral-400">
-                            {formatDuration(item.duration)}
-                          </Text>
-                          <View className="mt-5 flex-row items-center justify-between">
-                            <View className="rounded-full bg-white/5 px-4 py-2">
-                              <Text className="text-xs uppercase tracking-[1.8px] text-neutral-300">
-                                {isActive ? "Playing" : "Ready"}
-                              </Text>
-                            </View>
+                          <View className="mt-5 flex-row items-center justify-between gap-2">
+                            <Text className="text-sm text-neutral-400">
+                              {formatDuration(item.duration)}
+                            </Text>
                             <MaterialIcons
                               name={isActive ? "equalizer" : "play-circle-filled"}
                               size={28}
@@ -397,8 +397,6 @@ export default function BrowseWebScreen() {
                 const thumbnailUri = item.thumbnail || getThumbnailUrl(item.youtubeId);
                 const isCurrentlyPlaying =
                   currentTrack?.id === item.$id && isBrowsePlaying;
-                const isDownloaded = downloads.has(item.$id);
-                const isDownloading = downloading.has(item.$id);
                 const progressPercent = audioProgress[item.$id] ?? 0;
 
                 return (
@@ -439,18 +437,11 @@ export default function BrowseWebScreen() {
                         <Text className="text-sm text-neutral-400">
                           {formatDuration(item.duration)}
                         </Text>
-                        {isDownloaded ? (
-                          <MaterialIcons name="download-done" size={20} color="#6ee7b7" />
-                        ) : isDownloading ? (
-                          <ActivityIndicator size="small" color={colors.primary.light} />
-                        ) : (
-                          <TouchableOpacity
-                            onPress={() => handleDownload(item)}
-                            className="rounded-full border border-white/10 bg-white/5 p-2"
-                          >
-                            <MaterialIcons name="download" size={18} color="#d4d4d4" />
-                          </TouchableOpacity>
-                        )}
+                        <MaterialIcons
+                          name={isCurrentlyPlaying ? "equalizer" : "play-circle-filled"}
+                          size={22}
+                          color={isCurrentlyPlaying ? colors.primary.light : "#d4d4d4"}
+                        />
                       </View>
                     </View>
                   </View>
