@@ -20,7 +20,8 @@
     "create-translation-collection": "node scripts/create-translation-collection.js",
     "create-translation-bucket": "node scripts/create-translation-bucket.js",
     "get-schema": "node scripts/get-collection-schema.js",
-    "cleanup-orphaned": "node scripts/cleanup-orphaned-files.js"
+    "cleanup-orphaned": "node scripts/cleanup-orphaned-files.js",
+    "backfill-audio-order": "node scripts/backfill-audio-order.js"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

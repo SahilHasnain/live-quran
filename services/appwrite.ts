@@ -33,6 +33,7 @@ export interface QuranAudio {
   thumbnail: string | null;
   uploader: string | null;
   uploadDate: string | null;
+  order?: number | null;
 }
 
 // Keep old name as alias for backward compat
@@ -74,6 +75,7 @@ export async function fetchAudios(
   const queries = [
     Query.limit(limit),
     Query.offset(offset),
+    Query.orderAsc("order"),
     Query.orderDesc("$createdAt"),
   ];
 
