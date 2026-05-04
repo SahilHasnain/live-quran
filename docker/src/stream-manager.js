@@ -90,11 +90,10 @@ class StreamManager {
   async generateFFmpegPlaylist() {
     const playlistContent = [];
     
-    // Limit initial caching to first 10 tracks for faster startup
-    const tracksToCache = this.currentPlaylist.slice(0, 10);
+    console.log(`[${this.streamName}] 📥 Caching all ${this.currentPlaylist.length} tracks...`);
     
-    for (const track of tracksToCache) {
-      // Download and cache audio file
+    // Cache ALL tracks before starting stream
+    for (const track of this.currentPlaylist) {
       const cachedFile = await this.cacheAudioFile(track);
       if (cachedFile) {
         playlistContent.push(`file '${cachedFile}'`);
@@ -108,19 +107,6 @@ class StreamManager {
     
     await fs.writeFile(this.playlistFile, playlistContent.join('\n'));
     console.log(`[${this.streamName}] ✅ Generated playlist with ${playlistContent.length} tracks`);
-    
-    // Cache remaining tracks in background
-    if (this.currentPlaylist.length > 10) {
-      console.log(`[${this.streamName}] 📥 Caching remaining ${this.currentPlaylist.length - 10} tracks in background...`);
-      this.cacheRemainingTracks(10);
-    }
-  }
-  
-  async cacheRemainingTracks(startIndex) {
-    for (let i = startIndex; i < this.currentPlaylist.length; i++) {
-      await this.cacheAudioFile(this.currentPlaylist[i]);
-    }
-    console.log(`[${this.streamName}] ✅ All tracks cached`);
   }
 
   async cacheAudioFile(track) {
