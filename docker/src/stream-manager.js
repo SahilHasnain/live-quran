@@ -16,6 +16,16 @@ class StreamManager {
     this.mountPoint = process.env.MOUNT_POINT || '/live';
     this.streamTitle = process.env.STREAM_TITLE || 'Live Radio';
     this.apiPort = process.env.API_PORT || 3000;
+    
+    // Hardcoded bucket IDs
+    this.bucketIds = {
+      tafseer: '698e92c5001a5b8a75c0',
+      tilawat: '69958cf3001a3bb3e6dd',
+      translation: '6995f0f4002cb3539d2a'
+    };
+    
+    // Get bucket ID based on stream name
+    this.bucketId = this.bucketIds[this.streamName] || this.bucketIds.tilawat;
   }
 
   async initialize() {
@@ -53,17 +63,24 @@ class StreamManager {
       
       const { Client, Storage } = require('node-appwrite');
       
+      // Hardcoded Appwrite credentials
+      const APPWRITE_ENDPOINT = 'https://sgp.cloud.appwrite.io/v1';
+      const APPWRITE_PROJECT_ID = '698e91f800372012b43e';
+      const APPWRITE_API_KEY = 'standard_da657bf87fd39c46b341ff12e23c10e35208dc0f4bd8feacdfc5364a9a5f42a2d27d55805b28bf541b9b323ef26cd0f2487c1494f916fe6d6617a003b45fa1c6870593a73068b85da49c3965e5dfc4de026d4aebe194dc52a774120ce4e0d76885c91cfa9bb5fe7a4c7938d21f91871a1987ff82398a202ea676d4e6e0b951f6';
+      
       // Initialize Appwrite client
       const client = new Client()
-        .setEndpoint(process.env.APPWRITE_ENDPOINT)
-        .setProject(process.env.APPWRITE_PROJECT_ID)
-        .setKey(process.env.APPWRITE_API_KEY);
+        .setEndpoint(APPWRITE_ENDPOINT)
+        .setProject(APPWRITE_PROJECT_ID)
+        .setKey(APPWRITE_API_KEY);
 
       const storage = new Storage(client);
       
+      console.log(`[${this.streamName}] Using bucket ID: ${this.bucketId}`);
+      
       // Fetch files directly from bucket (bypasses database read limits)
       const response = await storage.listFiles(
-        process.env.APPWRITE_BUCKET_ID,
+        this.bucketId,
         [], // No queries needed
         100 // Limit
       );
@@ -72,7 +89,7 @@ class StreamManager {
       this.currentPlaylist = response.files.map(file => ({
         id: file.$id,
         title: file.name.replace(/\.(mp3|m4a|wav)$/i, ''), // Use filename as title
-        audioUrl: `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`,
+        audioUrl: `${APPWRITE_ENDPOINT}/storage/buckets/${this.bucketId}/files/${file.$id}/view?project=${APPWRITE_PROJECT_ID}`,
         duration: 180 // Default duration since bucket doesn't store this
       }));
       
