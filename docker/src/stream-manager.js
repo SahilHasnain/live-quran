@@ -60,13 +60,20 @@ class StreamManager {
   async updatePlaylist() {
     try {
       console.log(`[${this.streamName}] Updating playlist from bucket...`);
+      console.log(`[${this.streamName}] DEBUG: Loading node-appwrite...`);
       
-      const { Client, Storage } = require('node-appwrite');
+      const { Client, Storage, Query } = require('node-appwrite');
+      console.log(`[${this.streamName}] DEBUG: node-appwrite loaded successfully`);
       
       // Hardcoded Appwrite credentials
       const APPWRITE_ENDPOINT = 'https://sgp.cloud.appwrite.io/v1';
       const APPWRITE_PROJECT_ID = '698e91f800372012b43e';
       const APPWRITE_API_KEY = 'standard_da657bf87fd39c46b341ff12e23c10e35208dc0f4bd8feacdfc5364a9a5f42a2d27d55805b28bf541b9b323ef26cd0f2487c1494f916fe6d6617a003b45fa1c6870593a73068b85da49c3965e5dfc4de026d4aebe194dc52a774120ce4e0d76885c91cfa9bb5fe7a4c7938d21f91871a1987ff82398a202ea676d4e6e0b951f6';
+      
+      console.log(`[${this.streamName}] DEBUG: Creating Appwrite client...`);
+      console.log(`[${this.streamName}] DEBUG: Endpoint: ${APPWRITE_ENDPOINT}`);
+      console.log(`[${this.streamName}] DEBUG: Project: ${APPWRITE_PROJECT_ID}`);
+      console.log(`[${this.streamName}] DEBUG: API Key length: ${APPWRITE_API_KEY.length}`);
       
       // Initialize Appwrite client
       const client = new Client()
@@ -75,15 +82,25 @@ class StreamManager {
         .setKey(APPWRITE_API_KEY);
 
       const storage = new Storage(client);
+      console.log(`[${this.streamName}] DEBUG: Storage client created`);
       
       console.log(`[${this.streamName}] Using bucket ID: ${this.bucketId}`);
+      console.log(`[${this.streamName}] DEBUG: Calling storage.listFiles()...`);
       
-      // Fetch files directly from bucket (bypasses database read limits)
+      // Fetch ALL files from bucket with proper limit
       const response = await storage.listFiles(
         this.bucketId,
-        [], // No queries needed
-        100 // Limit
+        [Query.limit(5000)] // Fetch up to 5000 files
       );
+      
+      console.log(`[${this.streamName}] DEBUG: Response received`);
+      console.log(`[${this.streamName}] DEBUG: response.files type: ${typeof response.files}`);
+      console.log(`[${this.streamName}] DEBUG: response.files is array: ${Array.isArray(response.files)}`);
+      console.log(`[${this.streamName}] Found ${response.files.length} files (total: ${response.total})`);
+      
+      if (response.files.length > 0) {
+        console.log(`[${this.streamName}] DEBUG: First file: ${response.files[0].name} (${response.files[0].$id})`);
+      }
       
       // Convert to playlist format
       this.currentPlaylist = response.files.map(file => ({
@@ -94,10 +111,19 @@ class StreamManager {
       }));
       
       console.log(`[${this.streamName}] ✅ Loaded ${this.currentPlaylist.length} tracks from bucket`);
+      
+      if (this.currentPlaylist.length > 0) {
+        console.log(`[${this.streamName}] DEBUG: First track URL: ${this.currentPlaylist[0].audioUrl}`);
+      }
+      
       await this.generateFFmpegPlaylist();
       
     } catch (error) {
       console.error(`[${this.streamName}] ❌ Error updating playlist:`, error);
+      console.error(`[${this.streamName}] Error type: ${error.type}`);
+      console.error(`[${this.streamName}] Error code: ${error.code}`);
+      console.error(`[${this.streamName}] Error message: ${error.message}`);
+      console.error(`[${this.streamName}] Error stack:`, error.stack);
     }
   }
 
