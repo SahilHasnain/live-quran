@@ -49,9 +49,9 @@ class StreamManager {
 
   async updatePlaylist() {
     try {
-      console.log(`[${this.streamName}] Updating playlist...`);
+      console.log(`[${this.streamName}] Updating playlist from bucket...`);
       
-      const { Client, Databases, Query } = require('node-appwrite');
+      const { Client, Storage } = require('node-appwrite');
       
       // Initialize Appwrite client
       const client = new Client()
@@ -59,31 +59,28 @@ class StreamManager {
         .setProject(process.env.APPWRITE_PROJECT_ID)
         .setKey(process.env.APPWRITE_API_KEY);
 
-      const databases = new Databases(client);
+      const storage = new Storage(client);
       
-      // Fetch audio files from collection
-      const response = await databases.listDocuments(
-        process.env.APPWRITE_DATABASE_ID,
-        process.env.APPWRITE_COLLECTION_ID,
-        [
-          Query.limit(100),
-          Query.select(["$id", "title", "fileId", "duration"])
-        ]
+      // Fetch files directly from bucket (bypasses database read limits)
+      const response = await storage.listFiles(
+        process.env.APPWRITE_BUCKET_ID,
+        [], // No queries needed
+        100 // Limit
       );
       
       // Convert to playlist format
-      this.currentPlaylist = response.documents.map(doc => ({
-        id: doc.$id,
-        title: doc.title || `Audio ${doc.$id}`,
-        audioUrl: `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${doc.fileId}/view?project=${process.env.APPWRITE_PROJECT_ID}`,
-        duration: doc.duration || 180
+      this.currentPlaylist = response.files.map(file => ({
+        id: file.$id,
+        title: file.name.replace(/\.(mp3|m4a|wav)$/i, ''), // Use filename as title
+        audioUrl: `${process.env.APPWRITE_ENDPOINT}/storage/buckets/${process.env.APPWRITE_BUCKET_ID}/files/${file.$id}/view?project=${process.env.APPWRITE_PROJECT_ID}`,
+        duration: 180 // Default duration since bucket doesn't store this
       }));
       
-      console.log(`[${this.streamName}] Loaded ${this.currentPlaylist.length} tracks for playlist`);
+      console.log(`[${this.streamName}] ✅ Loaded ${this.currentPlaylist.length} tracks from bucket`);
       await this.generateFFmpegPlaylist();
       
     } catch (error) {
-      console.error(`[${this.streamName}] Error updating playlist:`, error);
+      console.error(`[${this.streamName}] ❌ Error updating playlist:`, error);
     }
   }
 
