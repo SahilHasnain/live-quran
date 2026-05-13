@@ -36,6 +36,9 @@ yarn-error.*
 # credentials
 credentials.json
 
+# secrets folder
+secrets/
+
 # typescript
 *.tsbuildinfo
 

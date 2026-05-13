@@ -1,4 +1,4 @@
-name: Android Self Hosted
+name: Android CI
 
 on:
   workflow_dispatch:
@@ -15,13 +15,13 @@ on:
 
 jobs:
   build-android:
-    runs-on: [self-hosted, linux, x64, android-do]
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash
     env:
-      ANDROID_SDK_ROOT: /opt/android-sdk
-      JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+      ANDROID_SDK_ROOT: /usr/local/lib/android/sdk
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
       APP_VARIANT: ${{ inputs.app_variant || 'production' }}
     steps:
       - name: Checkout
@@ -39,6 +39,27 @@ jobs:
           ruby-version: "3.2"
           bundler-cache: false
 
+      - name: Setup Gradle cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+            ~/.android/build-cache
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Cache NDK
+        uses: actions/cache@v4
+        with:
+          path: |
+            android/app/.cxx
+            android/.gradle
+          key: ${{ runner.os }}-ndk-${{ hashFiles('android/**/*.gradle*') }}
+          restore-keys: |
+            ${{ runner.os }}-ndk-
+
       - name: Install dependencies
         run: |
           npm ci
@@ -47,9 +68,18 @@ jobs:
         run: |
           printf "sdk.dir=%s\n" "$ANDROID_SDK_ROOT" > android/local.properties
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > /tmp/release.keystore
+
+      - name: Decode Play Store JSON
+        if: ${{ env.APP_VARIANT == 'production' }}
+        run: |
+          echo "${{ secrets.PLAY_STORE_JSON_BASE64 }}" | base64 -d > /tmp/play-store-key.json
+
       - name: Build Android artifact
         env:
-          ANDROID_KEYSTORE_PATH: ${{ vars.ANDROID_KEYSTORE_PATH || '/home/Sahilhasnain/android-secrets/live-quran/release.keystore' }}
+          ANDROID_KEYSTORE_PATH: /tmp/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -73,11 +103,11 @@ jobs:
         if: ${{ env.APP_VARIANT == 'production' }}
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SUPPLY_JSON_KEY: ${{ vars.PLAY_STORE_JSON_KEY_PATH || '/home/Sahilhasnain/android-secrets/play-store-key.json' }}
+          SUPPLY_JSON_KEY: /tmp/play-store-key.json
           ANDROID_APPLICATION_ID: ${{ vars.ANDROID_APPLICATION_ID || 'com.livequran' }}
           PLAY_TRACK: ${{ vars.PLAY_TRACK || 'alpha' }}
           SKIP_ANDROID_BUILD: "true"
-          ANDROID_KEYSTORE_PATH: ${{ vars.ANDROID_KEYSTORE_PATH || '/home/Sahilhasnain/android-secrets/live-quran/release.keystore' }}
+          ANDROID_KEYSTORE_PATH: /tmp/release.keystore
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
@@ -86,9 +116,3 @@ jobs:
           bundle install
           fastlane android deploy
 
-      - name: Cleanup build artifacts
-        if: always()
-        run: |
-          cd android
-          ./gradlew clean
-          rm -rf ~/.gradle/caches/build-cache-*
