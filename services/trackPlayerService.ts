@@ -4,10 +4,19 @@
  */
 
 import TrackPlayer, { Event } from "@weights-ai/react-native-track-player";
+import {
+  LIVE_STREAM_TRACK_ID,
+  reconnectLiveStream,
+} from "@/services/liveStream";
 
 export async function PlaybackService() {
-  TrackPlayer.addEventListener(Event.RemotePlay, () => {
-    TrackPlayer.play();
+  TrackPlayer.addEventListener(Event.RemotePlay, async () => {
+    const activeTrack = await TrackPlayer.getActiveTrack();
+    if (activeTrack?.id === LIVE_STREAM_TRACK_ID) {
+      await reconnectLiveStream();
+      return;
+    }
+    await TrackPlayer.play();
   });
 
   TrackPlayer.addEventListener(Event.RemotePause, () => {

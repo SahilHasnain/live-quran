@@ -13,6 +13,14 @@ import TrackPlayer, {
   usePlaybackState,
   useProgress,
 } from "@weights-ai/react-native-track-player";
+import {
+  getPersistedLiveMode,
+  getStreamTitle,
+  getStreamUrl,
+  LIVE_MODE_KEY,
+  reconnectLiveStream,
+  type QuranMode,
+} from "@/services/liveStream";
 import React, {
   createContext,
   useCallback,
@@ -22,12 +30,12 @@ import React, {
   useState,
 } from "react";
 
-export type QuranMode = "tafseer" | "tilawat" | "translation";
-
-const TAFSEER_STREAM_URL = "https://livequran.duckdns.org/tafseer";
-const TILAWAT_STREAM_URL = "https://livequran.duckdns.org/tilawat";
-const TRANSLATION_STREAM_URL = "https://livequran.duckdns.org/translation";
-const LIVE_MODE_KEY = "@mode_live";
+function isAlreadyInitializedError(error: unknown): boolean {
+  return (
+    error instanceof Error &&
+    error.message.includes("already been initialized via setupPlayer")
+  );
+}
 
 interface TilawatTrack {
   id: string;
@@ -89,16 +97,15 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   // Live stream state
   const [isLiveLoading, setIsLiveLoading] = useState(false);
   const [liveError, setLiveError] = useState<Error | null>(null);
-  const [isLiveSetup, setIsLiveSetup] = useState(false);
   const [currentMode, setCurrentMode] = useState<QuranMode>("tilawat");
   const [liveModePersisted, setLiveModePersisted] = useState(false);
 
   // Browse track state
   const [isBrowseLoading, setIsBrowseLoading] = useState(false);
   const [browseError, setBrowseError] = useState<Error | null>(null);
-  const [isBrowseSetup, setIsBrowseSetup] = useState(false);
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(false);
+  const setupPromiseRef = useRef<Promise<void> | null>(null);
 
   const playbackState = usePlaybackState();
 
@@ -156,34 +163,6 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const isLoading = isLiveLoading || isBrowseLoading;
   const error = liveError || browseError;
 
-  // Get stream URL based on current mode
-  const getStreamUrl = useCallback((mode: QuranMode) => {
-    switch (mode) {
-      case "tafseer":
-        return TAFSEER_STREAM_URL;
-      case "tilawat":
-        return TILAWAT_STREAM_URL;
-      case "translation":
-        return TRANSLATION_STREAM_URL;
-      default:
-        return TILAWAT_STREAM_URL;
-    }
-  }, []);
-
-  // Get stream title based on current mode
-  const getStreamTitle = useCallback((mode: QuranMode) => {
-    switch (mode) {
-      case "tafseer":
-        return "Tafseer Radio";
-      case "tilawat":
-        return "Tilawat Radio";
-      case "translation":
-        return "Translation Radio";
-      default:
-        return "Tilawat Radio";
-    }
-  }, []);
-
   // Get audio file URL from Appwrite (for on-demand playback)
   const getAudioUrl = useCallback((fileId: string, mode: QuranMode) => {
     return getAudioFileUrl(fileId, mode);
@@ -191,12 +170,46 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load persisted live mode
   useEffect(() => {
-    AsyncStorage.getItem(LIVE_MODE_KEY).then((saved) => {
-      if (saved) setCurrentMode(saved as QuranMode);
+    getPersistedLiveMode().then((saved) => {
+      setCurrentMode(saved);
       setLiveModePersisted(true);
     });
 
     historyManager.initialize();
+  }, []);
+
+  const ensurePlayerReady = useCallback(async () => {
+    if (setupPromiseRef.current) {
+      await setupPromiseRef.current;
+      return;
+    }
+
+    setupPromiseRef.current = (async () => {
+      try {
+        await TrackPlayer.setupPlayer({
+          waitForBuffer: true,
+        });
+      } catch (err) {
+        if (!isAlreadyInitializedError(err)) {
+          throw err;
+        }
+      }
+
+      await TrackPlayer.updateOptions({
+        capabilities: [Capability.Play, Capability.Pause],
+        compactCapabilities: [Capability.Play, Capability.Pause],
+        notificationCapabilities: [Capability.Play, Capability.Pause],
+      });
+
+      console.log("[TrackPlayer] Setup complete");
+    })();
+
+    try {
+      await setupPromiseRef.current;
+    } catch (err) {
+      setupPromiseRef.current = null;
+      throw err;
+    }
   }, []);
 
   // Setup TrackPlayer — wait until persisted mode is loaded
@@ -204,28 +217,9 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     if (!liveModePersisted) return;
     const setup = async () => {
       try {
-        await TrackPlayer.setupPlayer({
-          waitForBuffer: true,
-        });
-
-        await TrackPlayer.updateOptions({
-          capabilities: [Capability.Play, Capability.Pause],
-          compactCapabilities: [Capability.Play, Capability.Pause],
-          notificationCapabilities: [Capability.Play, Capability.Pause],
-        });
-
-        setIsLiveSetup(true);
-        setIsBrowseSetup(true);
-        console.log("[TrackPlayer] Setup complete");
-
+        await ensurePlayerReady();
         // Add the initial stream
-        await TrackPlayer.add({
-          id: "live-stream",
-          url: getStreamUrl(currentMode),
-          title: getStreamTitle(currentMode),
-          artwork: require("../assets/images/icon.png"),
-          isLiveStream: true,
-        });
+        await reconnectLiveStream(currentMode);
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
         setLiveError(err as Error);
@@ -235,41 +229,27 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setup();
 
     return () => {
-      TrackPlayer.reset();
+      // Keep player initialization sticky for the app lifetime.
     };
-  }, [liveModePersisted]);
+  }, [ensurePlayerReady, liveModePersisted]);
 
   const playLive = useCallback(async () => {
-    if (!isLiveSetup) {
-      console.warn("[TrackPlayer] Live not setup yet");
-      return;
-    }
-
     try {
       setLiveError(null);
+      await ensurePlayerReady();
 
       // If browse track is playing, stop it and switch to live
       if (currentTrack) {
-        await TrackPlayer.reset();
         setCurrentTrack(null);
-
-        // Add live stream back
-        await TrackPlayer.add({
-          id: "live-stream",
-          url: getStreamUrl(currentMode),
-          title: getStreamTitle(currentMode),
-          artwork: require("../assets/images/icon.png"),
-          isLiveStream: true,
-        });
       }
 
-      await TrackPlayer.play();
+      await reconnectLiveStream(currentMode);
       console.log("[TrackPlayer] Live play called");
     } catch (err) {
       console.error("[TrackPlayer] Live play error:", err);
       setLiveError(err as Error);
     }
-  }, [isLiveSetup, currentTrack, currentMode, getStreamUrl, getStreamTitle]);
+  }, [currentTrack, currentMode, ensurePlayerReady]);
 
   const pauseLive = useCallback(async () => {
     if (currentTrack) return; // Only pause if live is active
@@ -367,29 +347,16 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLiveLoading(true);
         setLiveError(null);
         const startTime = Date.now();
+        await ensurePlayerReady();
 
         // Stop current playback
-        await TrackPlayer.stop();
-
-        // Reset the queue
-        await TrackPlayer.reset();
-
         // Clear on-demand track if any
         setCurrentTrack(null);
 
         // Update mode
         setCurrentMode(mode);
-        AsyncStorage.setItem(LIVE_MODE_KEY, mode);
-        await TrackPlayer.add({
-          id: "live-stream",
-          url: getStreamUrl(mode),
-          title: getStreamTitle(mode),
-          artwork: require("../assets/images/icon.png"),
-          isLiveStream: true,
-        });
-
-        // Start playing new stream
-        await TrackPlayer.play();
+        await AsyncStorage.setItem(LIVE_MODE_KEY, mode);
+        await reconnectLiveStream(mode);
 
         // Ensure minimum loading duration for smooth UX
         const elapsed = Date.now() - startTime;
@@ -408,7 +375,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsLiveLoading(false);
       }
     },
-    [currentMode, getStreamUrl, getStreamTitle],
+    [currentMode, ensurePlayerReady],
   );
 
   // Play a specific track on demand (from audio list)
@@ -417,6 +384,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         setIsBrowseLoading(true);
         setBrowseError(null);
+        await ensurePlayerReady();
 
         // Keep context mode aligned with selected browse/download mode.
         setCurrentMode(mode);
@@ -497,7 +465,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsBrowseLoading(false);
       }
     },
-    [currentMode, getAudioUrl],
+    [currentMode, ensurePlayerReady, getAudioUrl],
   );
 
   const value: TrackPlayerContextType = {
@@ -554,3 +522,5 @@ export const useTrackPlayer = () => {
   }
   return context;
 };
+
+export type { QuranMode } from "@/services/liveStream";
