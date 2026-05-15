@@ -6,6 +6,12 @@
 
 import { getAudioFileUrl } from "@/services/appwrite";
 import { historyManager } from "@/services/historyManager";
+import {
+  getPersistedLiveMode,
+  LIVE_MODE_KEY,
+  reconnectLiveStream,
+  type QuranMode
+} from "@/services/liveStream";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import TrackPlayer, {
   Capability,
@@ -13,14 +19,6 @@ import TrackPlayer, {
   usePlaybackState,
   useProgress,
 } from "@weights-ai/react-native-track-player";
-import {
-  getPersistedLiveMode,
-  getStreamTitle,
-  getStreamUrl,
-  LIVE_MODE_KEY,
-  reconnectLiveStream,
-  type QuranMode,
-} from "@/services/liveStream";
 import React, {
   createContext,
   useCallback,
@@ -29,6 +27,7 @@ import React, {
   useRef,
   useState,
 } from "react";
+import { Alert } from "react-native";
 
 function isAlreadyInitializedError(error: unknown): boolean {
   return (
@@ -77,6 +76,12 @@ interface TrackPlayerContextType {
   setIsAutoplay: (value: boolean) => void;
   browseProgressPercent: number;
 
+  // Sleep timer
+  sleepTimerMinutes: number | null;
+  sleepTimerRemaining: number | null;
+  setSleepTimer: (minutes: number | null) => void;
+  cancelSleepTimer: () => void;
+
   // Legacy compatibility (will be removed)
   isPlaying: boolean;
   isBuffering: boolean;
@@ -106,6 +111,14 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
   const [currentTrack, setCurrentTrack] = useState<TilawatTrack | null>(null);
   const [isAutoplay, setIsAutoplay] = useState(false);
   const setupPromiseRef = useRef<Promise<void> | null>(null);
+
+  // Sleep timer state
+  const [sleepTimerMinutes, setSleepTimerMinutes] = useState<number | null>(null);
+  const [sleepTimerRemaining, setSleepTimerRemaining] = useState<number | null>(null);
+  const sleepTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const sleepTimerEndTimeRef = useRef<number | null>(null);
+  const sleepTimerPausedAtRef = useRef<number | null>(null);
 
   const playbackState = usePlaybackState();
 
@@ -244,24 +257,26 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       await reconnectLiveStream(currentMode);
+      resumeSleepTimer(); // Resume the sleep timer when live streaming plays
       console.log("[TrackPlayer] Live play called");
     } catch (err) {
       console.error("[TrackPlayer] Live play error:", err);
       setLiveError(err as Error);
     }
-  }, [currentTrack, currentMode, ensurePlayerReady]);
+  }, [currentTrack, currentMode, ensurePlayerReady, resumeSleepTimer]);
 
   const pauseLive = useCallback(async () => {
     if (currentTrack) return; // Only pause if live is active
 
     try {
       await TrackPlayer.pause();
+      pauseSleepTimer(); // Pause the sleep timer when live streaming pauses
       console.log("[TrackPlayer] Live pause called");
     } catch (err) {
       console.error("[TrackPlayer] Live pause error:", err);
       setLiveError(err as Error);
     }
-  }, [currentTrack]);
+  }, [currentTrack, pauseSleepTimer]);
 
   const stopLive = useCallback(async () => {
     if (currentTrack) return; // Only stop if live is active
@@ -378,6 +393,245 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     [currentMode, ensurePlayerReady],
   );
 
+  // Sleep timer functions
+  const setSleepTimer = useCallback((minutes: number | null) => {
+    // Clear existing timer
+    if (sleepTimerRef.current) {
+      clearTimeout(sleepTimerRef.current);
+      sleepTimerRef.current = null;
+    }
+    if (sleepTimerIntervalRef.current) {
+      clearInterval(sleepTimerIntervalRef.current);
+      sleepTimerIntervalRef.current = null;
+    }
+
+    if (minutes === null || minutes <= 0) {
+      setSleepTimerMinutes(null);
+      setSleepTimerRemaining(null);
+      sleepTimerEndTimeRef.current = null;
+      sleepTimerPausedAtRef.current = null;
+      return;
+    }
+
+    const endTime = Date.now() + minutes * 60 * 1000;
+    sleepTimerEndTimeRef.current = endTime;
+    sleepTimerPausedAtRef.current = null;
+    setSleepTimerMinutes(minutes);
+    setSleepTimerRemaining(minutes * 60);
+
+    // Update remaining time every second
+    sleepTimerIntervalRef.current = setInterval(() => {
+      if (sleepTimerPausedAtRef.current !== null) {
+        // Timer is paused, don't update
+        return;
+      }
+
+      const remaining = Math.max(0, Math.ceil((sleepTimerEndTimeRef.current! - Date.now()) / 1000));
+      setSleepTimerRemaining(remaining);
+
+      if (remaining <= 0) {
+        if (sleepTimerIntervalRef.current) {
+          clearInterval(sleepTimerIntervalRef.current);
+          sleepTimerIntervalRef.current = null;
+        }
+      }
+    }, 1000);
+
+    // Set timeout to pause playback and show alert
+    sleepTimerRef.current = setTimeout(async () => {
+      console.log("[TrackPlayer] Sleep timer expired, pausing playback");
+      try {
+        // Only pause if still in live mode (no on-demand track playing)
+        if (currentTrack !== null) {
+          console.log("[TrackPlayer] Sleep timer skipped - on-demand track is playing");
+          setSleepTimerMinutes(null);
+          setSleepTimerRemaining(null);
+          sleepTimerEndTimeRef.current = null;
+          sleepTimerPausedAtRef.current = null;
+          if (sleepTimerIntervalRef.current) {
+            clearInterval(sleepTimerIntervalRef.current);
+            sleepTimerIntervalRef.current = null;
+          }
+          return;
+        }
+
+        await TrackPlayer.pause();
+        setSleepTimerMinutes(null);
+        setSleepTimerRemaining(null);
+        sleepTimerEndTimeRef.current = null;
+        sleepTimerPausedAtRef.current = null;
+        if (sleepTimerIntervalRef.current) {
+          clearInterval(sleepTimerIntervalRef.current);
+          sleepTimerIntervalRef.current = null;
+        }
+
+        // Show alert to continue playback
+        Alert.alert(
+          "Sleep Timer Ended",
+          "Would you like to continue listening?",
+          [
+            {
+              text: "Stop",
+              style: "cancel",
+              onPress: () => {
+                console.log("[TrackPlayer] User chose to stop playback");
+              },
+            },
+            {
+              text: "Continue",
+              onPress: async () => {
+                console.log("[TrackPlayer] User chose to continue playback");
+                try {
+                  await TrackPlayer.play();
+                } catch (err) {
+                  console.error("[TrackPlayer] Error resuming playback:", err);
+                }
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } catch (err) {
+        console.error("[TrackPlayer] Sleep timer pause error:", err);
+      }
+    }, minutes * 60 * 1000);
+
+    console.log(`[TrackPlayer] Sleep timer set for ${minutes} minutes`);
+  }, [currentTrack]);
+
+  const pauseSleepTimer = useCallback(() => {
+    if (sleepTimerEndTimeRef.current === null || sleepTimerPausedAtRef.current !== null) {
+      return; // No timer active or already paused
+    }
+
+    // Store remaining time when paused
+    const remaining = Math.max(0, sleepTimerEndTimeRef.current - Date.now());
+    sleepTimerPausedAtRef.current = remaining;
+
+    // Clear the timeout
+    if (sleepTimerRef.current) {
+      clearTimeout(sleepTimerRef.current);
+      sleepTimerRef.current = null;
+    }
+
+    console.log(`[TrackPlayer] Sleep timer paused with ${Math.ceil(remaining / 1000)}s remaining`);
+  }, []);
+
+  const resumeSleepTimer = useCallback(() => {
+    if (sleepTimerPausedAtRef.current === null) {
+      return; // Timer not paused
+    }
+
+    const remainingMs = sleepTimerPausedAtRef.current;
+    const newEndTime = Date.now() + remainingMs;
+    sleepTimerEndTimeRef.current = newEndTime;
+    sleepTimerPausedAtRef.current = null;
+
+    // Set new timeout with remaining time
+    sleepTimerRef.current = setTimeout(async () => {
+      console.log("[TrackPlayer] Sleep timer expired, pausing playback");
+      try {
+        // Only pause if still in live mode
+        if (currentTrack !== null) {
+          console.log("[TrackPlayer] Sleep timer skipped - on-demand track is playing");
+          setSleepTimerMinutes(null);
+          setSleepTimerRemaining(null);
+          sleepTimerEndTimeRef.current = null;
+          sleepTimerPausedAtRef.current = null;
+          if (sleepTimerIntervalRef.current) {
+            clearInterval(sleepTimerIntervalRef.current);
+            sleepTimerIntervalRef.current = null;
+          }
+          return;
+        }
+
+        await TrackPlayer.pause();
+        setSleepTimerMinutes(null);
+        setSleepTimerRemaining(null);
+        sleepTimerEndTimeRef.current = null;
+        sleepTimerPausedAtRef.current = null;
+        if (sleepTimerIntervalRef.current) {
+          clearInterval(sleepTimerIntervalRef.current);
+          sleepTimerIntervalRef.current = null;
+        }
+
+        // Show alert to continue playback
+        Alert.alert(
+          "Sleep Timer Ended",
+          "Would you like to continue listening?",
+          [
+            {
+              text: "Stop",
+              style: "cancel",
+              onPress: () => {
+                console.log("[TrackPlayer] User chose to stop playback");
+              },
+            },
+            {
+              text: "Continue",
+              onPress: async () => {
+                console.log("[TrackPlayer] User chose to continue playback");
+                try {
+                  await TrackPlayer.play();
+                } catch (err) {
+                  console.error("[TrackPlayer] Error resuming playback:", err);
+                }
+              },
+            },
+          ],
+          { cancelable: false }
+        );
+      } catch (err) {
+        console.error("[TrackPlayer] Sleep timer pause error:", err);
+      }
+    }, remainingMs);
+
+    console.log(`[TrackPlayer] Sleep timer resumed with ${Math.ceil(remainingMs / 1000)}s remaining`);
+  }, [currentTrack]);
+
+  const cancelSleepTimer = useCallback(() => {
+    if (sleepTimerRef.current) {
+      clearTimeout(sleepTimerRef.current);
+      sleepTimerRef.current = null;
+    }
+    if (sleepTimerIntervalRef.current) {
+      clearInterval(sleepTimerIntervalRef.current);
+      sleepTimerIntervalRef.current = null;
+    }
+    setSleepTimerMinutes(null);
+    setSleepTimerRemaining(null);
+    sleepTimerEndTimeRef.current = null;
+    sleepTimerPausedAtRef.current = null;
+    console.log("[TrackPlayer] Sleep timer cancelled");
+  }, []);
+
+  // Cleanup sleep timer on unmount
+  useEffect(() => {
+    return () => {
+      if (sleepTimerRef.current) {
+        clearTimeout(sleepTimerRef.current);
+      }
+      if (sleepTimerIntervalRef.current) {
+        clearInterval(sleepTimerIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Monitor playback state changes to pause/resume sleep timer
+  useEffect(() => {
+    if (currentTrack !== null) {
+      // On-demand track is playing, don't manage sleep timer
+      return;
+    }
+
+    // Only manage sleep timer for live streaming
+    if (playbackState.state === State.Playing) {
+      resumeSleepTimer();
+    } else if (playbackState.state === State.Paused) {
+      pauseSleepTimer();
+    }
+  }, [playbackState.state, currentTrack, pauseSleepTimer, resumeSleepTimer]);
+
   // Play a specific track on demand (from audio list)
   const playTrack = useCallback(
     async (track: TilawatTrack, mode: QuranMode = currentMode) => {
@@ -385,6 +639,21 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
         setIsBrowseLoading(true);
         setBrowseError(null);
         await ensurePlayerReady();
+
+        // Cancel sleep timer when switching to on-demand playback
+        if (sleepTimerRef.current) {
+          clearTimeout(sleepTimerRef.current);
+          sleepTimerRef.current = null;
+        }
+        if (sleepTimerIntervalRef.current) {
+          clearInterval(sleepTimerIntervalRef.current);
+          sleepTimerIntervalRef.current = null;
+        }
+        setSleepTimerMinutes(null);
+        setSleepTimerRemaining(null);
+        sleepTimerEndTimeRef.current = null;
+        sleepTimerPausedAtRef.current = null;
+        console.log("[TrackPlayer] Sleep timer cancelled - switching to on-demand playback");
 
         // Keep context mode aligned with selected browse/download mode.
         setCurrentMode(mode);
@@ -498,6 +767,12 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setIsAutoplay,
     browseProgressPercent,
 
+    // Sleep timer
+    sleepTimerMinutes,
+    sleepTimerRemaining,
+    setSleepTimer,
+    cancelSleepTimer,
+
     // Legacy compatibility
     isPlaying,
     isBuffering,
@@ -524,3 +799,4 @@ export const useTrackPlayer = () => {
 };
 
 export type { QuranMode } from "@/services/liveStream";
+

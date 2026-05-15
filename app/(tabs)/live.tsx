@@ -24,6 +24,15 @@ const MODES: { key: QuranMode; label: string }[] = [
   { key: "tafseer", label: "Tafseer" },
 ];
 
+const SLEEP_TIMER_OPTIONS = [
+  { minutes: 5, label: "5 min" },
+  { minutes: 10, label: "10 min" },
+  { minutes: 15, label: "15 min" },
+  { minutes: 30, label: "30 min" },
+  { minutes: 45, label: "45 min" },
+  { minutes: 60, label: "1 hour" },
+];
+
 export default function Index() {
   const { showTabBar } = useTabBarVisibility();
   const {
@@ -36,8 +45,13 @@ export default function Index() {
     playLive,
     pauseLive,
     switchMode,
+    sleepTimerMinutes,
+    sleepTimerRemaining,
+    setSleepTimer,
+    cancelSleepTimer,
   } = useTrackPlayer();
   const [showModeMenu, setShowModeMenu] = useState(false);
+  const [showSleepTimerMenu, setShowSleepTimerMenu] = useState(false);
 
   // Always show tab bar on Live screen
   useFocusEffect(
@@ -67,6 +81,22 @@ export default function Index() {
     if (mode === currentMode) return;
     switchMode(mode);
     setShowModeMenu(false);
+  };
+
+  const handleSleepTimerSelect = (minutes: number) => {
+    setSleepTimer(minutes);
+    setShowSleepTimerMenu(false);
+  };
+
+  const handleCancelSleepTimer = () => {
+    cancelSleepTimer();
+    setShowSleepTimerMenu(false);
+  };
+
+  const formatTimeRemaining = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -135,6 +165,52 @@ export default function Index() {
         </TouchableWithoutFeedback>
       </Modal>
 
+      {/* Sleep Timer Modal */}
+      <Modal
+        visible={showSleepTimerMenu}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowSleepTimerMenu(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setShowSleepTimerMenu(false)}>
+          <View className="flex-1 bg-black/50">
+            <TouchableWithoutFeedback>
+              <View className="absolute top-[72px] left-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+                {sleepTimerMinutes && (
+                  <TouchableOpacity
+                    onPress={handleCancelSleepTimer}
+                    className="px-4 py-3 flex-row items-center justify-between border-b border-neutral-800 bg-red-500/10"
+                    style={{ minWidth: 140 }}
+                  >
+                    <Text className="font-medium text-red-400">Cancel Timer</Text>
+                    <MaterialIcons name="close" size={18} color="#f87171" />
+                  </TouchableOpacity>
+                )}
+                {SLEEP_TIMER_OPTIONS.map((option, index) => (
+                  <TouchableOpacity
+                    key={option.minutes}
+                    onPress={() => handleSleepTimerSelect(option.minutes)}
+                    className={`px-4 py-3 flex-row items-center justify-between ${index < SLEEP_TIMER_OPTIONS.length - 1 || sleepTimerMinutes ? "border-b border-neutral-800" : ""
+                      } ${sleepTimerMinutes === option.minutes ? "bg-primary/20" : ""}`}
+                    style={{ minWidth: 140 }}
+                  >
+                    <Text
+                      className={`font-medium ${sleepTimerMinutes === option.minutes ? "text-primary-light" : "text-white"
+                        }`}
+                    >
+                      {option.label}
+                    </Text>
+                    {sleepTimerMinutes === option.minutes && (
+                      <MaterialIcons name="check" size={18} color={colors.primary.light} />
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
+
       {/* Loading Overlay */}
       {isLiveLoading && (
         <View className="absolute inset-0 bg-[#080f0a]/95 z-50 items-center justify-center">
@@ -177,6 +253,25 @@ export default function Index() {
           </View>
 
           <View className="flex-row items-center gap-3">
+            {/* Sleep Timer Button */}
+            <TouchableOpacity
+              onPress={() => setShowSleepTimerMenu(!showSleepTimerMenu)}
+              className={`bg-neutral-800/80 px-3 py-2.5 rounded-xl flex-row items-center gap-2 ${sleepTimerMinutes ? "border border-primary/40" : ""
+                }`}
+              accessibilityLabel="Sleep timer"
+            >
+              <MaterialIcons
+                name="bedtime"
+                size={18}
+                color={sleepTimerMinutes ? colors.primary.light : "white"}
+              />
+              {sleepTimerRemaining !== null && (
+                <Text className="text-xs font-semibold text-primary-light">
+                  {formatTimeRemaining(sleepTimerRemaining)}
+                </Text>
+              )}
+            </TouchableOpacity>
+
             {/* Mode Selector Button */}
             <TouchableOpacity
               onPress={() => setShowModeMenu(!showModeMenu)}
