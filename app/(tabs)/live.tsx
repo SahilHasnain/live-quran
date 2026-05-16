@@ -175,7 +175,7 @@ export default function Index() {
         <TouchableWithoutFeedback onPress={() => setShowSleepTimerMenu(false)}>
           <View className="flex-1 bg-black/50">
             <TouchableWithoutFeedback>
-              <View className="absolute top-[72px] left-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+              <View className="absolute bottom-44 right-6 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                 {sleepTimerMinutes && (
                   <TouchableOpacity
                     onPress={handleCancelSleepTimer}
@@ -253,25 +253,6 @@ export default function Index() {
           </View>
 
           <View className="flex-row items-center gap-3">
-            {/* Sleep Timer Button */}
-            <TouchableOpacity
-              onPress={() => setShowSleepTimerMenu(!showSleepTimerMenu)}
-              className={`bg-neutral-800/80 px-3 py-2.5 rounded-xl flex-row items-center gap-2 ${sleepTimerMinutes ? "border border-primary/40" : ""
-                }`}
-              accessibilityLabel="Sleep timer"
-            >
-              <MaterialIcons
-                name="bedtime"
-                size={18}
-                color={sleepTimerMinutes ? colors.primary.light : "white"}
-              />
-              {sleepTimerRemaining !== null && (
-                <Text className="text-xs font-semibold text-primary-light">
-                  {formatTimeRemaining(sleepTimerRemaining)}
-                </Text>
-              )}
-            </TouchableOpacity>
-
             {/* Mode Selector Button */}
             <TouchableOpacity
               onPress={() => setShowModeMenu(!showModeMenu)}
@@ -331,12 +312,32 @@ export default function Index() {
         </View>
       </ScrollView>
 
-      {/* Fixed Play/Pause Button at Bottom Right */}
-      <View className="absolute pb-8 bottom-24 right-6">
+      {/* Fixed Play/Pause and Sleep Timer Buttons at Bottom Right */}
+      <View className="absolute pb-8 bottom-24 right-6 items-end gap-3">
+        {/* Sleep Timer Button */}
+        <TouchableOpacity
+          onPress={() => setShowSleepTimerMenu(!showSleepTimerMenu)}
+          className={`bg-neutral-800/90 backdrop-blur-sm px-4 py-3 rounded-full flex-row items-center gap-2 shadow-lg ${sleepTimerMinutes ? "border-2 border-primary/60" : ""
+            }`}
+          accessibilityLabel="Sleep timer"
+        >
+          <MaterialIcons
+            name="bedtime"
+            size={20}
+            color={sleepTimerMinutes ? colors.primary.light : "white"}
+          />
+          {sleepTimerRemaining !== null && (
+            <Text className="text-sm font-semibold text-primary-light min-w-[40px]">
+              {formatTimeRemaining(sleepTimerRemaining)}
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Play/Pause Button */}
         <TouchableOpacity
           onPress={isLivePlaying ? pauseLive : playLive}
           disabled={isLiveLoading}
-          className={`w-16 h-16 rounded-full items-center justify-center border border-primary/30 ${isLiveLoading ? "opacity-50" : ""}`}
+          className={`w-16 h-16 rounded-full items-center justify-center border border-primary/30 shadow-lg ${isLiveLoading ? "opacity-50" : ""}`}
         >
           {isLiveLoading ? (
             <ActivityIndicator size="small" color={colors.primary.light} />
