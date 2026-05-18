@@ -419,6 +419,12 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     setSleepTimerMinutes(minutes);
     setSleepTimerRemaining(minutes * 60);
 
+    // Auto-start playback if paused (only for live mode)
+    if (!isLivePlaying && currentTrack === null) {
+      console.log("[TrackPlayer] Sleep timer set while paused - auto-starting live playback");
+      playLive();
+    }
+
     // Update remaining time every second
     sleepTimerIntervalRef.current = setInterval(() => {
       if (sleepTimerPausedAtRef.current !== null) {
@@ -497,7 +503,7 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     }, minutes * 60 * 1000);
 
     console.log(`[TrackPlayer] Sleep timer set for ${minutes} minutes`);
-  }, [currentTrack]);
+  }, [currentTrack, isLivePlaying, playLive]);
 
   const pauseSleepTimer = useCallback(() => {
     if (sleepTimerEndTimeRef.current === null || sleepTimerPausedAtRef.current !== null) {
