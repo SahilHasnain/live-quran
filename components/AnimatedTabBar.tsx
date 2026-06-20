@@ -48,7 +48,10 @@ export function AnimatedTabBar({
         animatedStyle,
       ]}
     >
-      {state.routes.map((route, index) => {
+      {state.routes.filter((route) => {
+        const { options } = descriptors[route.key];
+        return options.tabBarIcon;
+      }).map((route, index) => {
         const { options } = descriptors[route.key];
         const label =
           options.tabBarLabel !== undefined

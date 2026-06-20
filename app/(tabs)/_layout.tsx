@@ -50,6 +50,21 @@ export default function TabLayout() {
               ),
             }}
           />
+          <Tabs.Screen
+            name="read"
+            options={{
+              title: "Read",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="auto-stories" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
+            name="reader/[lang]/[page]"
+            options={{
+              href: null,
+            }}
+          />
         </Tabs>
       </TabBarVisibilityProvider>
     </HeaderVisibilityProvider>

@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { href: "/", label: "Browse", icon: "menu-book" as const },
   { href: "/live", label: "Live", icon: "radio" as const },
   { href: "/history", label: "History", icon: "history" as const },
+  { href: "/read", label: "Read", icon: "auto-stories" as const },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = "live-quran:web-sidebar-collapsed";
