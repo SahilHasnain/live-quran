@@ -261,7 +261,7 @@ export default function ReadScreen() {
                           Para {juz.juz_number}
                         </Text>
                         <Text className="mt-0.5 text-[10px] text-neutral-500">
-                          {juz.verses_count} verses
+                          {juz.verses_count} aayah
                         </Text>
                       </TouchableOpacity>
                     ))}

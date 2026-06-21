@@ -6,10 +6,9 @@ import React, { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 const NAV_ITEMS = [
-  { href: "/", label: "Browse", icon: "menu-book" as const },
-  { href: "/live", label: "Live", icon: "radio" as const },
-  { href: "/history", label: "History", icon: "history" as const },
   { href: "/read", label: "Read", icon: "auto-stories" as const },
+  { href: "/listen", label: "Listen", icon: "menu-book" as const },
+  { href: "/live", label: "Live", icon: "radio" as const },
 ];
 
 const SIDEBAR_COLLAPSED_KEY = "live-quran:web-sidebar-collapsed";
@@ -83,8 +82,7 @@ export default function TabLayoutWeb() {
                 {NAV_ITEMS.map((item) => {
                   const isActive =
                     pathname === item.href ||
-                    (item.href === "/" && pathname === "/(tabs)") ||
-                    pathname === `/(tabs)${item.href === "/" ? "" : item.href}`;
+                    pathname === `/(tabs)${item.href}`;
 
                   return (
                     <Pressable

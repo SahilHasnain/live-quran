@@ -297,7 +297,7 @@ export default function ArabicParaReader() {
                     Para {j.juz_number}
                   </Text>
                   <Text className="mt-1 text-xs text-neutral-500">
-                    {j.verses_count} verses
+                    {j.verses_count} aayah
                   </Text>
                 </TouchableOpacity>
               )}
