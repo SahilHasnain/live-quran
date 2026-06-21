@@ -11,10 +11,85 @@ import {
 } from "@/lib/quran-manifest";
 import { useQuranBookmarks } from "@/hooks/useQuranBookmarks";
 import { useQuranProgress } from "@/hooks/useQuranProgress";
+import { useQuranArabic } from "@/hooks/useQuranArabic";
+import { useQuranArabicProgress } from "@/hooks/useQuranArabicProgress";
 import { MaterialIcons } from "@expo/vector-icons";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
+type ReadTab = "arabic" | "translations";
+
+function toArabicNumeral(n: number): string {
+  const digits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
+  return String(n)
+    .split("")
+    .map((d) => digits[parseInt(d, 10)])
+    .join("");
+}
+
+function SegmentedControl({
+  activeTab,
+  onTabChange,
+}: {
+  activeTab: ReadTab;
+  onTabChange: (tab: ReadTab) => void;
+}) {
+  return (
+    <View className="mb-8 flex-row rounded-xl bg-[#0a140e] p-1">
+      <TouchableOpacity
+        onPress={() => onTabChange("arabic")}
+        activeOpacity={0.7}
+        className={`flex-1 flex-row items-center justify-center gap-2 rounded-[10px] py-3 ${
+          activeTab === "arabic" ? "bg-emerald-500" : ""
+        }`}
+      >
+        <MaterialIcons
+          name="menu-book"
+          size={20}
+          color={activeTab === "arabic" ? "#03140d" : colors.text.muted}
+        />
+        <Text
+          className={`text-base font-semibold ${
+            activeTab === "arabic"
+              ? "text-[#03140d]"
+              : "text-neutral-400"
+          }`}
+        >
+          Arabic
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        onPress={() => onTabChange("translations")}
+        activeOpacity={0.7}
+        className={`flex-1 flex-row items-center justify-center gap-2 rounded-[10px] py-3 ${
+          activeTab === "translations" ? "bg-emerald-500" : ""
+        }`}
+      >
+        <MaterialIcons
+          name="auto-stories"
+          size={20}
+          color={activeTab === "translations" ? "#03140d" : colors.text.muted}
+        />
+        <Text
+          className={`text-base font-semibold ${
+            activeTab === "translations"
+              ? "text-[#03140d]"
+              : "text-neutral-400"
+          }`}
+        >
+          Translations
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
 
 export default function ReadWebScreen() {
   const router = useRouter();
@@ -25,6 +100,9 @@ export default function ReadWebScreen() {
   const [languages, setLanguages] = useState<QuranLanguageEntry[]>([
     { key: "roman-urdu", label: "Roman Urdu", nativeLabel: "رومن اردو", pages: 1207 },
   ]);
+  const [activeTab, setActiveTab] = useState<ReadTab>("arabic");
+  const { juzs, loading, error } = useQuranArabic();
+  const { lastPara } = useQuranArabicProgress();
 
   useEffect(() => {
     getLanguages().then(setLanguages);
@@ -62,126 +140,214 @@ export default function ReadWebScreen() {
           </Text>
         </View>
 
-        <TouchableOpacity
-          onPress={() =>
-            openReader(hasProgress ? lastPage : 1, lastLang)
-          }
-          activeOpacity={0.85}
-          className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a140e]"
-        >
-          <View className="p-8">
-            <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
-              <MaterialIcons
-                name="auto-stories"
-                size={32}
-                color={colors.primary.light}
-              />
-            </View>
-            <Text className="text-2xl font-bold text-white">Al-Quran</Text>
-            <Text className="mt-2 text-base text-neutral-400">
-              {currentLang.label} • Read in the name of your Lord
-            </Text>
+        <SegmentedControl
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+        />
 
-            {hasProgress && (
-              <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500/10 px-5 py-4">
-                <View className="h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15">
-                  <MaterialIcons
-                    name="play-arrow"
-                    size={24}
-                    color={colors.primary.light}
-                  />
+        {activeTab === "arabic" && (
+          <View>
+            {lastPara != null && (
+              <TouchableOpacity
+                onPress={() => router.push(`/reader/arabic/${lastPara}`)}
+                activeOpacity={0.85}
+                className="mb-6 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-emerald-500/10"
+              >
+                <View className="flex-row items-center gap-4 px-6 py-5">
+                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15">
+                    <MaterialIcons name="play-arrow" size={24} color="#34d399" />
+                  </View>
+                  <View className="flex-1">
+                    <Text className="text-base font-semibold text-white">
+                      Continue Reading
+                    </Text>
+                    <Text className="text-sm text-neutral-400">
+                      Para {lastPara}
+                    </Text>
+                  </View>
+                  <MaterialIcons name="chevron-right" size={24} color="#a3a3a3" />
                 </View>
-                <View>
-                  <Text className="text-base font-semibold text-white">
-                    Continue Reading
-                  </Text>
-                  <Text className="text-sm text-neutral-400">
-                    {surah.transliteration} • Page {lastPage}
-                  </Text>
-                </View>
-                <MaterialIcons
-                  name="chevron-right"
-                  size={24}
-                  color={colors.text.muted}
-                />
-              </View>
+              </TouchableOpacity>
             )}
 
-            {!hasProgress && (
-              <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500 px-5 py-4">
-                <MaterialIcons name="play-arrow" size={24} color="#03140d" />
-                <Text className="text-base font-bold text-[#03140d]">
-                  Start Reading ({currentLang.label})
+            {loading ? (
+              <View className="items-center py-32">
+                <ActivityIndicator size="large" color={colors.primary.light} />
+                <Text className="mt-4 text-sm text-neutral-400">
+                  Loading...
                 </Text>
               </View>
+            ) : error ? (
+              <View className="items-center py-32">
+                <MaterialIcons
+                  name="error-outline"
+                  size={40}
+                  color={colors.text.muted}
+                />
+                <Text className="mt-3 text-sm text-neutral-500">
+                  {error}
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row flex-wrap" style={{ gap: 10 }}>
+                {[...juzs]
+                  .sort((a, b) => a.juz_number - b.juz_number)
+                  .map((juz) => (
+                    <TouchableOpacity
+                      key={juz.juz_number}
+                      onPress={() =>
+                        router.push(`/reader/arabic/${juz.juz_number}`)
+                      }
+                      activeOpacity={0.7}
+                      className="items-center rounded-2xl border border-white/10 bg-[#0a140e] px-1 py-4"
+                      style={{ width: "31%" }}
+                    >
+                      <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                        <Text className="text-base font-bold text-emerald-400">
+                          {toArabicNumeral(juz.juz_number)}
+                        </Text>
+                      </View>
+                      <Text className="text-sm font-bold text-white">
+                        Para {juz.juz_number}
+                      </Text>
+                      <Text className="mt-0.5 text-[10px] text-neutral-500">
+                        {juz.verses_count} verses
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+              </View>
             )}
           </View>
-        </TouchableOpacity>
+        )}
 
-        <View className="mt-10">
-          <Text className="mb-5 text-xl font-bold text-white">Language</Text>
-          <View className="flex-row gap-4">
-            {languages.map((lang) => {
-              const isActive = lang.key === lastLang;
-              return (
-                <TouchableOpacity
-                  key={lang.key}
-                  onPress={() => openReader(1, lang.key)}
-                  activeOpacity={0.7}
-                  className={`flex-1 flex-col items-center rounded-[28px] border px-6 py-6 ${
-                    isActive
-                      ? "border-emerald-400/30 bg-emerald-500/15"
-                      : "border-white/10 bg-[#0a140e]"
-                  }`}
-                >
+        {activeTab === "translations" && (
+          <>
+            <TouchableOpacity
+              onPress={() =>
+                openReader(hasProgress ? lastPage : 1, lastLang)
+              }
+              activeOpacity={0.85}
+              className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a140e]"
+            >
+              <View className="p-8">
+                <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
                   <MaterialIcons
-                    name={isActive ? "check-circle" : "language"}
+                    name="auto-stories"
                     size={32}
-                    color={
-                      isActive ? colors.primary.light : colors.text.muted
-                    }
-                  />
-                  <Text
-                    className={`mt-3 text-lg font-semibold ${
-                      isActive ? "text-white" : "text-neutral-300"
-                    }`}
-                  >
-                    {lang.label}
-                  </Text>
-                  <Text className="mt-1 text-sm text-neutral-500">
-                    {lang.nativeLabel}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-
-        {bookmarks.length > 0 && (
-          <View className="mt-10">
-            <Text className="mb-5 text-xl font-bold text-white">
-              Bookmarks
-            </Text>
-            <View className="flex-row flex-wrap gap-3">
-              {bookmarks.map((bm) => (
-                <TouchableOpacity
-                  key={bm.id}
-                  onPress={() => openReader(bm.page, bm.lang)}
-                  activeOpacity={0.7}
-                  className="flex-row items-center gap-2 rounded-full border border-white/10 bg-[#0a140e] px-5 py-3"
-                >
-                  <MaterialIcons
-                    name="bookmark"
-                    size={18}
                     color={colors.primary.light}
                   />
-                  <Text className="text-sm text-white">
-                    {bm.label} • p.{bm.page}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+                </View>
+                <Text className="text-2xl font-bold text-white">Al-Quran</Text>
+                <Text className="mt-2 text-base text-neutral-400">
+                  {currentLang.label} • Read in the name of your Lord
+                </Text>
+
+                {hasProgress && (
+                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500/10 px-5 py-4">
+                    <View className="h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15">
+                      <MaterialIcons
+                        name="play-arrow"
+                        size={24}
+                        color={colors.primary.light}
+                      />
+                    </View>
+                    <View>
+                      <Text className="text-base font-semibold text-white">
+                        Continue Reading
+                      </Text>
+                      <Text className="text-sm text-neutral-400">
+                        {surah.transliteration} • Page {lastPage}
+                      </Text>
+                    </View>
+                    <MaterialIcons
+                      name="chevron-right"
+                      size={24}
+                      color={colors.text.muted}
+                    />
+                  </View>
+                )}
+
+                {!hasProgress && (
+                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500 px-5 py-4">
+                    <MaterialIcons name="play-arrow" size={24} color="#03140d" />
+                    <Text className="text-base font-bold text-[#03140d]">
+                      Start Reading ({currentLang.label})
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+
+            <View className="mt-10">
+              <Text className="mb-5 text-xl font-bold text-white">
+                Language
+              </Text>
+              <View className="flex-row gap-4">
+                {languages.map((lang) => {
+                  const isActive = lang.key === lastLang;
+                  return (
+                    <TouchableOpacity
+                      key={lang.key}
+                      onPress={() => openReader(1, lang.key)}
+                      activeOpacity={0.7}
+                      className={`flex-1 flex-col items-center rounded-[28px] border px-6 py-6 ${
+                        isActive
+                          ? "border-emerald-400/30 bg-emerald-500/15"
+                          : "border-white/10 bg-[#0a140e]"
+                      }`}
+                    >
+                      <MaterialIcons
+                        name={isActive ? "check-circle" : "language"}
+                        size={32}
+                        color={
+                          isActive
+                            ? colors.primary.light
+                            : colors.text.muted
+                        }
+                      />
+                      <Text
+                        className={`mt-3 text-lg font-semibold ${
+                          isActive ? "text-white" : "text-neutral-300"
+                        }`}
+                      >
+                        {lang.label}
+                      </Text>
+                      <Text className="mt-1 text-sm text-neutral-500">
+                        {lang.nativeLabel}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
             </View>
-          </View>
+
+            {bookmarks.length > 0 && (
+              <View className="mt-10">
+                <Text className="mb-5 text-xl font-bold text-white">
+                  Bookmarks
+                </Text>
+                <View className="flex-row flex-wrap gap-3">
+                  {bookmarks.map((bm) => (
+                    <TouchableOpacity
+                      key={bm.id}
+                      onPress={() => openReader(bm.page, bm.lang)}
+                      activeOpacity={0.7}
+                      className="flex-row items-center gap-2 rounded-full border border-white/10 bg-[#0a140e] px-5 py-3"
+                    >
+                      <MaterialIcons
+                        name="bookmark"
+                        size={18}
+                        color={colors.primary.light}
+                      />
+                      <Text className="text-sm text-white">
+                        {bm.label} • p.{bm.page}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            )}
+          </>
         )}
       </ScrollView>
 
