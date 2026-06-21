@@ -1,31 +1,19 @@
-import { useEffect, useState } from "react";
-import {
-  fetchChapters,
-  fetchJuzs,
-  type ApiChapter,
-  type JuzEntry,
-} from "@/data/quran-api";
+import juzsList from "@/data/juzs.json";
+
+interface JuzMeta {
+  juz_number: number;
+  verses_count: number;
+}
 
 export function useQuranArabic() {
-  const [chapters, setChapters] = useState<ApiChapter[]>([]);
-  const [juzs, setJuzs] = useState<JuzEntry[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([fetchChapters(), fetchJuzs()])
-      .then(([ch, jz]) => {
-        setChapters(ch);
-        setJuzs(jz);
-      })
-      .catch(() => setError("Failed to load data"))
-      .finally(() => setLoading(false));
-  }, []);
+  const juzs = (juzsList as JuzMeta[]).sort(
+    (a, b) => a.juz_number - b.juz_number,
+  );
 
   return {
-    chapters,
     juzs,
-    loading,
-    error,
+    loading: false,
+    error: null,
+    chapters: [],
   };
 }

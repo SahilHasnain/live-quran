@@ -2,16 +2,13 @@ import { QuranZoomableImage } from "@/components/QuranZoomableImage";
 import { colors } from "@/constants/theme";
 import { useTabBarVisibility } from "@/contexts/TabBarVisibilityContext";
 import {
-  QURAN_TITLE,
   clampQuranPage,
-  getSurahForPage,
   type QuranLang,
 } from "@/data/quran";
 import {
   getLanguageEntry,
   getCachedLanguageEntry,
 } from "@/lib/quran-manifest";
-import { useQuranBookmarks } from "@/hooks/useQuranBookmarks";
 import { useQuranProgress } from "@/hooks/useQuranProgress";
 import { useResolvedQuranPage } from "@/hooks/useResolvedQuranPage";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -108,15 +105,12 @@ export default function QuranReaderScreen() {
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const { saveProgress } = useQuranProgress();
-  const { isBookmarked, addBookmark, removeBookmark } = useQuranBookmarks();
 
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [isZoomed, setIsZoomed] = useState(false);
   const [isJumpVisible, setIsJumpVisible] = useState(false);
   const [pageInput, setPageInput] = useState(String(initialPage));
 
-  const currentSurah = getSurahForPage(currentPage);
-  const currentBookmarked = isBookmarked(currentPage, lang);
   const bookProgress = (currentPage / totalPages) * 100;
   const headerOffset = insets.top + 60;
 
@@ -177,14 +171,6 @@ export default function QuranReaderScreen() {
     },
   ).current;
 
-  const toggleBookmark = async () => {
-    if (currentBookmarked) {
-      await removeBookmark(currentPage, lang);
-    } else {
-      await addBookmark(currentPage, lang, currentSurah.transliteration);
-    }
-  };
-
   const submitJump = () => {
     moveToPage(Number(pageInput) || currentPage);
     setIsJumpVisible(false);
@@ -231,21 +217,6 @@ export default function QuranReaderScreen() {
             name="chevron-left"
             size={22}
             color="rgba(255,255,255,0.9)"
-          />
-        </Pressable>
-        <View style={styles.titleWrap}>
-          <Text style={styles.readerTitle}>{QURAN_TITLE}</Text>
-          <Text style={styles.readerMeta} numberOfLines={1}>
-            {language.label} • {currentSurah.transliteration} • Page {currentPage}
-          </Text>
-        </View>
-        <Pressable style={styles.iconButton} onPress={toggleBookmark}>
-          <MaterialIcons
-            name={currentBookmarked ? "bookmark" : "bookmark-outline"}
-            size={21}
-            color={
-              currentBookmarked ? colors.primary.light : "rgba(255,255,255,0.9)"
-            }
           />
         </Pressable>
       </View>

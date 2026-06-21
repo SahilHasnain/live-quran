@@ -1,24 +1,35 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useCallback, useEffect, useState } from "react";
 
-const ARABIC_LAST_PARA_KEY = "@quran_arabic_last_para";
+const PROGRESS_KEY = "@quran_arabic_progress";
+
+interface QuranProgress {
+  juzNumber: number;
+  verseId: number;
+}
 
 export function useQuranArabicProgress() {
-  const [lastPara, setLastPara] = useState<number | null>(null);
+  const [progress, setProgress] = useState<QuranProgress | null>(null);
 
   useEffect(() => {
-    AsyncStorage.getItem(ARABIC_LAST_PARA_KEY).then((saved) => {
+    AsyncStorage.getItem(PROGRESS_KEY).then((saved) => {
       if (saved) {
-        const num = parseInt(saved, 10);
-        if (!isNaN(num)) setLastPara(num);
+        try {
+          const parsed = JSON.parse(saved) as QuranProgress;
+          if (parsed.juzNumber && parsed.verseId) setProgress(parsed);
+        } catch {}
       }
     });
   }, []);
 
-  const saveLastPara = useCallback(async (para: number) => {
-    await AsyncStorage.setItem(ARABIC_LAST_PARA_KEY, String(para));
-    setLastPara(para);
+  const saveProgress = useCallback(async (juzNumber: number, verseId: number) => {
+    const data: QuranProgress = { juzNumber, verseId };
+    await AsyncStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+    setProgress(data);
   }, []);
 
-  return { lastPara, saveLastPara };
+  const lastPara = progress?.juzNumber ?? null;
+  const lastVerseId = progress?.verseId ?? null;
+
+  return { lastPara, lastVerseId, saveProgress };
 }

@@ -15,9 +15,18 @@ export default function TabLayout() {
           }}
         >
           <Tabs.Screen
+            name="read"
+            options={{
+              title: "Read",
+              tabBarIcon: ({ color, size }) => (
+                <MaterialIcons name="auto-stories" size={size} color={color} />
+              ),
+            }}
+          />
+          <Tabs.Screen
             name="index"
             options={{
-              title: "Browse",
+              title: "Listen",
               tabBarIcon: ({ color, size }) => (
                 <MaterialIcons name="menu-book" size={size} color={color} />
               ),
@@ -29,33 +38,6 @@ export default function TabLayout() {
               title: "Live",
               tabBarIcon: ({ color, size }) => (
                 <MaterialIcons name="radio" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="history"
-            options={{
-              title: "History",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="history" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="downloads"
-            options={{
-              title: "Downloads",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="download" size={size} color={color} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="read"
-            options={{
-              title: "Read",
-              tabBarIcon: ({ color, size }) => (
-                <MaterialIcons name="auto-stories" size={size} color={color} />
               ),
             }}
           />

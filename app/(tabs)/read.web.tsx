@@ -14,6 +14,7 @@ import { useQuranProgress } from "@/hooks/useQuranProgress";
 import { useQuranArabic } from "@/hooks/useQuranArabic";
 import { useQuranArabicProgress } from "@/hooks/useQuranArabicProgress";
 import { MaterialIcons } from "@expo/vector-icons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useState } from "react";
 import {
@@ -25,6 +26,7 @@ import {
 } from "react-native";
 
 type ReadTab = "arabic" | "translations";
+const ACTIVE_TAB_KEY = "@read_active_tab";
 
 function toArabicNumeral(n: number): string {
   const digits = ["٠", "١", "٢", "٣", "٤", "٥", "٦", "٧", "٨", "٩"];
@@ -102,11 +104,21 @@ export default function ReadWebScreen() {
   ]);
   const [activeTab, setActiveTab] = useState<ReadTab>("arabic");
   const { juzs, loading, error } = useQuranArabic();
-  const { lastPara } = useQuranArabicProgress();
+  const { lastPara, lastVerseId } = useQuranArabicProgress();
 
   useEffect(() => {
     getLanguages().then(setLanguages);
+
+    AsyncStorage.getItem(ACTIVE_TAB_KEY).then((saved) => {
+      if (saved === "arabic" || saved === "translations") {
+        setActiveTab(saved);
+      }
+    });
   }, []);
+
+  useEffect(() => {
+    AsyncStorage.setItem(ACTIVE_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   useFocusEffect(
     useCallback(() => {
@@ -149,7 +161,13 @@ export default function ReadWebScreen() {
           <View>
             {lastPara != null && (
               <TouchableOpacity
-                onPress={() => router.push(`/reader/arabic/${lastPara}`)}
+                onPress={() =>
+                    router.push(
+                      lastVerseId
+                        ? `/reader/arabic/${lastPara}?verse=${lastVerseId}`
+                        : `/reader/arabic/${lastPara}`,
+                    )
+                  }
                 activeOpacity={0.85}
                 className="mb-6 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-emerald-500/10"
               >
@@ -230,19 +248,20 @@ export default function ReadWebScreen() {
               className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a140e]"
             >
               <View className="p-8">
-                <View className="mb-5 h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
-                  <MaterialIcons
-                    name="auto-stories"
-                    size={32}
-                    color={colors.primary.light}
-                  />
-                </View>
-                <Text className="text-2xl font-bold text-white">Al-Quran</Text>
-                <Text className="mt-2 text-base text-neutral-400">
-                  {currentLang.label} • Read in the name of your Lord
-                </Text>
+                  <View className="flex-row items-center gap-4">
+                    <View className="h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
+                      <MaterialIcons
+                        name="auto-stories"
+                        size={32}
+                        color={colors.primary.light}
+                      />
+                    </View>
+                    <Text className="flex-1 text-2xl font-bold text-white">
+                      Kanzul Iman
+                    </Text>
+                  </View>
 
-                {hasProgress && (
+                  {hasProgress && (
                   <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500/10 px-5 py-4">
                     <View className="h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15">
                       <MaterialIcons
@@ -251,14 +270,9 @@ export default function ReadWebScreen() {
                         color={colors.primary.light}
                       />
                     </View>
-                    <View>
-                      <Text className="text-base font-semibold text-white">
-                        Continue Reading
-                      </Text>
-                      <Text className="text-sm text-neutral-400">
-                        {surah.transliteration} • Page {lastPage}
-                      </Text>
-                    </View>
+                    <Text className="flex-1 text-base font-semibold text-white">
+                      Continue Reading
+                    </Text>
                     <MaterialIcons
                       name="chevron-right"
                       size={24}
@@ -312,9 +326,7 @@ export default function ReadWebScreen() {
                       >
                         {lang.label}
                       </Text>
-                      <Text className="mt-1 text-sm text-neutral-500">
-                        {lang.nativeLabel}
-                      </Text>
+
                     </TouchableOpacity>
                   );
                 })}

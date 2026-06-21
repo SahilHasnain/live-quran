@@ -1,220 +1,159 @@
 import QuranAyahView from "@/components/QuranAyahView";
-import { colors } from "@/constants/theme";
-import {
-  type ApiVerseWithNumber,
-  type JuzEntry,
-  fetchJuzs,
-  fetchVerses,
-  getCachedJuzs,
-} from "@/data/quran-api";
+import bundledParas from "@/data/bundled-paras";
+import type { BundledVerse } from "@/data/bundled-paras";
+import juzsList from "@/data/juzs.json";
 import { useQuranArabicProgress } from "@/hooks/useQuranArabicProgress";
 import { MaterialIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   BackHandler,
   Dimensions,
   FlatList,
   Modal,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
+  type ViewToken,
 } from "react-native";
 
+interface JuzMeta {
+  juz_number: number;
+  verses_count: number;
+}
+
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
-function parseVerseRange(
-  range: string,
-): { start: number; end: number } | null {
-  const parts = range.split("-");
-  if (parts.length !== 2) return null;
-  const start = parseInt(parts[0], 10);
-  const end = parseInt(parts[1], 10);
-  if (isNaN(start) || isNaN(end)) return null;
-  return { start, end };
-}
-
-const JUZ_CACHE_PREFIX = "@juz_verses_";
-const juzVersesCache: Record<number, ApiVerseWithNumber[]> = {};
-
-async function saveJuzToDisk(
-  juzNumber: number,
-  verses: ApiVerseWithNumber[],
-) {
-  await AsyncStorage.setItem(
-    JUZ_CACHE_PREFIX + juzNumber,
-    JSON.stringify(verses),
-  );
-}
-
-async function loadJuzFromDisk(
-  juzNumber: number,
-): Promise<ApiVerseWithNumber[] | null> {
-  const raw = await AsyncStorage.getItem(JUZ_CACHE_PREFIX + juzNumber);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as ApiVerseWithNumber[];
-  } catch {
-    return null;
-  }
-}
-
-async function loadVersesForJuz(
-  juzNumber: number,
-  onChunk?: (verses: ApiVerseWithNumber[]) => void,
-): Promise<ApiVerseWithNumber[]> {
-  const cached = juzVersesCache[juzNumber];
-  if (cached) return cached;
-
-  const diskVerses = await loadJuzFromDisk(juzNumber);
-  if (diskVerses) {
-    juzVersesCache[juzNumber] = diskVerses;
-    onChunk?.(diskVerses);
-    return diskVerses;
-  }
-
-  const allJuzs = await fetchJuzs();
-  const found = allJuzs.find((j) => j.juz_number === juzNumber);
-  if (!found) return [];
-
-  const entries = Object.entries(found.verse_mapping);
-  const all: ApiVerseWithNumber[] = [];
-
-  await Promise.all(
-    entries.map(async ([chId, rangeStr]) => {
-      const chapterId = parseInt(chId, 10);
-      const range = parseVerseRange(rangeStr);
-      if (!range) return;
-      const chapterVerses = await fetchVerses(chapterId);
-      const filtered = chapterVerses.filter(
-        (v) =>
-          v.verse_number >= range.start && v.verse_number <= range.end,
-      );
-      all.push(...filtered);
-      onChunk?.(filtered);
-    }),
-  );
-
-  juzVersesCache[juzNumber] = all;
-  saveJuzToDisk(juzNumber, all);
-  return all;
-}
+const sortedJuzs = (juzsList as JuzMeta[]).sort(
+  (a, b) => a.juz_number - b.juz_number,
+);
 
 function ParaPage({
   juzNumber,
-  onLoaded,
+  initialVerseId,
+  onVerseChange,
 }: {
   juzNumber: number;
-  onLoaded?: (juz: number) => void;
+  initialVerseId?: number;
+  onVerseChange?: (verseId: number) => void;
 }) {
-  const [verses, setVerses] = useState<ApiVerseWithNumber[]>([]);
-  const [loading, setLoading] = useState(true);
-  const notified = useRef(false);
+  const verses = bundledParas[juzNumber] ?? [];
+
+  const flatListRef = useRef<FlatList<BundledVerse>>(null);
+  const onVerseChangeRef = useRef(onVerseChange);
+  onVerseChangeRef.current = onVerseChange;
+
+  const viewabilityConfig = useRef({
+    viewAreaCoveragePercentThreshold: 50,
+  });
+
+  const viewabilityPairs = useRef([
+    {
+      viewabilityConfig: viewabilityConfig.current,
+      onViewableItemsChanged: ({
+        viewableItems,
+      }: {
+        viewableItems: ViewToken<BundledVerse>[];
+      }) => {
+        if (viewableItems.length > 0) {
+          onVerseChangeRef.current?.(viewableItems[0].item.id);
+        }
+      },
+    },
+  ]);
 
   useEffect(() => {
-    let cancelled = false;
-    notified.current = false;
-    setVerses([]);
-    setLoading(true);
-    loadVersesForJuz(juzNumber, (chunk) => {
-      if (!cancelled) {
-        setVerses((prev) => [...prev, ...chunk]);
+    if (initialVerseId && verses.length > 0) {
+      const idx = verses.findIndex((v) => v.id === initialVerseId);
+      if (idx > 0) {
+        setTimeout(() => {
+          flatListRef.current?.scrollToIndex({
+            index: idx,
+            animated: false,
+            viewPosition: 0,
+          });
+        }, 50);
       }
-    }).then((all) => {
-      if (!cancelled) {
-        setVerses(all);
-        setLoading(false);
-      }
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [juzNumber]);
-
-  useEffect(() => {
-    if (!loading && verses.length > 0 && !notified.current) {
-      notified.current = true;
-      onLoaded?.(juzNumber);
     }
-  }, [loading, verses.length, juzNumber, onLoaded]);
+  }, [initialVerseId, verses]);
 
-  if (loading) {
-    return (
-      <View
-        className="flex-1 items-center justify-center"
-        style={{ width: SCREEN_WIDTH }}
-      >
-        <ActivityIndicator size="large" color={colors.primary.light} />
-      </View>
-    );
-  }
+  const onScrollToIndexFailed = useCallback(
+    (info: { index: number; averageItemLength: number }) => {
+      const offset = info.averageItemLength * info.index;
+      flatListRef.current?.scrollToOffset({ offset, animated: false });
+      setTimeout(() => {
+        flatListRef.current?.scrollToIndex({
+          index: info.index,
+          animated: false,
+          viewPosition: 0,
+        });
+      }, 100);
+    },
+    [],
+  );
 
   return (
-    <ScrollView
+    <FlatList
+      ref={flatListRef}
       style={{ width: SCREEN_WIDTH }}
       contentContainerClassName="px-4 pb-32"
       showsVerticalScrollIndicator={false}
-    >
-      {verses.map((v) => (
+      data={verses}
+      keyExtractor={(v) => String(v.id)}
+      renderItem={({ item: v }) => (
         <QuranAyahView
-          key={v.id}
           verseNumber={v.verse_number}
           textUthmani={v.text_uthmani}
         />
-      ))}
-    </ScrollView>
+      )}
+      onScrollToIndexFailed={onScrollToIndexFailed}
+      viewabilityConfigCallbackPairs={viewabilityPairs.current}
+      removeClippedSubviews
+      maxToRenderPerBatch={15}
+      windowSize={7}
+      initialNumToRender={10}
+    />
   );
 }
 
 export default function ArabicParaReader() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, verse } = useLocalSearchParams<{ id: string; verse?: string }>();
   const router = useRouter();
   const initialJuz = parseInt(id ?? "1", 10);
-  const { saveLastPara } = useQuranArabicProgress();
-
-  const [sortedJuzs, setSortedJuzs] = useState<JuzEntry[]>(() => {
-    const cached = getCachedJuzs();
-    return cached
-      ? [...cached].sort((a, b) => a.juz_number - b.juz_number)
-      : [];
-  });
+  const initialVerseId = verse ? parseInt(verse, 10) : undefined;
+  const { saveProgress } = useQuranArabicProgress();
 
   const initialIndex = sortedJuzs.findIndex(
     (j) => j.juz_number === initialJuz,
   );
 
-  const flatListRef = useRef<FlatList<JuzEntry>>(null);
+  const flatListRef = useRef<FlatList<JuzMeta>>(null);
   const [currentIndex, setCurrentIndex] = useState(
     initialIndex >= 0 ? initialIndex : 0,
   );
 
-  useEffect(() => {
-    if (sortedJuzs.length === 0) {
-      fetchJuzs().then((all) => {
-        const sorted = [...all].sort((a, b) => a.juz_number - b.juz_number);
-        setSortedJuzs(sorted);
-      });
-    }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (sortedJuzs.length > 0) {
-      const idx = sortedJuzs.findIndex((j) => j.juz_number === initialJuz);
-      if (idx >= 0 && idx !== currentIndex) {
-        setCurrentIndex(idx);
-        setTimeout(() => {
-          flatListRef.current?.scrollToIndex({ index: idx, animated: false });
-        }, 100);
-      }
-    }
-  }, [sortedJuzs]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const currentJuz = sortedJuzs[currentIndex] ?? null;
 
   const [pickerVisible, setPickerVisible] = useState(false);
+
+  const currentVerseIdRef = useRef<number | null>(null);
+  const [currentVerseId, setCurrentVerseId] = useState<number | null>(null);
+
+  const onVerseChange = useCallback(
+    (verseId: number) => {
+      currentVerseIdRef.current = verseId;
+      setCurrentVerseId(verseId);
+    },
+    [],
+  );
+
+  const progress =
+    currentJuz && currentVerseId != null
+      ? ((() => {
+          const verses = bundledParas[currentJuz.juz_number] ?? [];
+          const idx = verses.findIndex((v) => v.id === currentVerseId);
+          return idx >= 0 ? ((idx + 1) / verses.length) * 100 : 0;
+        })())
+      : 0;
 
   const onMomentumEnd = useCallback(
     (e: any) => {
@@ -223,9 +162,13 @@ export default function ArabicParaReader() {
       );
       setCurrentIndex(index);
       const juz = sortedJuzs[index];
-      if (juz) saveLastPara(juz.juz_number);
+      if (juz) {
+        const verses = bundledParas[juz.juz_number];
+        const firstVerse = verses?.[0];
+        saveProgress(juz.juz_number, firstVerse?.id ?? 0);
+      }
     },
-    [sortedJuzs, saveLastPara],
+    [sortedJuzs, saveProgress],
   );
 
   const navigateToJuz = useCallback(
@@ -235,41 +178,38 @@ export default function ArabicParaReader() {
       if (idx >= 0) {
         flatListRef.current?.scrollToIndex({ index: idx, animated: false });
         setCurrentIndex(idx);
-        saveLastPara(n);
+        const verses = bundledParas[n];
+        const firstVerse = verses?.[0];
+        saveProgress(n, firstVerse?.id ?? 0);
       }
     },
-    [sortedJuzs, saveLastPara],
+    [sortedJuzs, saveProgress],
   );
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      const juz = sortedJuzs[currentIndex];
+      if (juz) {
+        const verseId =
+          currentVerseIdRef.current ?? bundledParas[juz.juz_number]?.[0]?.id ?? 0;
+        saveProgress(juz.juz_number, verseId);
+      }
       router.back();
       return true;
     });
     return () => sub.remove();
-  }, [router]);
+  }, [router, sortedJuzs, currentIndex, saveProgress]);
 
   return (
     <View className="flex-1 bg-[#080f0a]">
       <View className="px-4 pb-2 pt-14">
         <View className="flex-row items-center gap-3">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            className="h-10 w-10 items-center justify-center rounded-full bg-white/10"
-          >
-            <MaterialIcons name="arrow-back" size={22} color="white" />
-          </TouchableOpacity>
           <View className="flex-1">
             <Text className="text-lg font-bold text-white">
               {currentJuz
                 ? `Para ${currentJuz.juz_number}`
                 : "Loading..."}
             </Text>
-            {currentJuz && (
-              <Text className="text-xs text-neutral-500">
-                {currentJuz.verses_count} verses
-              </Text>
-            )}
           </View>
           <TouchableOpacity
             onPress={() => setPickerVisible(true)}
@@ -278,39 +218,39 @@ export default function ArabicParaReader() {
             <MaterialIcons name="list" size={20} color="#34d399" />
           </TouchableOpacity>
         </View>
+        <View className="mt-2 h-[3px] overflow-hidden rounded-full bg-white/10">
+          <View
+            className="h-full rounded-full bg-emerald-400"
+            style={{ width: `${progress}%` }}
+          />
+        </View>
       </View>
 
-      {sortedJuzs.length === 0 ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.primary.light} />
-        </View>
-      ) : (
-        <FlatList
-          ref={flatListRef}
-          data={sortedJuzs}
-          keyExtractor={(item) => String(item.juz_number)}
-          horizontal
-          pagingEnabled
-          showsHorizontalScrollIndicator={false}
-          initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
-          getItemLayout={(_, index) => ({
-            length: SCREEN_WIDTH,
-            offset: SCREEN_WIDTH * index,
-            index,
-          })}
-          onMomentumScrollEnd={onMomentumEnd}
-          renderItem={({ item }) => (
-            <ParaPage
-              juzNumber={item.juz_number}
-              onLoaded={(juz) => {
-                if (juz < 30) loadVersesForJuz(juz + 1);
-              }}
-            />
-          )}
-        />
-      )}
+      <FlatList
+        ref={flatListRef}
+        data={sortedJuzs}
+        keyExtractor={(item) => String(item.juz_number)}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        initialScrollIndex={initialIndex >= 0 ? initialIndex : 0}
+        getItemLayout={(_, index) => ({
+          length: SCREEN_WIDTH,
+          offset: SCREEN_WIDTH * index,
+          index,
+        })}
+        onMomentumScrollEnd={onMomentumEnd}
+        renderItem={({ item }) => (
+          <ParaPage
+            juzNumber={item.juz_number}
+            initialVerseId={
+              item.juz_number === initialJuz ? initialVerseId : undefined
+            }
+            onVerseChange={onVerseChange}
+          />
+        )}
+      />
 
-      {/* Para picker bottom sheet */}
       <Modal
         visible={pickerVisible}
         animationType="slide"

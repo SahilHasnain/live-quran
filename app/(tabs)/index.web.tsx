@@ -4,16 +4,20 @@ import { useTrackPlayer } from "@/contexts/TrackPlayerContext";
 import {
   fetchAudios,
   formatDuration,
+  getAudioViewUrl,
   getThumbnailUrl,
   type AudioMode,
   type QuranAudio,
 } from "@/services/appwrite";
+import { downloadManager } from "@/services/downloadManager";
+import { historyManager, type HistoryEntry } from "@/services/historyManager";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Image } from "expo-image";
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  FlatList,
   StyleSheet,
   ScrollView,
   Text,
@@ -73,6 +77,19 @@ function getFeaturedAudios(items: QuranAudio[], mode: AudioMode | null): QuranAu
   return selected;
 }
 
+function formatPlayedAt(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  if (hours < 48) return "Yesterday";
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
+}
+
 const MODES: { key: AudioMode; label: string; blurb: string }[] = [
   {
     key: "tilawat",
@@ -112,6 +129,9 @@ export default function BrowseWebScreen() {
   const [activeSearch, setActiveSearch] = useState("");
   const [isShuffled, setIsShuffled] = useState(false);
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>({});
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [filter, setFilter] = useState<"all" | "downloaded">("all");
+  const [downloads, setDownloads] = useState<Set<string>>(new Set());
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const autoplayRef = useRef({
     isAutoplay,
@@ -143,13 +163,22 @@ export default function BrowseWebScreen() {
         youtubeId: next.youtubeId,
         uploader: next.uploader,
       },
-      mode,
+      mode!,
     );
   }, [isBrowseEnded]);
 
   useEffect(() => {
     AsyncStorage.getItem(MODE_KEY).then((saved) => {
       setMode((saved as AudioMode) || "tilawat");
+    });
+
+    downloadManager.initialize().then(() => {
+      const allDownloads = downloadManager.getAllDownloads();
+      setDownloads(new Set(allDownloads.map((d) => d.id)));
+    });
+
+    historyManager.initialize().then(() => {
+      setHistory(historyManager.getAllHistory());
     });
   }, []);
 
@@ -266,11 +295,15 @@ export default function BrowseWebScreen() {
 
   if (mode === null) return null;
 
+  const displayAudios = filter === "downloaded"
+    ? audios.filter((a) => downloads.has(a.$id))
+    : audios;
+
   return (
     <View className="flex-1 bg-transparent">
       <ScrollView
         className="flex-1"
-        contentContainerStyle={{ padding: 40, paddingBottom: currentTrack ? 140 : 48 }}
+        contentContainerStyle={{ padding: 40, paddingTop: 45, paddingBottom: currentTrack ? 140 : 48 }}
         showsVerticalScrollIndicator={false}
       >
         <View className="mb-8 flex-row items-start justify-between">
@@ -335,6 +368,94 @@ export default function BrowseWebScreen() {
           })}
         </View>
 
+        {/* Filter chips */}
+        <View className="mb-6 flex-row gap-3">
+          <TouchableOpacity
+            onPress={() => setFilter("all")}
+            className={`rounded-full px-5 py-2 ${
+              filter === "all" ? "bg-emerald-500/20" : "bg-white/10"
+            }`}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                filter === "all" ? "text-emerald-400" : "text-white/70"
+              }`}
+            >
+              All
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setFilter("downloaded")}
+            className={`rounded-full px-5 py-2 ${
+              filter === "downloaded" ? "bg-emerald-500/20" : "bg-white/10"
+            }`}
+          >
+            <Text
+              className={`text-sm font-medium ${
+                filter === "downloaded" ? "text-emerald-400" : "text-white/70"
+              }`}
+            >
+              Downloaded
+            </Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Recently Played */}
+        {history.length > 0 && (
+          <View className="mb-10">
+            <Text className="mb-4 text-sm font-semibold text-white/60 uppercase tracking-wider">
+              Recently Played
+            </Text>
+            <View className="flex-row gap-4">
+              {history.slice(0, 6).map((h) => {
+                const isCurrent = currentTrack?.id === h.id && isBrowsePlaying;
+                const thumb = h.thumbnail || "https://img.youtube.com/vi/default/mqdefault.jpg";
+                return (
+                  <TouchableOpacity
+                    key={`${h.mode}-${h.id}`}
+                    onPress={() => {
+                      playTrack(
+                        {
+                          id: h.id,
+                          title: h.title,
+                          duration: h.duration,
+                          fileId: h.fileId,
+                          thumbnail: h.thumbnail ?? null,
+                          youtubeId: "",
+                          uploader: null,
+                        },
+                        h.mode as AudioMode,
+                      );
+                    }}
+                    className="w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#0a140e]"
+                  >
+                    <View style={{ aspectRatio: 16 / 9 }}>
+                      <Image
+                        source={{ uri: thumb }}
+                        style={StyleSheet.absoluteFillObject}
+                        contentFit="cover"
+                      />
+                      {isCurrent && (
+                        <View className="absolute inset-0 items-center justify-center bg-black/40">
+                          <MaterialIcons name="equalizer" size={24} color={colors.primary.light} />
+                        </View>
+                      )}
+                    </View>
+                    <View className="p-3">
+                      <Text className="text-sm font-medium text-white" numberOfLines={1}>
+                        {h.title}
+                      </Text>
+                      <Text className="mt-1 text-xs text-neutral-500">
+                        {formatPlayedAt(h.playedAt)}
+                      </Text>
+                    </View>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
         {loading ? (
           <View className="items-center justify-center py-24">
             <ActivityIndicator size="large" color={colors.primary.light} />
@@ -393,7 +514,7 @@ export default function BrowseWebScreen() {
             <Text className="mb-5 text-sm font-semibold text-white">All</Text>
 
             <View className="flex-row flex-wrap justify-between">
-              {audios.map((item) => {
+              {displayAudios.map((item) => {
                 const thumbnailUri = item.thumbnail || getThumbnailUrl(item.youtubeId);
                 const isCurrentlyPlaying =
                   currentTrack?.id === item.$id && isBrowsePlaying;
@@ -449,7 +570,7 @@ export default function BrowseWebScreen() {
               })}
             </View>
 
-            {audios.length < total && (
+            {displayAudios.length < total && (
               <TouchableOpacity
                 onPress={() => void loadMore()}
                 className="mt-2 self-center rounded-full border border-white/10 bg-white/5 px-6 py-3"

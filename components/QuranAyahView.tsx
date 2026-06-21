@@ -1,4 +1,3 @@
-import { colors } from "@/constants/theme";
 import React from "react";
 import { Text, View } from "react-native";
 
@@ -16,7 +15,7 @@ function toArabicDigits(n: number): string {
     .join("");
 }
 
-export default function QuranAyahView({
+export default React.memo(function QuranAyahView({
   verseNumber,
   textUthmani,
   isBismillah,
@@ -25,7 +24,7 @@ export default function QuranAyahView({
     return (
       <View className="items-center py-6">
         <Text
-          style={{ fontFamily: "System" }}
+          style={{ fontFamily: "KFGQPC_Uthmanic_Hafs" }}
           className="text-3xl leading-[60px] text-white/80"
         >
           {textUthmani}
@@ -42,11 +41,11 @@ export default function QuranAyahView({
         </Text>
       </View>
       <Text
-        style={{ fontFamily: "System", lineHeight: 48 }}
+        style={{ fontFamily: "KFGQPC_Uthmanic_Hafs", lineHeight: 48 }}
         className="flex-1 text-right text-2xl leading-[48px] text-white"
       >
         {textUthmani}
       </Text>
     </View>
   );
-}
+});

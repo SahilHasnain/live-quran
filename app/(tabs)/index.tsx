@@ -12,6 +12,7 @@ import {
   type QuranAudio,
 } from "@/services/appwrite";
 import { downloadManager } from "@/services/downloadManager";
+import { historyManager, type HistoryEntry } from "@/services/historyManager";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Haptics from "expo-haptics";
@@ -21,6 +22,7 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  FlatList,
   Modal,
   Platform,
   Pressable,
@@ -50,6 +52,19 @@ function shuffleArray<T>(items: T[]): T[] {
     [next[i], next[j]] = [next[j], next[i]];
   }
   return next;
+}
+
+function formatPlayedAt(timestamp: number): string {
+  const diff = Date.now() - timestamp;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  if (hours < 48) return "Yesterday";
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(timestamp).toLocaleDateString();
 }
 
 export default function AudiosScreen() {
@@ -86,6 +101,8 @@ export default function AudiosScreen() {
   const [audioProgress, setAudioProgress] = useState<Record<string, number>>(
     {},
   );
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [filter, setFilter] = useState<"all" | "downloaded">("all");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Keep a stable ref of values needed in autoplay effect to avoid stale closures
@@ -121,7 +138,7 @@ export default function AudiosScreen() {
         youtubeId: next.youtubeId,
         uploader: next.uploader,
       },
-      mode,
+      mode!,
     );
   }, [isBrowseEnded]);
 
@@ -146,6 +163,10 @@ export default function AudiosScreen() {
           AsyncStorage.setItem(TOOLTIP_KEY, "true");
         }, 5000);
       }
+    });
+
+    historyManager.initialize().then(() => {
+      setHistory(historyManager.getAllHistory());
     });
   }, []);
 
@@ -217,8 +238,15 @@ export default function AudiosScreen() {
   useFocusEffect(
     useCallback(() => {
       showHeader();
+      historyManager.initialize().then(() => {
+        setHistory(historyManager.getAllHistory());
+      });
     }, [showHeader]),
   );
+
+  const displayAudios = filter === "downloaded"
+    ? audios.filter((a) => downloads.has(a.$id))
+    : audios;
 
   const switchMode = (newMode: AudioMode) => {
     if (newMode === mode) return;
@@ -255,7 +283,7 @@ export default function AudiosScreen() {
 
   const loadMore = () => {
     if (!loadingMore && audios.length < total) {
-      loadAudios(audios.length, activeSearch, mode);
+      loadAudios(audios.length, activeSearch, mode!);
     }
   };
 
@@ -277,7 +305,7 @@ export default function AudiosScreen() {
           youtubeId: item.youtubeId,
           uploader: item.uploader,
         },
-        mode,
+        mode!,
       );
     }
   };
@@ -286,14 +314,14 @@ export default function AudiosScreen() {
     try {
       setDownloading((prev) => new Set(prev).add(item.$id));
 
-      const audioUrl = getAudioViewUrl(item.fileId, mode);
+      const audioUrl = getAudioViewUrl(item.fileId, mode!);
 
       const result = await downloadManager.downloadAudio(
         item.$id,
         item.title,
         item.duration,
         audioUrl,
-        mode,
+        mode!,
         item.thumbnail || getThumbnailUrl(item.youtubeId),
       );
 
@@ -660,13 +688,106 @@ export default function AudiosScreen() {
         </View>
       ) : (
         <Animated.FlatList
-          data={audios}
+          data={displayAudios}
           keyExtractor={(item) => item.$id}
           renderItem={renderItem}
           onScroll={handleScroll}
           scrollEventThrottle={16}
           onEndReached={loadMore}
           onEndReachedThreshold={0.5}
+          ListHeaderComponent={
+            <View>
+              {/* Filter chips */}
+              <View className="flex-row gap-2 px-4 pb-2">
+                <TouchableOpacity
+                  onPress={() => setFilter("all")}
+                  className={`rounded-full px-4 py-1.5 ${
+                    filter === "all" ? "bg-emerald-500/20" : "bg-white/10"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-medium ${
+                      filter === "all" ? "text-emerald-400" : "text-white/70"
+                    }`}
+                  >
+                    All
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setFilter("downloaded")}
+                  className={`rounded-full px-4 py-1.5 ${
+                    filter === "downloaded" ? "bg-emerald-500/20" : "bg-white/10"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-medium ${
+                      filter === "downloaded" ? "text-emerald-400" : "text-white/70"
+                    }`}
+                  >
+                    Downloaded
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Recently Played */}
+              {history.length > 0 && (
+                <View className="mb-4">
+                  <Text className="px-4 pb-2 text-sm font-semibold text-white/60 uppercase tracking-wider">
+                    Recently Played
+                  </Text>
+                  <FlatList
+                    data={history.slice(0, 8)}
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    keyExtractor={(item) => `${item.mode}-${item.id}`}
+                    contentContainerClassName="px-4 gap-3"
+                    renderItem={({ item: h }) => {
+                      const isCurrent = currentTrack?.id === h.id && isBrowsePlaying;
+                      const thumb = h.thumbnail || "https://img.youtube.com/vi/default/mqdefault.jpg";
+                      return (
+                        <TouchableOpacity
+                          onPress={() => {
+                            playTrack(
+                              {
+                                id: h.id,
+                                title: h.title,
+                                duration: h.duration,
+                                fileId: h.fileId,
+                                thumbnail: h.thumbnail ?? null,
+                                youtubeId: "",
+                                uploader: null,
+                              },
+                              h.mode as AudioMode,
+                            );
+                          }}
+                          className="w-32"
+                        >
+                          <View>
+                            <Image
+                              source={{ uri: thumb }}
+                              style={{ width: 128, height: 72, borderRadius: 8 }}
+                              contentFit="cover"
+                            />
+                            {isCurrent && (
+                              <View className="absolute inset-0 items-center justify-center bg-black/40 rounded-lg">
+                                <MaterialIcons name="equalizer" size={22} color={colors.primary.light} />
+                              </View>
+                            )}
+                          </View>
+                          <Text className="mt-1.5 text-xs font-medium text-white" numberOfLines={1}>
+                            {h.title}
+                          </Text>
+                          <Text className="text-[10px] text-neutral-500">
+                            {formatPlayedAt(h.playedAt)}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    }}
+                  />
+                </View>
+              )}
+            </View>
+          }
           ListFooterComponent={renderFooter}
           ListEmptyComponent={
             <View className="items-center justify-center py-16">
@@ -675,7 +796,7 @@ export default function AudiosScreen() {
             </View>
           }
           contentContainerStyle={{
-            paddingTop: 96,
+            paddingTop: 101,
             paddingBottom: miniPlayerPadding,
           }}
           showsVerticalScrollIndicator={false}
