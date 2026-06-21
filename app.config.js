@@ -38,7 +38,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: getPackageName(),
-      versionCode: 14,
+      versionCode: 15,
     },
     web: {
       bundler: "metro",
