@@ -8,9 +8,9 @@ const getPackageName = () => {
 };
 
 const getAppName = () => {
-  if (IS_DEV) return "Live Quran (Dev)";
-  if (IS_PREVIEW) return "Live Quran (Preview)";
-  return "Live Quran";
+  if (IS_DEV) return "Quran e Kareem (Dev)";
+  if (IS_PREVIEW) return "Quran e Kareem (Preview)";
+  return "Quran e Kareem";
 };
 
 export default {
@@ -38,7 +38,7 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: getPackageName(),
-      versionCode: 15,
+      versionCode: 16,
     },
     web: {
       bundler: "metro",

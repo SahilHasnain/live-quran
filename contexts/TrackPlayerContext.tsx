@@ -9,6 +9,7 @@ import { historyManager } from "@/services/historyManager";
 import {
   getPersistedLiveMode,
   LIVE_MODE_KEY,
+  loadLiveStreamTrack,
   reconnectLiveStream,
   type QuranMode
 } from "@/services/liveStream";
@@ -231,8 +232,8 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
     const setup = async () => {
       try {
         await ensurePlayerReady();
-        // Add the initial stream
-        await reconnectLiveStream(currentMode);
+        // Add the initial stream without auto-playing
+        await loadLiveStreamTrack(currentMode);
       } catch (err) {
         console.error("[TrackPlayer] Setup error:", err);
         setLiveError(err as Error);

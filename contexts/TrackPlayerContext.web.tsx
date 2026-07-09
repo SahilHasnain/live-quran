@@ -335,11 +335,6 @@ export const TrackPlayerProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (!isLiveActive) return;
 
-      const audio = audioRef.current;
-      const shouldResume = !!audio && !audio.paused;
-
-      if (!shouldResume) return;
-
       try {
         setIsLiveLoading(true);
         setLiveError(null);
