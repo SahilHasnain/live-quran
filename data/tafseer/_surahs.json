@@ -1,0 +1,914 @@
+[
+  {
+    "id": 1,
+    "name": "اَلْفَاتِحَة",
+    "transliteration": "Al Fatihah",
+    "english_name": "Al Fatiha",
+    "total_verses": 7,
+    "para_id": 1
+  },
+  {
+    "id": 2,
+    "name": "اَلْبَقَرَة",
+    "transliteration": "Al Baqarah",
+    "english_name": "Al Baqarah",
+    "total_verses": 286,
+    "para_id": 1
+  },
+  {
+    "id": 3,
+    "name": "اٰلِ عِمْرَان",
+    "transliteration": "Al Imran",
+    "english_name": "Al Imran",
+    "total_verses": 200,
+    "para_id": 3
+  },
+  {
+    "id": 4,
+    "name": "اَلنِّسَآء",
+    "transliteration": "An Nisa",
+    "english_name": "An Nisa",
+    "total_verses": 176,
+    "para_id": 4
+  },
+  {
+    "id": 5,
+    "name": "اَلْمَـآئِدَة",
+    "transliteration": "Al Maidah",
+    "english_name": "Al Maidah",
+    "total_verses": 120,
+    "para_id": 6
+  },
+  {
+    "id": 6,
+    "name": "اَلْاَ نْعَام",
+    "transliteration": "Al Anam",
+    "english_name": "Al Anam",
+    "total_verses": 165,
+    "para_id": 7
+  },
+  {
+    "id": 7,
+    "name": "اَلْاَعْرَاف",
+    "transliteration": "Al Araf",
+    "english_name": "Al Araf",
+    "total_verses": 206,
+    "para_id": 8
+  },
+  {
+    "id": 8,
+    "name": "اَلْاَ نْفَال",
+    "transliteration": "Al Anfal",
+    "english_name": "Al Anfal",
+    "total_verses": 75,
+    "para_id": 9
+  },
+  {
+    "id": 9,
+    "name": "اَلتَّوْبَة",
+    "transliteration": "At Taubah",
+    "english_name": "At Taubah",
+    "total_verses": 129,
+    "para_id": 10
+  },
+  {
+    "id": 10,
+    "name": "يُوْنُس",
+    "transliteration": "Yunus",
+    "english_name": "Yunus",
+    "total_verses": 109,
+    "para_id": 11
+  },
+  {
+    "id": 11,
+    "name": "هُوْد",
+    "transliteration": "Hud",
+    "english_name": "Hud",
+    "total_verses": 123,
+    "para_id": 11
+  },
+  {
+    "id": 12,
+    "name": "يُوْسُف",
+    "transliteration": "Yusuf",
+    "english_name": "Yusuf",
+    "total_verses": 111,
+    "para_id": 12
+  },
+  {
+    "id": 13,
+    "name": "اَلرَّعْد",
+    "transliteration": "Ar Rad",
+    "english_name": "Ar Rad",
+    "total_verses": 43,
+    "para_id": 13
+  },
+  {
+    "id": 14,
+    "name": "اِبرٰهِيْم",
+    "transliteration": "Ibrahim",
+    "english_name": "Ibrahim",
+    "total_verses": 52,
+    "para_id": 13
+  },
+  {
+    "id": 15,
+    "name": "اَلْحِجْر",
+    "transliteration": "Al Hijr",
+    "english_name": "Al Hijr",
+    "total_verses": 99,
+    "para_id": 13
+  },
+  {
+    "id": 16,
+    "name": "اَلنَّحْل",
+    "transliteration": "An Nahl",
+    "english_name": "An Nahl",
+    "total_verses": 128,
+    "para_id": 14
+  },
+  {
+    "id": 17,
+    "name": "بَنِیْٓ اِسْرَآءِیْل (اَلْاَسْرَاء)",
+    "transliteration": "Al Isra",
+    "english_name": "Al Isra",
+    "total_verses": 111,
+    "para_id": 15
+  },
+  {
+    "id": 18,
+    "name": "اَلْـكَهْف",
+    "transliteration": "Al Kahf",
+    "english_name": "Al Kahf",
+    "total_verses": 110,
+    "para_id": 15
+  },
+  {
+    "id": 19,
+    "name": "مَرْيَم",
+    "transliteration": "Maryam",
+    "english_name": "Maryam",
+    "total_verses": 98,
+    "para_id": 16
+  },
+  {
+    "id": 20,
+    "name": "طٰهٰ",
+    "transliteration": "Taha",
+    "english_name": "Taha",
+    "total_verses": 135,
+    "para_id": 16
+  },
+  {
+    "id": 21,
+    "name": "اَلْاَ نْبِيَآء",
+    "transliteration": "Al anbya",
+    "english_name": "Al Anbiya",
+    "total_verses": 112,
+    "para_id": 17
+  },
+  {
+    "id": 22,
+    "name": "اَلْحَجّ",
+    "transliteration": "Al Hajj",
+    "english_name": "Al Hajj",
+    "total_verses": 78,
+    "para_id": 17
+  },
+  {
+    "id": 23,
+    "name": "اَلْمُؤْمِنُوْن",
+    "transliteration": "Al Muminun",
+    "english_name": "Al Muminun",
+    "total_verses": 118,
+    "para_id": 18
+  },
+  {
+    "id": 24,
+    "name": "اَلنُّوْر",
+    "transliteration": "An Noor",
+    "english_name": "An Noor",
+    "total_verses": 64,
+    "para_id": 18
+  },
+  {
+    "id": 25,
+    "name": "اَلْفُرْقَان",
+    "transliteration": "Al Furqan",
+    "english_name": "Al Furqan",
+    "total_verses": 77,
+    "para_id": 18
+  },
+  {
+    "id": 26,
+    "name": "اَلشُّـعَرَاء",
+    "transliteration": "ash shuara",
+    "english_name": "Ash Shura",
+    "total_verses": 227,
+    "para_id": 19
+  },
+  {
+    "id": 27,
+    "name": "اَلنَّمْل",
+    "transliteration": "An Naml",
+    "english_name": "An Naml",
+    "total_verses": 93,
+    "para_id": 19
+  },
+  {
+    "id": 28,
+    "name": "اَلْقَصَص",
+    "transliteration": "Al Qasas",
+    "english_name": "Al Qasas",
+    "total_verses": 88,
+    "para_id": 20
+  },
+  {
+    "id": 29,
+    "name": "اَلْعَنْـكَبُوْت",
+    "transliteration": "Al Ankabut",
+    "english_name": "Al Ankabut",
+    "total_verses": 69,
+    "para_id": 20
+  },
+  {
+    "id": 30,
+    "name": "اَلرُّوْم",
+    "transliteration": "Ar Rum",
+    "english_name": "Ar Rum",
+    "total_verses": 60,
+    "para_id": 21
+  },
+  {
+    "id": 31,
+    "name": "لُقْمٰن",
+    "transliteration": "Luqman",
+    "english_name": "Luqman",
+    "total_verses": 34,
+    "para_id": 21
+  },
+  {
+    "id": 32,
+    "name": "اَلسَّجْدَة",
+    "transliteration": "As Sajda",
+    "english_name": "As Sajdah",
+    "total_verses": 30,
+    "para_id": 21
+  },
+  {
+    "id": 33,
+    "name": "اَلْاَحْزَاب",
+    "transliteration": "Al Ahzab",
+    "english_name": "Al Ahzab",
+    "total_verses": 73,
+    "para_id": 21
+  },
+  {
+    "id": 34,
+    "name": "سَبَا",
+    "transliteration": "Sabah",
+    "english_name": "Saba",
+    "total_verses": 54,
+    "para_id": 22
+  },
+  {
+    "id": 35,
+    "name": "اَلْفَاطِر",
+    "transliteration": "Fatir",
+    "english_name": "Fatir",
+    "total_verses": 45,
+    "para_id": 22
+  },
+  {
+    "id": 36,
+    "name": "يـٰسٓ",
+    "transliteration": "Yasin",
+    "english_name": "Yasin",
+    "total_verses": 83,
+    "para_id": 22
+  },
+  {
+    "id": 37,
+    "name": "اَلصّٰٓفّٰت",
+    "transliteration": "As Saffat",
+    "english_name": "As Saffat",
+    "total_verses": 182,
+    "para_id": 23
+  },
+  {
+    "id": 38,
+    "name": "صٓ",
+    "transliteration": "Sad",
+    "english_name": "Sad",
+    "total_verses": 88,
+    "para_id": 23
+  },
+  {
+    "id": 39,
+    "name": "اَلزُّمَر",
+    "transliteration": "Az Zumar",
+    "english_name": "Az Zumar",
+    "total_verses": 75,
+    "para_id": 23
+  },
+  {
+    "id": 40,
+    "name": "اَلْمُؤْمِن (اَلْغَافِر)",
+    "transliteration": "Al Momin",
+    "english_name": "Ghafir",
+    "total_verses": 85,
+    "para_id": 24
+  },
+  {
+    "id": 41,
+    "name": "حٰمٓ اَلسَّجْدَۃ (فُصِّلَت)",
+    "transliteration": "Fussilat",
+    "english_name": "Fussilat",
+    "total_verses": 54,
+    "para_id": 24
+  },
+  {
+    "id": 42,
+    "name": "اَلشُّوْرٰی",
+    "transliteration": "Ash Shura",
+    "english_name": "Ash  Shura",
+    "total_verses": 53,
+    "para_id": 25
+  },
+  {
+    "id": 43,
+    "name": "اَلزُّخْرُف",
+    "transliteration": "Az Zukhruf",
+    "english_name": "Az Zukhruf",
+    "total_verses": 89,
+    "para_id": 25
+  },
+  {
+    "id": 44,
+    "name": "اَلدُّخَان",
+    "transliteration": "Ad Dukhan",
+    "english_name": "Ad Dukhan",
+    "total_verses": 59,
+    "para_id": 25
+  },
+  {
+    "id": 45,
+    "name": "اَلْجَاثِيَة",
+    "transliteration": "Al Jathiyah",
+    "english_name": "Al Jasia",
+    "total_verses": 37,
+    "para_id": 25
+  },
+  {
+    "id": 46,
+    "name": "اَلْاَحْقَاف",
+    "transliteration": "Al Ahqaf",
+    "english_name": "Al Ahqaf",
+    "total_verses": 35,
+    "para_id": 26
+  },
+  {
+    "id": 47,
+    "name": "مُحَمَّد",
+    "transliteration": "Muhammad",
+    "english_name": "Muhammad",
+    "total_verses": 38,
+    "para_id": 26
+  },
+  {
+    "id": 48,
+    "name": "اَلْفَتْح",
+    "transliteration": "Al Fath",
+    "english_name": "Al Fath",
+    "total_verses": 29,
+    "para_id": 26
+  },
+  {
+    "id": 49,
+    "name": "اَلْحُجُرٰت",
+    "transliteration": "Al Hujurat",
+    "english_name": "Al Hujurat",
+    "total_verses": 18,
+    "para_id": 26
+  },
+  {
+    "id": 50,
+    "name": "قٓ",
+    "transliteration": "Qaf",
+    "english_name": "Qaf",
+    "total_verses": 45,
+    "para_id": 26
+  },
+  {
+    "id": 51,
+    "name": "اَلذّٰرِيـٰت",
+    "transliteration": "Az Zariyat",
+    "english_name": "Az Zariyat",
+    "total_verses": 60,
+    "para_id": 26
+  },
+  {
+    "id": 52,
+    "name": "اَلطُّوْر",
+    "transliteration": "At Tur",
+    "english_name": "At Tur",
+    "total_verses": 49,
+    "para_id": 27
+  },
+  {
+    "id": 53,
+    "name": "اَلنَّجْم",
+    "transliteration": "An Najm",
+    "english_name": "An Najm",
+    "total_verses": 62,
+    "para_id": 27
+  },
+  {
+    "id": 54,
+    "name": "اَلْقَمَر",
+    "transliteration": "Al Qamar",
+    "english_name": "Al Qamar",
+    "total_verses": 55,
+    "para_id": 27
+  },
+  {
+    "id": 55,
+    "name": "اَلرَّحْمٰن",
+    "transliteration": "Ar Rahman",
+    "english_name": "Ar Rahman",
+    "total_verses": 78,
+    "para_id": 27
+  },
+  {
+    "id": 56,
+    "name": "اَلْوَاقِعَة",
+    "transliteration": "Al Waqiah",
+    "english_name": "Al Waqiah",
+    "total_verses": 96,
+    "para_id": 27
+  },
+  {
+    "id": 57,
+    "name": "اَلْحَدِيْد",
+    "transliteration": "Hadid",
+    "english_name": "Al Hadid",
+    "total_verses": 29,
+    "para_id": 27
+  },
+  {
+    "id": 58,
+    "name": "اَلْمُجَادَلَة",
+    "transliteration": "Al Mujadilah",
+    "english_name": "Al Mujadilah",
+    "total_verses": 22,
+    "para_id": 28
+  },
+  {
+    "id": 59,
+    "name": "اَلْحَشْر",
+    "transliteration": "Al Hashr",
+    "english_name": "Al Hashr",
+    "total_verses": 24,
+    "para_id": 28
+  },
+  {
+    "id": 60,
+    "name": "اَلْمُمْتَحِنَة",
+    "transliteration": "Al Mumtahanah",
+    "english_name": "Al Mumtahanah",
+    "total_verses": 13,
+    "para_id": 28
+  },
+  {
+    "id": 61,
+    "name": "اَلصَّفّ",
+    "transliteration": "As Saf",
+    "english_name": "As Saff",
+    "total_verses": 14,
+    "para_id": 28
+  },
+  {
+    "id": 62,
+    "name": "اَلْجُمُعَة",
+    "transliteration": "Al Jumuah",
+    "english_name": "Al Juma",
+    "total_verses": 11,
+    "para_id": 28
+  },
+  {
+    "id": 63,
+    "name": "اَلْمُنٰفِقُوْن",
+    "transliteration": "Al Munafiqun",
+    "english_name": "Al Munafiqun",
+    "total_verses": 11,
+    "para_id": 28
+  },
+  {
+    "id": 64,
+    "name": "اَلتَّغَابُن",
+    "transliteration": "At Taghabun",
+    "english_name": "At Taghabun",
+    "total_verses": 18,
+    "para_id": 28
+  },
+  {
+    "id": 65,
+    "name": "اَلطَّلَاق",
+    "transliteration": "At Talaq",
+    "english_name": "At Talaq",
+    "total_verses": 12,
+    "para_id": 28
+  },
+  {
+    "id": 66,
+    "name": "اَلتَّحْرِيْم",
+    "transliteration": "At Tahrim",
+    "english_name": "At Tahrim",
+    "total_verses": 12,
+    "para_id": 28
+  },
+  {
+    "id": 67,
+    "name": "اَلْمُلْك",
+    "transliteration": "Al Mulk",
+    "english_name": "Al Mulk",
+    "total_verses": 30,
+    "para_id": 29
+  },
+  {
+    "id": 68,
+    "name": "اَلْقَلَم",
+    "transliteration": "Al Qalam",
+    "english_name": "Al Qalam",
+    "total_verses": 52,
+    "para_id": 29
+  },
+  {
+    "id": 69,
+    "name": "اَلْحَآ قَّة",
+    "transliteration": "Al Haqqah",
+    "english_name": "Al Haqqah",
+    "total_verses": 52,
+    "para_id": 29
+  },
+  {
+    "id": 70,
+    "name": "اَلْمَعَارِ ج",
+    "transliteration": "Al Maarij",
+    "english_name": "Al Ma'arij",
+    "total_verses": 44,
+    "para_id": 29
+  },
+  {
+    "id": 71,
+    "name": "نُوْ ح",
+    "transliteration": "Nuh",
+    "english_name": "Nuh",
+    "total_verses": 28,
+    "para_id": 29
+  },
+  {
+    "id": 72,
+    "name": "اَلْجِنّ",
+    "transliteration": "Al Jin",
+    "english_name": "Al Jin",
+    "total_verses": 28,
+    "para_id": 29
+  },
+  {
+    "id": 73,
+    "name": "اَلْمُزَّمِّل",
+    "transliteration": "Al Muzzammil",
+    "english_name": "Al Muzzammil",
+    "total_verses": 20,
+    "para_id": 29
+  },
+  {
+    "id": 74,
+    "name": "اَلْمُدَّثِّر",
+    "transliteration": "Al Mudassir",
+    "english_name": "Al Mudassir",
+    "total_verses": 56,
+    "para_id": 29
+  },
+  {
+    "id": 75,
+    "name": "اَلْقِيَامَة",
+    "transliteration": "Al Qiyamah",
+    "english_name": "Al Qiyamah",
+    "total_verses": 40,
+    "para_id": 29
+  },
+  {
+    "id": 76,
+    "name": "اَلدَّهْر (اَلْاِنْسَان)",
+    "transliteration": "Al Insan",
+    "english_name": "Al Insan",
+    "total_verses": 31,
+    "para_id": 29
+  },
+  {
+    "id": 77,
+    "name": "اَلْمُرْسَلٰت",
+    "transliteration": "Al Mursalat",
+    "english_name": "Al Mursalat",
+    "total_verses": 50,
+    "para_id": 29
+  },
+  {
+    "id": 78,
+    "name": "اَلنَّبَا",
+    "transliteration": "An Naba",
+    "english_name": "An Naba",
+    "total_verses": 40,
+    "para_id": 30
+  },
+  {
+    "id": 79,
+    "name": "اَلنَّازِعَات",
+    "transliteration": "An Naziat",
+    "english_name": "An Naziat",
+    "total_verses": 46,
+    "para_id": 30
+  },
+  {
+    "id": 80,
+    "name": "عَبَس",
+    "transliteration": "Abasa",
+    "english_name": "Abasa",
+    "total_verses": 42,
+    "para_id": 30
+  },
+  {
+    "id": 81,
+    "name": "اَلتَّكْوِيْر",
+    "transliteration": "At Takwir",
+    "english_name": "At Takwir",
+    "total_verses": 29,
+    "para_id": 30
+  },
+  {
+    "id": 82,
+    "name": "اَلْاِنْفِطَار",
+    "transliteration": "Al Infitar",
+    "english_name": "Al Infitar",
+    "total_verses": 19,
+    "para_id": 30
+  },
+  {
+    "id": 83,
+    "name": "اَلْمُطَفِّفِيْن",
+    "transliteration": "Al Mutaffifin",
+    "english_name": "Al Mutaffifin",
+    "total_verses": 36,
+    "para_id": 30
+  },
+  {
+    "id": 84,
+    "name": "اَلْاِنْشِقَاق",
+    "transliteration": "Al Inshiqaq",
+    "english_name": "Al Inshiqaq",
+    "total_verses": 25,
+    "para_id": 30
+  },
+  {
+    "id": 85,
+    "name": "اَلْبُرُوْج",
+    "transliteration": "Al Buruj",
+    "english_name": "Al Buruj",
+    "total_verses": 22,
+    "para_id": 30
+  },
+  {
+    "id": 86,
+    "name": "اَلطَّارِق",
+    "transliteration": "At Tariq",
+    "english_name": "At Tariq",
+    "total_verses": 17,
+    "para_id": 30
+  },
+  {
+    "id": 87,
+    "name": "اَلْاَعْلٰی",
+    "transliteration": "Al Ala",
+    "english_name": "Al Ala",
+    "total_verses": 19,
+    "para_id": 30
+  },
+  {
+    "id": 88,
+    "name": "اَلْغَاشِيَة",
+    "transliteration": "Al Ghashiyah",
+    "english_name": "Al Ghashiyah",
+    "total_verses": 26,
+    "para_id": 30
+  },
+  {
+    "id": 89,
+    "name": "اَلْفَجْر",
+    "transliteration": "Al Fajr",
+    "english_name": "Al Fajr",
+    "total_verses": 30,
+    "para_id": 30
+  },
+  {
+    "id": 90,
+    "name": "اَلْبَـلَد",
+    "transliteration": "Al Balad",
+    "english_name": "Al Balad",
+    "total_verses": 20,
+    "para_id": 30
+  },
+  {
+    "id": 91,
+    "name": "اَلشَّمْس",
+    "transliteration": "Ash Shams",
+    "english_name": "Ash Shams",
+    "total_verses": 15,
+    "para_id": 30
+  },
+  {
+    "id": 92,
+    "name": "اَلَّيْل",
+    "transliteration": "Al Lail",
+    "english_name": "Al Lail",
+    "total_verses": 21,
+    "para_id": 30
+  },
+  {
+    "id": 93,
+    "name": "اَلْضُّحٰی",
+    "transliteration": "Ad Duha",
+    "english_name": "Ad Duha",
+    "total_verses": 11,
+    "para_id": 30
+  },
+  {
+    "id": 94,
+    "name": "اَلَمْ نَشْرَ ح",
+    "transliteration": "Alam Nashrah",
+    "english_name": "Alam Nashrah",
+    "total_verses": 8,
+    "para_id": 30
+  },
+  {
+    "id": 95,
+    "name": "اَلتِّیْن",
+    "transliteration": "At Tin",
+    "english_name": "At Tin",
+    "total_verses": 8,
+    "para_id": 30
+  },
+  {
+    "id": 96,
+    "name": "اَلْعَلَق",
+    "transliteration": "Al Alaq",
+    "english_name": "Al Alaq",
+    "total_verses": 19,
+    "para_id": 30
+  },
+  {
+    "id": 97,
+    "name": "اَلْقَدَر",
+    "transliteration": "Al Qadr",
+    "english_name": "Al Qadr",
+    "total_verses": 5,
+    "para_id": 30
+  },
+  {
+    "id": 98,
+    "name": "اَلْبَيِّنَة",
+    "transliteration": "Al Baiyinah",
+    "english_name": "Al Bayyinah",
+    "total_verses": 8,
+    "para_id": 30
+  },
+  {
+    "id": 99,
+    "name": "اَلزِّلْزَال",
+    "transliteration": "Az Zilzal",
+    "english_name": "Al Zalzalah",
+    "total_verses": 8,
+    "para_id": 30
+  },
+  {
+    "id": 100,
+    "name": "اَلْعٰدِيٰت",
+    "transliteration": "Al Adiyat",
+    "english_name": "Al Adiyat",
+    "total_verses": 11,
+    "para_id": 30
+  },
+  {
+    "id": 101,
+    "name": "اَلْقَارِعَة",
+    "transliteration": "Al Qariah",
+    "english_name": "Al Qariah",
+    "total_verses": 11,
+    "para_id": 30
+  },
+  {
+    "id": 102,
+    "name": "اَلتَّكَاثُر",
+    "transliteration": "At Takasur",
+    "english_name": "At Takasur",
+    "total_verses": 8,
+    "para_id": 30
+  },
+  {
+    "id": 103,
+    "name": "اَلْعَصْر",
+    "transliteration": "Al Asr",
+    "english_name": "Al Asr",
+    "total_verses": 3,
+    "para_id": 30
+  },
+  {
+    "id": 104,
+    "name": "اَلْهُمَزَة",
+    "transliteration": "Al Humazah",
+    "english_name": "Al Humazah",
+    "total_verses": 9,
+    "para_id": 30
+  },
+  {
+    "id": 105,
+    "name": "اَلْفِيْل",
+    "transliteration": "Al Fil",
+    "english_name": "Al Feel",
+    "total_verses": 5,
+    "para_id": 30
+  },
+  {
+    "id": 106,
+    "name": "قُـرَيْش",
+    "transliteration": "Quraish",
+    "english_name": "Quraish",
+    "total_verses": 4,
+    "para_id": 30
+  },
+  {
+    "id": 107,
+    "name": "اَلْمَاعُوْن",
+    "transliteration": "Al Maun",
+    "english_name": "Al Maun",
+    "total_verses": 7,
+    "para_id": 30
+  },
+  {
+    "id": 108,
+    "name": "اَلْـكَوْثَر",
+    "transliteration": "Al Kausar",
+    "english_name": "Al Kausar",
+    "total_verses": 3,
+    "para_id": 30
+  },
+  {
+    "id": 109,
+    "name": "اَلْكَافِرُوْن",
+    "transliteration": "Al Kafirun",
+    "english_name": "Al Kafirun",
+    "total_verses": 6,
+    "para_id": 30
+  },
+  {
+    "id": 110,
+    "name": "اَلنَّصْر",
+    "transliteration": "An Nasr",
+    "english_name": "An Nasr",
+    "total_verses": 3,
+    "para_id": 30
+  },
+  {
+    "id": 111,
+    "name": "اَللَّھَب",
+    "transliteration": "Al Lahab",
+    "english_name": "Al Lahab",
+    "total_verses": 5,
+    "para_id": 30
+  },
+  {
+    "id": 112,
+    "name": "اَلْاِخْلَاص",
+    "transliteration": "Al Ikhlas",
+    "english_name": "Al Ikhlas",
+    "total_verses": 4,
+    "para_id": 30
+  },
+  {
+    "id": 113,
+    "name": "اَلْفَلَق",
+    "transliteration": "Al Falaq",
+    "english_name": "Al Falaq",
+    "total_verses": 5,
+    "para_id": 30
+  },
+  {
+    "id": 114,
+    "name": "اَلنَّاس",
+    "transliteration": "An Nas",
+    "english_name": "An Nas",
+    "total_verses": 6,
+    "para_id": 30
+  }
+]

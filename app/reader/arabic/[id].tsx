@@ -7,6 +7,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   BackHandler,
   Dimensions,
   FlatList,
@@ -130,6 +131,7 @@ export default function ArabicParaReader() {
   const [currentIndex, setCurrentIndex] = useState(
     initialIndex >= 0 ? initialIndex : 0,
   );
+  const [ready, setReady] = useState(false);
 
   const currentJuz = sortedJuzs[currentIndex] ?? null;
 
@@ -199,6 +201,20 @@ export default function ArabicParaReader() {
     });
     return () => sub.remove();
   }, [router, sortedJuzs, currentIndex, saveProgress]);
+
+  useEffect(() => {
+    const t = setTimeout(() => setReady(true), 600);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (!ready) {
+    return (
+      <View className="flex-1 items-center justify-center bg-[#080f0a]">
+        <ActivityIndicator size="large" color="#34d399" />
+        <Text className="mt-4 text-sm text-neutral-400">Loading Para...</Text>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-[#080f0a]">
