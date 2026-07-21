@@ -38,7 +38,11 @@ export default {
         backgroundColor: "#ffffff"
       },
       package: getPackageName(),
-      versionCode: 17,
+      versionCode: 18,
+      notification: {
+        icon: "./assets/images/status_bar_icon.png",
+        color: "#228B22",
+      },
     },
     web: {
       bundler: "metro",
