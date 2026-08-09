@@ -1,6 +1,7 @@
 import QuranAyahView from "@/components/QuranAyahView";
-import bundledParas from "@/data/bundled-paras";
-import type { BundledVerse } from "@/data/bundled-paras";
+import { getVersesByJuz, type DbVerse } from "@/lib/quran-db";
+import type { SQLiteDatabase } from "expo-sqlite";
+import { useSQLiteContext } from "expo-sqlite";
 import juzsList from "@/data/juzs.json";
 import { useQuranArabicProgress } from "@/hooks/useQuranArabicProgress";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -28,20 +29,46 @@ const sortedJuzs = (juzsList as JuzMeta[]).sort(
   (a, b) => a.juz_number - b.juz_number,
 );
 
+function useVersesForJuz(db: SQLiteDatabase, juzNumber: number) {
+  const [verses, setVerses] = useState<DbVerse[] | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!db) return;
+    getVersesByJuz(db, juzNumber).then((rows) => {
+      if (!cancelled) setVerses(rows);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [db, juzNumber]);
+
+  return verses;
+}
+
 function ParaPage({
   juzNumber,
   initialVerseId,
   onVerseChange,
+  onLoaded,
 }: {
   juzNumber: number;
   initialVerseId?: number;
   onVerseChange?: (verseId: number) => void;
+  onLoaded?: (juzNumber: number, verses: DbVerse[]) => void;
 }) {
-  const verses = bundledParas[juzNumber] ?? [];
+  const db = useSQLiteContext();
+  const verses = useVersesForJuz(db, juzNumber);
 
-  const flatListRef = useRef<FlatList<BundledVerse>>(null);
+  const flatListRef = useRef<FlatList<DbVerse>>(null);
   const onVerseChangeRef = useRef(onVerseChange);
   onVerseChangeRef.current = onVerseChange;
+
+  useEffect(() => {
+    if (verses) {
+      onLoaded?.(juzNumber, verses);
+    }
+  }, [verses, juzNumber, onLoaded]);
 
   const viewabilityConfig = useRef({
     viewAreaCoveragePercentThreshold: 50,
@@ -53,7 +80,7 @@ function ParaPage({
       onViewableItemsChanged: ({
         viewableItems,
       }: {
-        viewableItems: ViewToken<BundledVerse>[];
+        viewableItems: ViewToken<DbVerse>[];
       }) => {
         if (viewableItems.length > 0) {
           onVerseChangeRef.current?.(viewableItems[0].item.id);
@@ -63,7 +90,7 @@ function ParaPage({
   ]);
 
   useEffect(() => {
-    if (initialVerseId && verses.length > 0) {
+    if (initialVerseId && verses && verses.length > 0) {
       const idx = verses.findIndex((v) => v.id === initialVerseId);
       if (idx > 0) {
         setTimeout(() => {
@@ -91,6 +118,17 @@ function ParaPage({
     },
     [],
   );
+
+  if (!verses) {
+    return (
+      <View
+        style={{ width: SCREEN_WIDTH }}
+        className="flex-1 items-center justify-center"
+      >
+        <ActivityIndicator size="large" color="#34d399" />
+      </View>
+    );
+  }
 
   return (
     <FlatList
@@ -132,8 +170,22 @@ export default function ArabicParaReader() {
     initialIndex >= 0 ? initialIndex : 0,
   );
   const [ready, setReady] = useState(false);
+  const versesCacheRef = useRef<Record<number, DbVerse[]>>({});
+  const [, setVerseCacheVersion] = useState(0);
 
   const currentJuz = sortedJuzs[currentIndex] ?? null;
+
+  const onJuzLoaded = useCallback(
+    (juzNumber: number, verses: DbVerse[]) => {
+      versesCacheRef.current[juzNumber] = verses;
+      setVerseCacheVersion((v) => v + 1);
+    },
+    [],
+  );
+
+  const getJuzVerses = useCallback((juzNumber: number): DbVerse[] => {
+    return versesCacheRef.current[juzNumber] ?? [];
+  }, []);
 
   const [pickerVisible, setPickerVisible] = useState(false);
 
@@ -151,7 +203,7 @@ export default function ArabicParaReader() {
   const progress =
     currentJuz && currentVerseId != null
       ? ((() => {
-          const verses = bundledParas[currentJuz.juz_number] ?? [];
+          const verses = getJuzVerses(currentJuz.juz_number);
           const idx = verses.findIndex((v) => v.id === currentVerseId);
           return idx >= 0 ? ((idx + 1) / verses.length) * 100 : 0;
         })())
@@ -165,12 +217,12 @@ export default function ArabicParaReader() {
       setCurrentIndex(index);
       const juz = sortedJuzs[index];
       if (juz) {
-        const verses = bundledParas[juz.juz_number];
-        const firstVerse = verses?.[0];
+        const verses = getJuzVerses(juz.juz_number);
+        const firstVerse = verses[0];
         saveProgress(juz.juz_number, firstVerse?.id ?? 0);
       }
     },
-    [sortedJuzs, saveProgress],
+    [sortedJuzs, saveProgress, getJuzVerses],
   );
 
   const navigateToJuz = useCallback(
@@ -180,12 +232,12 @@ export default function ArabicParaReader() {
       if (idx >= 0) {
         flatListRef.current?.scrollToIndex({ index: idx, animated: false });
         setCurrentIndex(idx);
-        const verses = bundledParas[n];
-        const firstVerse = verses?.[0];
+        const verses = getJuzVerses(n);
+        const firstVerse = verses[0];
         saveProgress(n, firstVerse?.id ?? 0);
       }
     },
-    [sortedJuzs, saveProgress],
+    [sortedJuzs, saveProgress, getJuzVerses],
   );
 
   useEffect(() => {
@@ -193,14 +245,14 @@ export default function ArabicParaReader() {
       const juz = sortedJuzs[currentIndex];
       if (juz) {
         const verseId =
-          currentVerseIdRef.current ?? bundledParas[juz.juz_number]?.[0]?.id ?? 0;
+          currentVerseIdRef.current ?? getJuzVerses(juz.juz_number)[0]?.id ?? 0;
         saveProgress(juz.juz_number, verseId);
       }
       router.back();
       return true;
     });
     return () => sub.remove();
-  }, [router, sortedJuzs, currentIndex, saveProgress]);
+  }, [router, sortedJuzs, currentIndex, saveProgress, getJuzVerses]);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 600);
@@ -263,6 +315,7 @@ export default function ArabicParaReader() {
               item.juz_number === initialJuz ? initialVerseId : undefined
             }
             onVerseChange={onVerseChange}
+            onLoaded={onJuzLoaded}
           />
         )}
       />

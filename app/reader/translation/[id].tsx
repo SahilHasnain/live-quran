@@ -1,15 +1,15 @@
-import bundledParas from "@/data/bundled-paras";
-import type { BundledVerse } from "@/data/bundled-paras";
-import bundledTranslationEN from "@/data/bundled-translation-en";
-import bundledTranslationSI from "@/data/bundled-translation-si";
-import bundledTranslationPS from "@/data/bundled-translation-ps";
-import bundledTranslationSR from "@/data/bundled-translation-sr";
-import type { TranslationData, TranslationEntry } from "@/data/bundled-translation-en";
+import {
+  getTranslationsBySurah,
+  getVersesBySurah,
+  type DbTranslation,
+  type DbVerse,
+} from "@/lib/quran-db";
 import { getAllSurahs } from "@/data/quran";
+import { useSQLiteContext } from "expo-sqlite";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -36,20 +36,42 @@ const LANGUAGES: { key: TranslationLang; name: string; native: string }[] = [
   { key: "sr", name: "Saraiki", native: "Kanzul Irfan" },
 ];
 
-const BUNDLED_TRANSLATIONS: Record<TranslationLang, Record<number, TranslationData>> = {
-  en: bundledTranslationEN,
-  si: bundledTranslationSI,
-  ps: bundledTranslationPS,
-  sr: bundledTranslationSR,
-};
+function useSurahTranslationData(surahId: number, lang: TranslationLang) {
+  const db = useSQLiteContext();
+  const [data, setData] = useState<{
+    verses: DbVerse[];
+    translationMap: Map<number, DbTranslation>;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      getVersesBySurah(db, surahId),
+      getTranslationsBySurah(db, lang, surahId),
+    ]).then(([verses, translationRows]) => {
+      if (cancelled) return;
+      const translationMap = new Map<number, DbTranslation>();
+      for (const entry of translationRows) {
+        translationMap.set(entry.verse_number, entry);
+      }
+      setData({ verses, translationMap });
+    });
+    return () => {
+      cancelled = true;
+      setData(null);
+    };
+  }, [db, surahId, lang]);
+
+  return data;
+}
 
 const VerseCard = memo(function VerseCard({
   verse,
   translation,
   lang,
 }: {
-  verse: BundledVerse;
-  translation?: TranslationEntry;
+  verse: DbVerse;
+  translation?: DbTranslation;
   lang: TranslationLang;
 }) {
   const verseNumber = verse.verse_number;
@@ -111,31 +133,13 @@ function SurahTranslationPage({
   lang: TranslationLang;
   onVerseChange?: (verseIndex: number) => void;
 }) {
-  const translationData = BUNDLED_TRANSLATIONS[lang][surahId];
   const surah = ALL_SURAHS.find((s) => s.id === surahId);
+  const data = useSurahTranslationData(surahId, lang);
+  const allVerses = data?.verses ?? [];
+  const translationMap =
+    data?.translationMap ?? new Map<number, DbTranslation>();
 
-  const allVerses = useMemo(() => {
-    const verses: BundledVerse[] = [];
-    for (let para = 1; para <= 30; para++) {
-      for (const v of bundledParas[para] ?? []) {
-        const [vSurah] = v.verse_key.split(":").map(Number);
-        if (vSurah === surahId) verses.push(v);
-      }
-    }
-    return verses;
-  }, [surahId]);
-
-  const translationMap = useMemo(() => {
-    const map = new Map<number, TranslationEntry>();
-    if (translationData) {
-      for (const entry of translationData.entries) {
-        map.set(entry.verse_number, entry);
-      }
-    }
-    return map;
-  }, [translationData]);
-
-  const flatListRef = useRef<FlatList<BundledVerse>>(null);
+  const flatListRef = useRef<FlatList<DbVerse>>(null);
   const onVerseChangeRef = useRef(onVerseChange);
   onVerseChangeRef.current = onVerseChange;
 
@@ -149,7 +153,7 @@ function SurahTranslationPage({
       onViewableItemsChanged: ({
         viewableItems,
       }: {
-        viewableItems: ViewToken<BundledVerse>[];
+        viewableItems: ViewToken<DbVerse>[];
       }) => {
         if (viewableItems.length > 0) {
           const idx = allVerses.findIndex(
@@ -161,7 +165,26 @@ function SurahTranslationPage({
     },
   ]);
 
-  if (!surah || allVerses.length === 0) {
+  if (!surah) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <MaterialIcons name="error-outline" size={40} color="#525252" />
+        <Text className="mt-3 text-sm text-neutral-500">
+          Translation data not available
+        </Text>
+      </View>
+    );
+  }
+
+  if (!data) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#34d399" />
+      </View>
+    );
+  }
+
+  if (allVerses.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
         <MaterialIcons name="error-outline" size={40} color="#525252" />

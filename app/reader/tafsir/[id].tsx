@@ -1,12 +1,15 @@
-import bundledParas from "@/data/bundled-paras";
-import type { BundledVerse } from "@/data/bundled-paras";
-import bundledTafseer from "@/data/bundled-tafseer";
-import type { TafseerData, TafseerEntry } from "@/data/bundled-tafseer";
+import {
+  getTafseerBySurah,
+  getVersesBySurah,
+  type DbTafseer,
+  type DbVerse,
+} from "@/lib/quran-db";
 import { getAllSurahs } from "@/data/quran";
+import { useSQLiteContext } from "expo-sqlite";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   BackHandler,
@@ -23,12 +26,41 @@ const TAFSIR_PROGRESS_KEY = "@quran_tafseer_progress";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const ALL_SURAHS = getAllSurahs();
 
+function useSurahTafseerData(surahId: number) {
+  const db = useSQLiteContext();
+  const [data, setData] = useState<{
+    verses: DbVerse[];
+    tafseerMap: Map<number, DbTafseer>;
+  } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      getVersesBySurah(db, surahId),
+      getTafseerBySurah(db, surahId),
+    ]).then(([verses, tafseerRows]) => {
+      if (cancelled) return;
+      const tafseerMap = new Map<number, DbTafseer>();
+      for (const entry of tafseerRows) {
+        tafseerMap.set(entry.verse_number, entry);
+      }
+      setData({ verses, tafseerMap });
+    });
+    return () => {
+      cancelled = true;
+      setData(null);
+    };
+  }, [db, surahId]);
+
+  return data;
+}
+
 const VerseCard = memo(function VerseCard({
   verse,
   tafseer,
 }: {
-  verse: BundledVerse;
-  tafseer?: TafseerEntry;
+  verse: DbVerse;
+  tafseer?: DbTafseer;
 }) {
   const verseNumber = verse.verse_number;
 
@@ -78,31 +110,12 @@ function SurahTafseerPage({
   surahId: number;
   onVerseChange?: (verseIndex: number) => void;
 }) {
-  const tafseerData = bundledTafseer[surahId];
   const surah = ALL_SURAHS.find((s) => s.id === surahId);
+  const data = useSurahTafseerData(surahId);
+  const allVerses = data?.verses ?? [];
+  const tafseerMap = data?.tafseerMap ?? new Map<number, DbTafseer>();
 
-  const allVerses = useMemo(() => {
-    const verses: BundledVerse[] = [];
-    for (let para = 1; para <= 30; para++) {
-      for (const v of bundledParas[para] ?? []) {
-        const [vSurah] = v.verse_key.split(":").map(Number);
-        if (vSurah === surahId) verses.push(v);
-      }
-    }
-    return verses;
-  }, [surahId]);
-
-  const tafseerMap = useMemo(() => {
-    const map = new Map<number, TafseerEntry>();
-    if (tafseerData) {
-      for (const entry of tafseerData.entries) {
-        map.set(entry.verse_number, entry);
-      }
-    }
-    return map;
-  }, [tafseerData]);
-
-  const flatListRef = useRef<FlatList<BundledVerse>>(null);
+  const flatListRef = useRef<FlatList<DbVerse>>(null);
   const onVerseChangeRef = useRef(onVerseChange);
   onVerseChangeRef.current = onVerseChange;
 
@@ -116,7 +129,7 @@ function SurahTafseerPage({
       onViewableItemsChanged: ({
         viewableItems,
       }: {
-        viewableItems: ViewToken<BundledVerse>[];
+        viewableItems: ViewToken<DbVerse>[];
       }) => {
         if (viewableItems.length > 0) {
           const idx = allVerses.findIndex(
@@ -128,7 +141,26 @@ function SurahTafseerPage({
     },
   ]);
 
-  if (!surah || allVerses.length === 0) {
+  if (!surah) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <MaterialIcons name="error-outline" size={40} color="#525252" />
+        <Text className="mt-3 text-sm text-neutral-500">
+          Tafsir data not available
+        </Text>
+      </View>
+    );
+  }
+
+  if (!data) {
+    return (
+      <View className="flex-1 items-center justify-center">
+        <ActivityIndicator size="large" color="#34d399" />
+      </View>
+    );
+  }
+
+  if (allVerses.length === 0) {
     return (
       <View className="flex-1 items-center justify-center">
         <MaterialIcons name="error-outline" size={40} color="#525252" />

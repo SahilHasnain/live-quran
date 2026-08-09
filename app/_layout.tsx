@@ -1,6 +1,7 @@
 import { TrackPlayerProvider } from "@/contexts/TrackPlayerContext";
 import { useFonts } from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
+import { SQLiteProvider } from "expo-sqlite";
 import { Stack } from "expo-router";
 import { useCallback } from "react";
 import "../global.css";
@@ -22,7 +23,12 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }} onLayout={onLayoutRootView}>
       <TrackPlayerProvider>
-        <Stack screenOptions={{ headerShown: false }} />
+        <SQLiteProvider
+          databaseName="quran.db"
+          assetSource={{ assetId: require("../assets/db/quran.db") }}
+        >
+          <Stack screenOptions={{ headerShown: false }} />
+        </SQLiteProvider>
       </TrackPlayerProvider>
     </GestureHandlerRootView>
   );
