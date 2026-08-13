@@ -240,7 +240,7 @@ export default function QuranReaderScreen() {
             style={styles.jumpButton}
             onPress={() => setIsJumpVisible(true)}
           >
-            <MaterialIcons name="search" size={17} color="#03140d" />
+            <MaterialIcons name="search" size={17} color="#1a1204" />
             <Text style={styles.jumpButtonText}>Jump</Text>
           </Pressable>
         </View>
@@ -408,7 +408,7 @@ const styles = StyleSheet.create({
   jumpButtonText: {
     fontSize: 14,
     fontWeight: "900",
-    color: "#03140d",
+    color: "#1a1204",
   },
   modalBackdrop: {
     flex: 1,
@@ -470,6 +470,6 @@ const styles = StyleSheet.create({
   },
   modalPrimaryText: {
     fontWeight: "900",
-    color: "#03140d",
+    color: "#1a1204",
   },
 });

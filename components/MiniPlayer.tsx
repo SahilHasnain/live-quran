@@ -66,7 +66,7 @@ export function MiniPlayer() {
         ]}
         pointerEvents="box-none"
       >
-        <View className="border border-black/45 bg-[#080f0a]/95 px-3.5 py-2.5 shadow-lg">
+        <View className="border border-black/45 bg-[#0a0e1c]/95 px-3.5 py-2.5 shadow-lg">
           <View
             className="absolute top-0 left-0 right-0 bg-white/5"
             style={{ height: 1 }}

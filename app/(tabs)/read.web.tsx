@@ -44,23 +44,23 @@ function SegmentedControl({
   onTabChange: (tab: ReadTab) => void;
 }) {
   return (
-    <View className="mb-8 flex-row rounded-xl bg-[#0a140e] p-1">
+    <View className="mb-8 flex-row rounded-xl bg-[#101729] p-1">
       <TouchableOpacity
         onPress={() => onTabChange("arabic")}
         activeOpacity={0.7}
         className={`flex-1 flex-row items-center justify-center gap-2 rounded-[10px] py-3 ${
-          activeTab === "arabic" ? "bg-emerald-500" : ""
+          activeTab === "arabic" ? "bg-gold-500" : ""
         }`}
       >
         <MaterialIcons
           name="menu-book"
           size={20}
-          color={activeTab === "arabic" ? "#03140d" : colors.text.muted}
+          color={activeTab === "arabic" ? "#1a1204" : colors.text.muted}
         />
         <Text
           className={`text-base font-semibold ${
             activeTab === "arabic"
-              ? "text-[#03140d]"
+              ? "text-[#1a1204]"
               : "text-neutral-400"
           }`}
         >
@@ -71,18 +71,18 @@ function SegmentedControl({
         onPress={() => onTabChange("translations")}
         activeOpacity={0.7}
         className={`flex-1 flex-row items-center justify-center gap-2 rounded-[10px] py-3 ${
-          activeTab === "translations" ? "bg-emerald-500" : ""
+          activeTab === "translations" ? "bg-gold-500" : ""
         }`}
       >
         <MaterialIcons
           name="auto-stories"
           size={20}
-          color={activeTab === "translations" ? "#03140d" : colors.text.muted}
+          color={activeTab === "translations" ? "#1a1204" : colors.text.muted}
         />
         <Text
           className={`text-base font-semibold ${
             activeTab === "translations"
-              ? "text-[#03140d]"
+              ? "text-[#1a1204]"
               : "text-neutral-400"
           }`}
         >
@@ -169,11 +169,11 @@ export default function ReadWebScreen() {
                     )
                   }
                 activeOpacity={0.85}
-                className="mb-6 overflow-hidden rounded-[28px] border border-emerald-400/20 bg-emerald-500/10"
+                className="mb-6 overflow-hidden rounded-[28px] border border-gold-400/20 bg-gold-500/10"
               >
                 <View className="flex-row items-center gap-4 px-6 py-5">
-                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15">
-                    <MaterialIcons name="play-arrow" size={24} color="#34d399" />
+                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-gold-500/15">
+                    <MaterialIcons name="play-arrow" size={24} color="#e0bd5e" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-base font-semibold text-white">
@@ -217,11 +217,11 @@ export default function ReadWebScreen() {
                         router.push(`/reader/arabic/${juz.juz_number}`)
                       }
                       activeOpacity={0.7}
-                      className="items-center rounded-2xl border border-white/10 bg-[#0a140e] px-1 py-4"
+                      className="items-center rounded-2xl border border-white/10 bg-[#101729] px-1 py-4"
                       style={{ width: "31%" }}
                     >
-                      <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-                        <Text className="text-base font-bold text-emerald-400">
+                      <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+                        <Text className="text-base font-bold text-gold-400">
                           {toArabicNumeral(juz.juz_number)}
                         </Text>
                       </View>
@@ -245,11 +245,11 @@ export default function ReadWebScreen() {
                 openReader(hasProgress ? lastPage : 1, lastLang)
               }
               activeOpacity={0.85}
-              className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a140e]"
+              className="overflow-hidden rounded-[28px] border border-white/10 bg-[#101729]"
             >
               <View className="p-8">
                   <View className="flex-row items-center gap-4">
-                    <View className="h-16 w-16 items-center justify-center rounded-2xl bg-emerald-500/15">
+                    <View className="h-16 w-16 items-center justify-center rounded-2xl bg-gold-500/15">
                       <MaterialIcons
                         name="auto-stories"
                         size={32}
@@ -262,8 +262,8 @@ export default function ReadWebScreen() {
                   </View>
 
                   {hasProgress && (
-                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500/10 px-5 py-4">
-                    <View className="h-11 w-11 items-center justify-center rounded-xl bg-emerald-500/15">
+                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-gold-500/10 px-5 py-4">
+                    <View className="h-11 w-11 items-center justify-center rounded-xl bg-gold-500/15">
                       <MaterialIcons
                         name="play-arrow"
                         size={24}
@@ -282,9 +282,9 @@ export default function ReadWebScreen() {
                 )}
 
                 {!hasProgress && (
-                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-emerald-500 px-5 py-4">
-                    <MaterialIcons name="play-arrow" size={24} color="#03140d" />
-                    <Text className="text-base font-bold text-[#03140d]">
+                  <View className="mt-6 inline-flex flex-row items-center gap-3 rounded-2xl bg-gold-500 px-5 py-4">
+                    <MaterialIcons name="play-arrow" size={24} color="#1a1204" />
+                    <Text className="text-base font-bold text-[#1a1204]">
                       Start Reading ({currentLang.label})
                     </Text>
                   </View>
@@ -306,8 +306,8 @@ export default function ReadWebScreen() {
                       activeOpacity={0.7}
                       className={`flex-1 flex-col items-center rounded-[28px] border px-6 py-6 ${
                         isActive
-                          ? "border-emerald-400/30 bg-emerald-500/15"
-                          : "border-white/10 bg-[#0a140e]"
+                          ? "border-gold-400/30 bg-gold-500/15"
+                          : "border-white/10 bg-[#101729]"
                       }`}
                     >
                       <MaterialIcons
@@ -344,7 +344,7 @@ export default function ReadWebScreen() {
                       key={bm.id}
                       onPress={() => openReader(bm.page, bm.lang)}
                       activeOpacity={0.7}
-                      className="flex-row items-center gap-2 rounded-full border border-white/10 bg-[#0a140e] px-5 py-3"
+                      className="flex-row items-center gap-2 rounded-full border border-white/10 bg-[#101729] px-5 py-3"
                     >
                       <MaterialIcons
                         name="bookmark"

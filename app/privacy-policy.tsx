@@ -272,7 +272,7 @@ export default function PrivacyPolicy() {
                             lineHeight: "1.75",
                             marginTop: "8px"
                         }}>
-                            Email: <a href="mailto:mdsahil1631@gmail.com" style={{ color: "#10b981", textDecoration: "none" }}>mdsahil1631@gmail.com</a>
+                            Email: <a href="mailto:mdsahil1631@gmail.com" style={{ color: "#d4a843", textDecoration: "none" }}>mdsahil1631@gmail.com</a>
                         </p>
                     </section>
                 </div>

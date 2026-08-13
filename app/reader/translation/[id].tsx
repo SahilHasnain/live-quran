@@ -36,15 +36,26 @@ const LANGUAGES: { key: TranslationLang; name: string; native: string }[] = [
   { key: "sr", name: "Saraiki", native: "Kanzul Irfan" },
 ];
 
+const translationCache = new Map<
+  string,
+  { verses: DbVerse[]; translationMap: Map<number, DbTranslation> }
+>();
+
 function useSurahTranslationData(surahId: number, lang: TranslationLang) {
   const db = useSQLiteContext();
   const [data, setData] = useState<{
     verses: DbVerse[];
     translationMap: Map<number, DbTranslation>;
-  } | null>(null);
+  } | null>(() => translationCache.get(`${lang}:${surahId}`) ?? null);
 
   useEffect(() => {
     let cancelled = false;
+    const cacheKey = `${lang}:${surahId}`;
+    const cached = translationCache.get(cacheKey);
+    if (cached) {
+      setData(cached);
+      return;
+    }
     Promise.all([
       getVersesBySurah(db, surahId),
       getTranslationsBySurah(db, lang, surahId),
@@ -54,11 +65,12 @@ function useSurahTranslationData(surahId: number, lang: TranslationLang) {
       for (const entry of translationRows) {
         translationMap.set(entry.verse_number, entry);
       }
-      setData({ verses, translationMap });
+      const result = { verses, translationMap };
+      translationCache.set(cacheKey, result);
+      setData(result);
     });
     return () => {
       cancelled = true;
-      setData(null);
     };
   }, [db, surahId, lang]);
 
@@ -78,11 +90,11 @@ const VerseCard = memo(function VerseCard({
   const isRTL = lang !== "en";
 
   return (
-    <View className="mb-6 rounded-2xl border border-white/10 bg-[#0a140e] p-4">
+    <View className="mb-6 rounded-2xl border border-white/10 bg-[#101729] p-4">
       {/* Verse number badge */}
       <View className="mb-3 flex-row items-center justify-between">
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15">
-          <Text className="text-xs font-bold text-emerald-400">
+        <View className="h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
+          <Text className="text-xs font-bold text-gold-400">
             {verseNumber}
           </Text>
         </View>
@@ -179,7 +191,7 @@ function SurahTranslationPage({
   if (!data) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#34d399" />
+        <ActivityIndicator size="large" color="#e0bd5e" />
       </View>
     );
   }
@@ -314,15 +326,15 @@ export default function TranslationReader() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#080f0a]">
-        <ActivityIndicator size="large" color="#34d399" />
+      <View className="flex-1 items-center justify-center bg-[#0a0e1c]">
+        <ActivityIndicator size="large" color="#e0bd5e" />
         <Text className="mt-4 text-sm text-neutral-400">Loading Translation...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       {/* Header */}
       <View className="px-4 pb-2 pt-14">
         <View className="flex-row items-center gap-3">
@@ -342,15 +354,15 @@ export default function TranslationReader() {
           </View>
           <TouchableOpacity
             onPress={() => setLangPickerVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15"
+            className="h-10 w-10 items-center justify-center rounded-full bg-gold-500/15"
           >
-            <MaterialIcons name="language" size={20} color="#34d399" />
+            <MaterialIcons name="language" size={20} color="#e0bd5e" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setPickerVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15"
+            className="h-10 w-10 items-center justify-center rounded-full bg-gold-500/15"
           >
-            <MaterialIcons name="swap-horiz" size={20} color="#34d399" />
+            <MaterialIcons name="swap-horiz" size={20} color="#e0bd5e" />
           </TouchableOpacity>
         </View>
 
@@ -376,8 +388,8 @@ export default function TranslationReader() {
               Prev
             </Text>
           </TouchableOpacity>
-          <View className="items-center rounded-xl bg-emerald-500/15 px-4 py-2">
-            <Text className="text-xs font-bold text-emerald-400">
+          <View className="items-center rounded-xl bg-gold-500/15 px-4 py-2">
+            <Text className="text-xs font-bold text-gold-400">
               {currentIndex + 1} / {ALL_SURAHS.length}
             </Text>
           </View>
@@ -425,6 +437,9 @@ export default function TranslationReader() {
           index,
         })}
         onMomentumScrollEnd={onMomentumEnd}
+        windowSize={3}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
         renderItem={({ item }) => (
           <SurahTranslationPage
             surahId={item.id}
@@ -442,7 +457,7 @@ export default function TranslationReader() {
         onRequestClose={() => setLangPickerVisible(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="rounded-t-3xl bg-[#080f0a] px-4 pb-8 pt-5">
+          <View className="rounded-t-3xl bg-[#0a0e1c] px-4 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-lg font-semibold text-white">
                 Select Language
@@ -465,15 +480,15 @@ export default function TranslationReader() {
                   activeOpacity={0.7}
                   className={`flex-row items-center rounded-2xl border px-4 py-4 ${
                     l.key === lang
-                      ? "border-emerald-400/40 bg-emerald-500/20"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/20"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
                     <MaterialIcons
                       name={l.key === lang ? "check-circle" : "language"}
                       size={20}
-                      color={l.key === lang ? "#34d399" : "#525252"}
+                      color={l.key === lang ? "#e0bd5e" : "#525252"}
                     />
                   </View>
                   <View className="flex-1">
@@ -497,7 +512,7 @@ export default function TranslationReader() {
         onRequestClose={() => setPickerVisible(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="h-3/4 rounded-t-3xl bg-[#080f0a]">
+          <View className="h-3/4 rounded-t-3xl bg-[#0a0e1c]">
             <View className="flex-row items-center justify-between px-4 pb-3 pt-5">
               <TouchableOpacity
                 onPress={() => setPickerVisible(false)}
@@ -521,12 +536,12 @@ export default function TranslationReader() {
                   activeOpacity={0.7}
                   className={`mb-2 flex-row items-center rounded-2xl border px-4 py-3 ${
                     s.id === currentSurah?.id
-                      ? "border-emerald-400/40 bg-emerald-500/20"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/20"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-                    <Text className="text-sm font-bold text-emerald-400">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+                    <Text className="text-sm font-bold text-gold-400">
                       {s.id}
                     </Text>
                   </View>

@@ -23,7 +23,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View className="flex-1 items-center justify-center bg-black/70 px-8">
-        <View className="w-full max-w-[960px] overflow-hidden rounded-[36px] border border-white/10 bg-[#09120d]">
+        <View className="w-full max-w-[960px] overflow-hidden rounded-[36px] border border-white/10 bg-[#0d1424]">
           <View className="flex-row">
             <View className="flex-1 border-r border-white/10 p-8">
               <Text className="text-3xl font-bold text-white">
@@ -35,7 +35,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
                   onPress={() => {
                     void (isBrowsePlaying ? pauseBrowse() : play());
                   }}
-                  className="h-14 w-14 items-center justify-center rounded-full bg-emerald-500"
+                  className="h-14 w-14 items-center justify-center rounded-full bg-gold-500"
                 >
                   <MaterialIcons
                     name={isBrowsePlaying ? "pause" : "play-arrow"}
@@ -53,7 +53,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
               </View>
             </View>
 
-            <View className="w-[420px] bg-[#060d08] p-8">
+            <View className="w-[420px] bg-[#080d18] p-8">
               <Image
                 source={thumbnailSource}
                 style={{ width: "100%", height: 236, borderRadius: 28 }}

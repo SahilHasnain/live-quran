@@ -48,7 +48,7 @@ export default function QuranSurahPicker({
       presentationStyle="pageSheet"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-[#080f0a]">
+      <View className="flex-1 bg-[#0a0e1c]">
         <View className="flex-row items-center justify-between px-4 pb-3 pt-14">
           <TouchableOpacity
             onPress={onClose}
@@ -62,7 +62,7 @@ export default function QuranSurahPicker({
           <View className="h-10 w-10" />
         </View>
 
-        <View className="mx-4 mb-3 rounded-xl bg-[#0f1a12] px-4 py-2">
+        <View className="mx-4 mb-3 rounded-xl bg-[#131b2e] px-4 py-2">
           <TextInput
             value={search}
             onChangeText={setSearch}
@@ -85,10 +85,10 @@ export default function QuranSurahPicker({
                 onClose();
               }}
               activeOpacity={0.7}
-              className="mb-3 flex-1 items-center rounded-2xl border border-white/10 bg-[#0a140e] px-2 py-4"
+              className="mb-3 flex-1 items-center rounded-2xl border border-white/10 bg-[#101729] px-2 py-4"
             >
-              <View className="mb-2 h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15">
-                <Text className="text-xs font-bold text-emerald-400">
+              <View className="mb-2 h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
+                <Text className="text-xs font-bold text-gold-400">
                   {item.id}
                 </Text>
               </View>

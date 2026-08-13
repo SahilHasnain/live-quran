@@ -26,15 +26,24 @@ const TAFSIR_PROGRESS_KEY = "@quran_tafseer_progress";
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const ALL_SURAHS = getAllSurahs();
 
+const tafseerCache = new Map<
+  number,
+  { verses: DbVerse[]; tafseerMap: Map<number, DbTafseer> }
+>();
+
 function useSurahTafseerData(surahId: number) {
   const db = useSQLiteContext();
-  const [data, setData] = useState<{
-    verses: DbVerse[];
-    tafseerMap: Map<number, DbTafseer>;
-  } | null>(null);
+  const [data, setData] = useState<
+    { verses: DbVerse[]; tafseerMap: Map<number, DbTafseer> } | null
+  >(() => tafseerCache.get(surahId) ?? null);
 
   useEffect(() => {
     let cancelled = false;
+    const cached = tafseerCache.get(surahId);
+    if (cached) {
+      setData(cached);
+      return;
+    }
     Promise.all([
       getVersesBySurah(db, surahId),
       getTafseerBySurah(db, surahId),
@@ -44,11 +53,12 @@ function useSurahTafseerData(surahId: number) {
       for (const entry of tafseerRows) {
         tafseerMap.set(entry.verse_number, entry);
       }
-      setData({ verses, tafseerMap });
+      const result = { verses, tafseerMap };
+      tafseerCache.set(surahId, result);
+      setData(result);
     });
     return () => {
       cancelled = true;
-      setData(null);
     };
   }, [db, surahId]);
 
@@ -65,11 +75,11 @@ const VerseCard = memo(function VerseCard({
   const verseNumber = verse.verse_number;
 
   return (
-    <View className="mb-6 rounded-2xl border border-white/10 bg-[#0a140e] p-4">
+    <View className="mb-6 rounded-2xl border border-white/10 bg-[#101729] p-4">
       {/* Verse number badge */}
       <View className="mb-3 flex-row items-center justify-between">
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15">
-          <Text className="text-xs font-bold text-emerald-400">
+        <View className="h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
+          <Text className="text-xs font-bold text-gold-400">
             {verseNumber}
           </Text>
         </View>
@@ -91,9 +101,23 @@ const VerseCard = memo(function VerseCard({
 
       {/* Tafsir text */}
       {tafseer ? (
-        <Text style={{ fontSize: 22, lineHeight: 38, color: "#d4d4d4" }}>
-          {tafseer.text}
-        </Text>
+        (() => {
+          const paragraphs = tafseer.text.split(/\n{2,}/);
+          return paragraphs.map((paragraph, index) => (
+            <Text
+              key={index}
+              style={{
+                fontSize: 22,
+                lineHeight: 38,
+                color: "#d4d4d4",
+                marginBottom:
+                  index < paragraphs.length - 1 ? 10 : 0,
+              }}
+            >
+              {paragraph.trim()}
+            </Text>
+          ));
+        })()
       ) : (
         <Text style={{ fontSize: 22, lineHeight: 38, color: "#525252", fontStyle: "italic" }}>
           Tafsir not available for this verse
@@ -155,7 +179,7 @@ function SurahTafseerPage({
   if (!data) {
     return (
       <View className="flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#34d399" />
+        <ActivityIndicator size="large" color="#e0bd5e" />
       </View>
     );
   }
@@ -269,15 +293,15 @@ export default function TafseerReader() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#080f0a]">
-        <ActivityIndicator size="large" color="#34d399" />
+      <View className="flex-1 items-center justify-center bg-[#0a0e1c]">
+        <ActivityIndicator size="large" color="#e0bd5e" />
         <Text className="mt-4 text-sm text-neutral-400">Loading Tafsir...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       {/* Header */}
       <View className="px-4 pb-2 pt-14">
         <View className="flex-row items-center gap-3">
@@ -297,9 +321,9 @@ export default function TafseerReader() {
           </View>
           <TouchableOpacity
             onPress={() => setPickerVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15"
+            className="h-10 w-10 items-center justify-center rounded-full bg-gold-500/15"
           >
-            <MaterialIcons name="swap-horiz" size={20} color="#34d399" />
+            <MaterialIcons name="swap-horiz" size={20} color="#e0bd5e" />
           </TouchableOpacity>
         </View>
 
@@ -325,8 +349,8 @@ export default function TafseerReader() {
               Prev
             </Text>
           </TouchableOpacity>
-          <View className="items-center rounded-xl bg-emerald-500/15 px-4 py-2">
-            <Text className="text-xs font-bold text-emerald-400">
+          <View className="items-center rounded-xl bg-gold-500/15 px-4 py-2">
+            <Text className="text-xs font-bold text-gold-400">
               {currentIndex + 1} / {ALL_SURAHS.length}
             </Text>
           </View>
@@ -374,6 +398,9 @@ export default function TafseerReader() {
           index,
         })}
         onMomentumScrollEnd={onMomentumEnd}
+        windowSize={3}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
         renderItem={({ item }) => (
           <SurahTafseerPage
             surahId={item.id}
@@ -390,7 +417,7 @@ export default function TafseerReader() {
         onRequestClose={() => setPickerVisible(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="h-3/4 rounded-t-3xl bg-[#080f0a]">
+          <View className="h-3/4 rounded-t-3xl bg-[#0a0e1c]">
             <View className="flex-row items-center justify-between px-4 pb-3 pt-5">
               <TouchableOpacity
                 onPress={() => setPickerVisible(false)}
@@ -414,12 +441,12 @@ export default function TafseerReader() {
                   activeOpacity={0.7}
                   className={`mb-2 flex-row items-center rounded-2xl border px-4 py-3 ${
                     s.id === currentSurah?.id
-                      ? "border-emerald-400/40 bg-emerald-500/20"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/20"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-                    <Text className="text-sm font-bold text-emerald-400">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+                    <Text className="text-sm font-bold text-gold-400">
                       {s.id}
                     </Text>
                   </View>

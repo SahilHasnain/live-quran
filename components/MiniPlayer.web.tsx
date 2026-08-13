@@ -29,12 +29,12 @@ export function MiniPlayer() {
   return (
     <>
       <View
-        className="z-50 w-[380px] overflow-hidden rounded-[28px] border border-white/10 bg-[#08110b]/95 shadow-2xl"
+        className="z-50 w-[380px] overflow-hidden rounded-[28px] border border-white/10 bg-[#0b101f]/95 shadow-2xl"
         style={{ position: "fixed", bottom: 24, right: 24 }}
       >
         <View className="h-1 bg-white/5">
           <View
-            className="h-full bg-emerald-400"
+            className="h-full bg-gold-400"
             style={{ width: `${browseProgressPercent}%` }}
           />
         </View>
@@ -64,7 +64,7 @@ export function MiniPlayer() {
               onPress={() => {
                 void (isBrowsePlaying ? pauseBrowse() : play());
               }}
-              className="h-12 w-12 items-center justify-center rounded-full border border-emerald-400/30 bg-emerald-500/10"
+              className="h-12 w-12 items-center justify-center rounded-full border border-gold-400/30 bg-gold-500/10"
             >
               {isBrowseBuffering ? (
                 <ActivityIndicator size="small" color={colors.primary.light} />

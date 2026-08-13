@@ -19,7 +19,7 @@ import { useQuranArabicProgress } from "@/hooks/useQuranArabicProgress";
 import { MaterialIcons } from "@expo/vector-icons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { memo, useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Modal,
@@ -52,7 +52,7 @@ function SegmentedControl({
   onTabChange: (tab: ReadTab) => void;
 }) {
   return (
-    <View className="mb-6 flex-row rounded-xl bg-[#0a140e] p-1">
+    <View className="mb-6 flex-row rounded-xl bg-[#101729] p-1">
       {([
         { key: "arabic", icon: "menu-book", label: "Tilawat" },
         { key: "translations", icon: "auto-stories", label: "Translations" },
@@ -63,17 +63,17 @@ function SegmentedControl({
           onPress={() => onTabChange(tab.key)}
           activeOpacity={0.7}
           className={`flex-1 flex-row items-center justify-center gap-1.5 rounded-[10px] py-2.5 ${
-            activeTab === tab.key ? "bg-emerald-500" : ""
+            activeTab === tab.key ? "bg-gold-500" : ""
           }`}
         >
           <MaterialIcons
             name={tab.icon}
             size={16}
-            color={activeTab === tab.key ? "#03140d" : colors.text.muted}
+            color={activeTab === tab.key ? "#1a1204" : colors.text.muted}
           />
           <Text
             className={`text-xs font-semibold ${
-              activeTab === tab.key ? "text-[#03140d]" : "text-neutral-400"
+              activeTab === tab.key ? "text-[#1a1204]" : "text-neutral-400"
             }`}
           >
             {tab.label}
@@ -97,7 +97,7 @@ const TRANSLATION_LANGS: { key: TranslationLang; name: string; native: string }[
   { key: "sr", name: "Saraiki", native: "Kanzul Irfan" },
 ];
 
-function TranslationsTab() {
+const TranslationsTab = memo(function TranslationsTab() {
   const router = useRouter();
   const [lastSurah, setLastSurah] = useState<number | null>(null);
   const [selectedLang, setSelectedLang] = useState<TranslationLang>("en");
@@ -129,10 +129,10 @@ function TranslationsTab() {
         <TouchableOpacity
           onPress={() => setLangPickerVisible(true)}
           activeOpacity={0.7}
-          className="flex-row items-center justify-between rounded-xl border border-white/10 bg-[#0a140e] px-4 py-3"
+          className="flex-row items-center justify-between rounded-xl border border-white/10 bg-[#101729] px-4 py-3"
         >
           <View className="flex-row items-center gap-3">
-            <MaterialIcons name="language" size={20} color="#34d399" />
+            <MaterialIcons name="language" size={20} color="#e0bd5e" />
             <Text className="text-sm font-semibold text-white">
               {currentLangInfo.name}
             </Text>
@@ -152,11 +152,11 @@ function TranslationsTab() {
             router.push(`/reader/roman-urdu/${page}` as never);
           }}
           activeOpacity={0.85}
-          className="overflow-hidden rounded-[28px] border border-white/10 bg-[#0a140e]"
+          className="overflow-hidden rounded-[28px] border border-white/10 bg-[#101729]"
         >
           <View className="p-6">
             <View className="flex-row items-center gap-3">
-              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-emerald-500/15">
+              <View className="h-14 w-14 items-center justify-center rounded-2xl bg-gold-500/15">
                 <MaterialIcons
                   name="auto-stories"
                   size={28}
@@ -169,8 +169,8 @@ function TranslationsTab() {
             </View>
 
             {hasProgress ? (
-              <View className="mt-4 flex-row items-center gap-3 rounded-2xl bg-emerald-500/10 px-4 py-3">
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
+              <View className="mt-4 flex-row items-center gap-3 rounded-2xl bg-gold-500/10 px-4 py-3">
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15">
                   <MaterialIcons
                     name="play-arrow"
                     size={22}
@@ -187,9 +187,9 @@ function TranslationsTab() {
                 />
               </View>
             ) : (
-              <View className="mt-4 flex-row items-center gap-3 rounded-2xl bg-emerald-500 px-4 py-3">
-                <MaterialIcons name="play-arrow" size={22} color="#03140d" />
-                <Text className="text-sm font-bold text-[#03140d]">
+              <View className="mt-4 flex-row items-center gap-3 rounded-2xl bg-gold-500 px-4 py-3">
+                <MaterialIcons name="play-arrow" size={22} color="#1a1204" />
+                <Text className="text-sm font-bold text-[#1a1204]">
                   Start Reading
                 </Text>
               </View>
@@ -203,11 +203,11 @@ function TranslationsTab() {
             <TouchableOpacity
               onPress={() => router.push(`/reader/translation/${lastSurah}` as never)}
               activeOpacity={0.85}
-              className="mb-4 overflow-hidden rounded-2xl border border-emerald-400/20 bg-emerald-500/10"
+              className="mb-4 overflow-hidden rounded-2xl border border-gold-400/20 bg-gold-500/10"
             >
               <View className="flex-row items-center gap-3 px-4 py-3">
-                <View className="h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-                  <MaterialIcons name="play-arrow" size={22} color="#34d399" />
+                <View className="h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15">
+                  <MaterialIcons name="play-arrow" size={22} color="#e0bd5e" />
                 </View>
                 <View className="flex-1">
                   <Text className="text-sm font-semibold text-white">
@@ -231,10 +231,10 @@ function TranslationsTab() {
                 key={surah.id}
                 onPress={() => router.push(`/reader/translation/${surah.id}` as never)}
                 activeOpacity={0.7}
-                className="flex-row items-center rounded-2xl border border-white/10 bg-[#0a140e] px-4 py-3"
+                className="flex-row items-center rounded-2xl border border-white/10 bg-[#101729] px-4 py-3"
               >
-                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-                  <Text className="text-sm font-bold text-emerald-400">
+                <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+                  <Text className="text-sm font-bold text-gold-400">
                     {surah.id}
                   </Text>
                 </View>
@@ -261,7 +261,7 @@ function TranslationsTab() {
         onRequestClose={() => setLangPickerVisible(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="rounded-t-3xl bg-[#080f0a] px-4 pb-8 pt-5">
+          <View className="rounded-t-3xl bg-[#0a0e1c] px-4 pb-8 pt-5">
             <View className="mb-4 flex-row items-center justify-between">
               <Text className="text-lg font-semibold text-white">
                 Select Language
@@ -284,15 +284,15 @@ function TranslationsTab() {
                   activeOpacity={0.7}
                   className={`flex-row items-center rounded-2xl border px-4 py-4 ${
                     l.key === selectedLang
-                      ? "border-emerald-400/40 bg-emerald-500/20"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/20"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
-                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
+                  <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
                     <MaterialIcons
                       name={l.key === selectedLang ? "check-circle" : "language"}
                       size={20}
-                      color={l.key === selectedLang ? "#34d399" : "#525252"}
+                      color={l.key === selectedLang ? "#e0bd5e" : "#525252"}
                     />
                   </View>
                   <View className="flex-1">
@@ -309,9 +309,9 @@ function TranslationsTab() {
       </Modal>
     </View>
   );
-}
+});
 
-function TafsirTab() {
+const TafsirTab = memo(function TafsirTab() {
   const router = useRouter();
   const [lastSurah, setLastSurah] = useState<number | null>(null);
 
@@ -329,11 +329,11 @@ function TafsirTab() {
         <TouchableOpacity
           onPress={() => router.push(`/reader/tafsir/${lastSurah}` as never)}
           activeOpacity={0.85}
-          className="mb-4 overflow-hidden rounded-2xl border border-emerald-400/20 bg-emerald-500/10"
+          className="mb-4 overflow-hidden rounded-2xl border border-gold-400/20 bg-gold-500/10"
         >
           <View className="flex-row items-center gap-3 px-4 py-3">
-            <View className="h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-              <MaterialIcons name="play-arrow" size={22} color="#34d399" />
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15">
+              <MaterialIcons name="play-arrow" size={22} color="#e0bd5e" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-white">
@@ -357,10 +357,10 @@ function TafsirTab() {
             key={surah.id}
             onPress={() => router.push(`/reader/tafsir/${surah.id}` as never)}
             activeOpacity={0.7}
-            className="flex-row items-center rounded-2xl border border-white/10 bg-[#0a140e] px-4 py-3"
+            className="flex-row items-center rounded-2xl border border-white/10 bg-[#101729] px-4 py-3"
           >
-            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-              <Text className="text-sm font-bold text-emerald-400">
+            <View className="mr-3 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+              <Text className="text-sm font-bold text-gold-400">
                 {surah.id}
               </Text>
             </View>
@@ -378,7 +378,7 @@ function TafsirTab() {
       </View>
     </View>
   );
-}
+});
 
 export default function ReadScreen() {
   const router = useRouter();
@@ -396,6 +396,7 @@ export default function ReadScreen() {
     { key: "roman-urdu", label: "Roman Urdu", nativeLabel: "رومن اردو", pages: 1207 },
   ]);
   const [activeTab, setActiveTab] = useState<ReadTab>("arabic");
+  const [visitedTabs, setVisitedTabs] = useState<ReadTab[]>(["arabic"]);
   const { juzs, loading, error } = useQuranArabic();
   const { lastPara, lastVerseId } = useQuranArabicProgress();
 
@@ -405,6 +406,9 @@ export default function ReadScreen() {
     AsyncStorage.getItem(ACTIVE_TAB_KEY).then((saved) => {
       if (saved === "arabic" || saved === "translations" || saved === "tafsir") {
         setActiveTab(saved);
+        setVisitedTabs((prev) =>
+          prev.includes(saved) ? prev : [...prev, saved],
+        );
       }
     });
   }, []);
@@ -412,6 +416,13 @@ export default function ReadScreen() {
   useEffect(() => {
     AsyncStorage.setItem(ACTIVE_TAB_KEY, activeTab);
   }, [activeTab]);
+
+  const handleTabChange = useCallback((tab: ReadTab) => {
+    setActiveTab(tab);
+    setVisitedTabs((prev) =>
+      prev.includes(tab) ? prev : [...prev, tab],
+    );
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -441,17 +452,17 @@ export default function ReadScreen() {
     languages.find((l) => l.key === lastLang) ?? languages[0];
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       <StatusBar barStyle="light-content" />
 
       <Animated.View
         style={[headerAnimatedStyle]}
-        className="absolute top-0 left-0 right-0 z-50 bg-[#080f0a]"
+        className="absolute top-0 left-0 right-0 z-50 bg-[#0a0e1c]"
       >
         <View className="px-4 pb-3 pt-14">
           <View className="flex-row items-center gap-3">
-            <View className="h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-              <MaterialIcons name="auto-stories" size={22} color="#34d399" />
+            <View className="h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15">
+              <MaterialIcons name="auto-stories" size={22} color="#e0bd5e" />
             </View>
             <Text className="text-lg font-semibold text-white">Read</Text>
           </View>
@@ -470,7 +481,7 @@ export default function ReadScreen() {
         <View className="px-4">
           <SegmentedControl
             activeTab={activeTab}
-            onTabChange={setActiveTab}
+            onTabChange={handleTabChange}
           />
 
           <View style={{ display: activeTab === "arabic" ? "flex" : "none" }}>
@@ -484,11 +495,11 @@ export default function ReadScreen() {
                   )
                 }
                 activeOpacity={0.85}
-                className="mb-4 overflow-hidden rounded-2xl border border-emerald-400/20 bg-emerald-500/10"
+                className="mb-4 overflow-hidden rounded-2xl border border-gold-400/20 bg-gold-500/10"
               >
                 <View className="flex-row items-center gap-3 px-4 py-3">
-                  <View className="h-10 w-10 items-center justify-center rounded-xl bg-emerald-500/15">
-                    <MaterialIcons name="play-arrow" size={22} color="#34d399" />
+                  <View className="h-10 w-10 items-center justify-center rounded-xl bg-gold-500/15">
+                    <MaterialIcons name="play-arrow" size={22} color="#e0bd5e" />
                   </View>
                   <View className="flex-1">
                     <Text className="text-sm font-semibold text-white">
@@ -513,11 +524,11 @@ export default function ReadScreen() {
                       router.push(`/reader/arabic/${juz.juz_number}`)
                     }
                     activeOpacity={0.7}
-                    className="items-center rounded-2xl border border-white/10 bg-[#0a140e] px-1 py-4"
+                    className="items-center rounded-2xl border border-white/10 bg-[#101729] px-1 py-4"
                     style={{ width: "31%" }}
                   >
-                    <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15">
-                      <Text className="text-base font-bold text-emerald-400">
+                    <View className="mb-2 h-10 w-10 items-center justify-center rounded-full bg-gold-500/15">
+                      <Text className="text-base font-bold text-gold-400">
                         {toArabicNumeral(juz.juz_number)}
                       </Text>
                     </View>
@@ -533,11 +544,11 @@ export default function ReadScreen() {
           </View>
 
           <View style={{ display: activeTab === "translations" ? "flex" : "none" }}>
-            <TranslationsTab />
+            {visitedTabs.includes("translations") && <TranslationsTab />}
           </View>
 
           <View style={{ display: activeTab === "tafsir" ? "flex" : "none" }}>
-            <TafsirTab />
+            {visitedTabs.includes("tafsir") && <TafsirTab />}
           </View>
         </View>
       </Animated.ScrollView>

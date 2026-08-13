@@ -51,17 +51,17 @@ export default function LiveWebScreen() {
             </Text>
           </View>
 
-          <View className="rounded-full border border-emerald-400/20 bg-emerald-500/10 px-5 py-3">
-            <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-emerald-200">
+          <View className="rounded-full border border-gold-400/20 bg-gold-500/10 px-5 py-3">
+            <Text className="text-sm font-semibold uppercase tracking-[1.8px] text-gold-200">
               {isLivePlaying ? "On Air" : "Standby"}
             </Text>
           </View>
         </View>
 
         <View className="flex-row gap-8">
-          <View className="flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-[#0a140e]">
+          <View className="flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-[#101729]">
             <View className="relative p-8">
-              <View className="absolute right-[-40px] top-[-20px] h-[220px] w-[220px] rounded-full bg-emerald-400/10" />
+              <View className="absolute right-[-40px] top-[-20px] h-[220px] w-[220px] rounded-full bg-gold-400/10" />
               <View className="absolute bottom-[-80px] left-[-20px] h-[240px] w-[240px] rounded-full bg-amber-400/10" />
 
               <View className="relative">
@@ -99,7 +99,7 @@ export default function LiveWebScreen() {
                 ) : (
                   <View className="rounded-[28px] border border-white/10 bg-black/20 p-6">
                     <View className="mb-8 flex-row items-center">
-                      <View className="mr-4 h-3 w-3 rounded-full bg-emerald-400" />
+                      <View className="mr-4 h-3 w-3 rounded-full bg-gold-400" />
                       <Text className="text-sm font-medium text-neutral-300">
                         {isLivePlaying
                           ? "Streaming now"
@@ -113,7 +113,7 @@ export default function LiveWebScreen() {
                       <TouchableOpacity
                         onPress={isLivePlaying ? pauseLive : playLive}
                         disabled={isLiveLoading}
-                        className="h-20 w-20 items-center justify-center rounded-full bg-emerald-500"
+                        className="h-20 w-20 items-center justify-center rounded-full bg-gold-500"
                       >
                         {isLiveLoading ? (
                           <ActivityIndicator size="small" color="white" />
@@ -151,8 +151,8 @@ export default function LiveWebScreen() {
                   onPressOut={() => setHoveredMode(null)}
                   className={`mb-4 rounded-[28px] border p-5 ${
                     isActive
-                      ? "border-emerald-400/40 bg-emerald-500/10"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/10"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
                   <View className="flex-row items-start justify-between">

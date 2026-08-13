@@ -29,14 +29,26 @@ const sortedJuzs = (juzsList as JuzMeta[]).sort(
   (a, b) => a.juz_number - b.juz_number,
 );
 
+const versesByJuzCache = new Map<number, DbVerse[]>();
+
 function useVersesForJuz(db: SQLiteDatabase, juzNumber: number) {
-  const [verses, setVerses] = useState<DbVerse[] | null>(null);
+  const [verses, setVerses] = useState<DbVerse[] | null>(
+    () => versesByJuzCache.get(juzNumber) ?? null,
+  );
 
   useEffect(() => {
     let cancelled = false;
     if (!db) return;
+    const cached = versesByJuzCache.get(juzNumber);
+    if (cached) {
+      setVerses(cached);
+      return;
+    }
     getVersesByJuz(db, juzNumber).then((rows) => {
-      if (!cancelled) setVerses(rows);
+      if (!cancelled) {
+        versesByJuzCache.set(juzNumber, rows);
+        setVerses(rows);
+      }
     });
     return () => {
       cancelled = true;
@@ -125,7 +137,7 @@ function ParaPage({
         style={{ width: SCREEN_WIDTH }}
         className="flex-1 items-center justify-center"
       >
-        <ActivityIndicator size="large" color="#34d399" />
+        <ActivityIndicator size="large" color="#e0bd5e" />
       </View>
     );
   }
@@ -261,15 +273,15 @@ export default function ArabicParaReader() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center bg-[#080f0a]">
-        <ActivityIndicator size="large" color="#34d399" />
+      <View className="flex-1 items-center justify-center bg-[#0a0e1c]">
+        <ActivityIndicator size="large" color="#e0bd5e" />
         <Text className="mt-4 text-sm text-neutral-400">Loading Para...</Text>
       </View>
     );
   }
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       <View className="px-4 pb-2 pt-14">
         <View className="flex-row items-center gap-3">
           <View className="flex-1">
@@ -281,14 +293,14 @@ export default function ArabicParaReader() {
           </View>
           <TouchableOpacity
             onPress={() => setPickerVisible(true)}
-            className="h-10 w-10 items-center justify-center rounded-full bg-emerald-500/15"
+            className="h-10 w-10 items-center justify-center rounded-full bg-gold-500/15"
           >
-            <MaterialIcons name="list" size={20} color="#34d399" />
+            <MaterialIcons name="list" size={20} color="#e0bd5e" />
           </TouchableOpacity>
         </View>
         <View className="mt-2 h-[3px] overflow-hidden rounded-full bg-white/10">
           <View
-            className="h-full rounded-full bg-emerald-400"
+            className="h-full rounded-full bg-gold-400"
             style={{ width: `${progress}%` }}
           />
         </View>
@@ -308,6 +320,9 @@ export default function ArabicParaReader() {
           index,
         })}
         onMomentumScrollEnd={onMomentumEnd}
+        windowSize={3}
+        initialNumToRender={1}
+        maxToRenderPerBatch={1}
         renderItem={({ item }) => (
           <ParaPage
             juzNumber={item.juz_number}
@@ -327,7 +342,7 @@ export default function ArabicParaReader() {
         onRequestClose={() => setPickerVisible(false)}
       >
         <View className="flex-1 justify-end bg-black/50">
-          <View className="h-1/2 rounded-t-3xl bg-[#080f0a]">
+          <View className="h-1/2 rounded-t-3xl bg-[#0a0e1c]">
             <View className="flex-row items-center justify-between px-4 pb-3 pt-5">
               <TouchableOpacity
                 onPress={() => setPickerVisible(false)}
@@ -353,12 +368,12 @@ export default function ArabicParaReader() {
                   activeOpacity={0.7}
                   className={`mb-3 flex-1 items-center rounded-2xl border px-2 py-5 ${
                     j.juz_number === currentJuz?.juz_number
-                      ? "border-emerald-400/40 bg-emerald-500/20"
-                      : "border-white/10 bg-[#0a140e]"
+                      ? "border-gold-400/40 bg-gold-500/20"
+                      : "border-white/10 bg-[#101729]"
                   }`}
                 >
-                  <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-emerald-500/15">
-                    <Text className="text-lg font-bold text-emerald-400">
+                  <View className="mb-3 h-12 w-12 items-center justify-center rounded-full bg-gold-500/15">
+                    <Text className="text-lg font-bold text-gold-400">
                       {toArabicNumeral(j.juz_number)}
                     </Text>
                   </View>

@@ -100,7 +100,7 @@ export default function Index() {
   };
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       <Image
         source={require("@/assets/images/quran-bg-v2.jpg")}
         style={StyleSheet.absoluteFillObject}
@@ -116,12 +116,12 @@ export default function Index() {
         transition={200}
       />
       <LinearGradient
-        colors={["rgba(5,10,7,0.08)", "rgba(8,15,10,0.22)", "rgba(8,15,10,0.48)"]}
+        colors={["rgba(8,12,26,0.08)", "rgba(10,14,28,0.22)", "rgba(10,14,28,0.48)"]}
         locations={[0, 0.45, 1]}
         style={StyleSheet.absoluteFillObject}
       />
       <LinearGradient
-        colors={["rgba(16,185,129,0.06)", "rgba(16,185,129,0)", "rgba(0,0,0,0.08)"]}
+        colors={["rgba(212,168,67,0.06)", "rgba(212,168,67,0)", "rgba(0,0,0,0.08)"]}
         locations={[0, 0.35, 1]}
         style={StyleSheet.absoluteFillObject}
       />
@@ -137,7 +137,7 @@ export default function Index() {
         <TouchableWithoutFeedback onPress={() => setShowModeMenu(false)}>
           <View className="flex-1 bg-black/50">
             <TouchableWithoutFeedback>
-              <View className="absolute top-[72px] right-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+              <View className="absolute top-[72px] right-4 bg-[#131b2e] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                 {MODES.map((m, index) => (
                   <TouchableOpacity
                     key={m.key}
@@ -175,7 +175,7 @@ export default function Index() {
         <TouchableWithoutFeedback onPress={() => setShowSleepTimerMenu(false)}>
           <View className="flex-1 bg-black/50">
             <TouchableWithoutFeedback>
-              <View className="absolute bottom-44 right-6 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+              <View className="absolute bottom-44 right-6 bg-[#131b2e] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                 {sleepTimerMinutes && (
                   <TouchableOpacity
                     onPress={handleCancelSleepTimer}
@@ -213,7 +213,7 @@ export default function Index() {
 
       {/* Loading Overlay */}
       {isLiveLoading && (
-        <View className="absolute inset-0 bg-[#080f0a]/95 z-50 items-center justify-center">
+        <View className="absolute inset-0 bg-[#0a0e1c]/95 z-50 items-center justify-center">
           <View className="items-center">
             <Image
               source={require("@/assets/images/headphone-v1.png")}

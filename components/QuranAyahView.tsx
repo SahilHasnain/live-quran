@@ -35,8 +35,8 @@ export default React.memo(function QuranAyahView({
 
   return (
     <View className="flex-row items-start justify-end px-4 py-4">
-      <View className="mr-3 mt-1 h-8 w-8 items-center justify-center rounded-full bg-emerald-500/15">
-        <Text className="text-xs font-medium text-emerald-400">
+      <View className="mr-3 mt-1 h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
+        <Text className="text-xs font-medium text-gold-400">
           {toArabicDigits(verseNumber)}
         </Text>
       </View>

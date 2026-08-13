@@ -545,7 +545,7 @@ export default function AudiosScreen() {
   if (mode === null) return null;
 
   return (
-    <View className="flex-1 bg-[#080f0a]">
+    <View className="flex-1 bg-[#0a0e1c]">
       <StatusBar barStyle="light-content" />
 
       {/* Mode Dropdown Modal */}
@@ -558,7 +558,7 @@ export default function AudiosScreen() {
         <TouchableWithoutFeedback onPress={() => setShowModeMenu(false)}>
           <View className="flex-1 bg-black/50">
             <TouchableWithoutFeedback>
-              <View className="absolute top-[72px] right-4 bg-[#0f1a12] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
+              <View className="absolute top-[72px] right-4 bg-[#131b2e] rounded-xl overflow-hidden shadow-lg border border-neutral-800">
                 {MODES.map((m, index) => (
                   <TouchableOpacity
                     key={m.key}
@@ -595,7 +595,7 @@ export default function AudiosScreen() {
       {/* Animated Header */}
       <Animated.View
         style={[headerAnimatedStyle]}
-        className="absolute top-0 left-0 right-0 z-50 bg-[#080f0a]"
+        className="absolute top-0 left-0 right-0 z-50 bg-[#0a0e1c]"
       >
         {/* Header with Logo, Search, and Mode Selector */}
         <View className="px-4 pb-3 pt-14">
@@ -605,7 +605,7 @@ export default function AudiosScreen() {
               style={{ width: 32, height: 32 }}
               contentFit="contain"
             />
-            <View className="flex-1 flex-row items-center bg-[#0f1a12] rounded-xl px-3 gap-2">
+            <View className="flex-1 flex-row items-center bg-[#131b2e] rounded-xl px-3 gap-2">
               <MaterialIcons name="search" size={20} color="#525252" />
               <TextInput
                 value={searchQuery}
@@ -631,7 +631,7 @@ export default function AudiosScreen() {
             <TouchableOpacity
               onPress={handleShuffle}
               className={`h-11 w-11 items-center justify-center rounded-xl ${
-                isShuffled ? "bg-primary/20" : "bg-[#0f1a12]"
+                isShuffled ? "bg-primary/20" : "bg-[#131b2e]"
               }`}
               accessibilityLabel="Shuffle list"
             >
@@ -702,12 +702,12 @@ export default function AudiosScreen() {
                 <TouchableOpacity
                   onPress={() => setFilter("all")}
                   className={`rounded-full px-4 py-1.5 ${
-                    filter === "all" ? "bg-emerald-500/20" : "bg-white/10"
+                    filter === "all" ? "bg-gold-500/20" : "bg-white/10"
                   }`}
                 >
                   <Text
                     className={`text-sm font-medium ${
-                      filter === "all" ? "text-emerald-400" : "text-white/70"
+                      filter === "all" ? "text-gold-400" : "text-white/70"
                     }`}
                   >
                     All
@@ -716,12 +716,12 @@ export default function AudiosScreen() {
                 <TouchableOpacity
                   onPress={() => setFilter("downloaded")}
                   className={`rounded-full px-4 py-1.5 ${
-                    filter === "downloaded" ? "bg-emerald-500/20" : "bg-white/10"
+                    filter === "downloaded" ? "bg-gold-500/20" : "bg-white/10"
                   }`}
                 >
                   <Text
                     className={`text-sm font-medium ${
-                      filter === "downloaded" ? "text-emerald-400" : "text-white/70"
+                      filter === "downloaded" ? "text-gold-400" : "text-white/70"
                     }`}
                   >
                     Downloaded

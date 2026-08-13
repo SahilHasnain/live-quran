@@ -313,7 +313,7 @@ export default function BrowseWebScreen() {
             </Text>
           </View>
 
-          <View className="w-[340px] rounded-[28px] border border-white/10 bg-[#0a140e] p-5">
+          <View className="w-[340px] rounded-[28px] border border-white/10 bg-[#101729] p-5">
             <View className="mt-4 flex-row items-center gap-3">
               <View className="flex-1 flex-row items-center rounded-2xl border border-white/10 bg-black/20 px-4">
                 <MaterialIcons name="search" size={20} color="#737373" />
@@ -329,7 +329,7 @@ export default function BrowseWebScreen() {
                 onPress={handleShuffle}
                 className={`h-14 w-14 items-center justify-center rounded-2xl border ${
                   isShuffled
-                    ? "border-emerald-400/30 bg-emerald-500/10"
+                    ? "border-gold-400/30 bg-gold-500/10"
                     : "border-white/10 bg-black/20"
                 }`}
               >
@@ -352,8 +352,8 @@ export default function BrowseWebScreen() {
                 onPress={() => switchMode(item.key)}
                 className={`w-[250px] rounded-[28px] border p-5 ${
                   isActive
-                    ? "border-emerald-400/40 bg-emerald-500/10"
-                    : "border-white/10 bg-[#0a140e]"
+                    ? "border-gold-400/40 bg-gold-500/10"
+                    : "border-white/10 bg-[#101729]"
                 }`}
               >
                 <Text
@@ -373,12 +373,12 @@ export default function BrowseWebScreen() {
           <TouchableOpacity
             onPress={() => setFilter("all")}
             className={`rounded-full px-5 py-2 ${
-              filter === "all" ? "bg-emerald-500/20" : "bg-white/10"
+              filter === "all" ? "bg-gold-500/20" : "bg-white/10"
             }`}
           >
             <Text
               className={`text-sm font-medium ${
-                filter === "all" ? "text-emerald-400" : "text-white/70"
+                filter === "all" ? "text-gold-400" : "text-white/70"
               }`}
             >
               All
@@ -387,12 +387,12 @@ export default function BrowseWebScreen() {
           <TouchableOpacity
             onPress={() => setFilter("downloaded")}
             className={`rounded-full px-5 py-2 ${
-              filter === "downloaded" ? "bg-emerald-500/20" : "bg-white/10"
+              filter === "downloaded" ? "bg-gold-500/20" : "bg-white/10"
             }`}
           >
             <Text
               className={`text-sm font-medium ${
-                filter === "downloaded" ? "text-emerald-400" : "text-white/70"
+                filter === "downloaded" ? "text-gold-400" : "text-white/70"
               }`}
             >
               Downloaded
@@ -427,7 +427,7 @@ export default function BrowseWebScreen() {
                         h.mode as AudioMode,
                       );
                     }}
-                    className="w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#0a140e]"
+                    className="w-48 overflow-hidden rounded-2xl border border-white/10 bg-[#101729]"
                   >
                     <View style={{ aspectRatio: 16 / 9 }}>
                       <Image
@@ -479,7 +479,7 @@ export default function BrowseWebScreen() {
                         key={item.$id}
                         onPress={() => handlePlay(item)}
                         activeOpacity={0.85}
-                        className="flex-1 overflow-hidden rounded-[30px] border border-white/10 bg-[#0a140e]"
+                        className="flex-1 overflow-hidden rounded-[30px] border border-white/10 bg-[#101729]"
                       >
                         <View style={{ aspectRatio: 16 / 9 }}>
                           <Image
@@ -523,7 +523,7 @@ export default function BrowseWebScreen() {
                 return (
                   <View
                     key={item.$id}
-                    className="mb-6 overflow-hidden rounded-[26px] border border-white/10 bg-[#09130d]"
+                    className="mb-6 overflow-hidden rounded-[26px] border border-white/10 bg-[#0d1424]"
                     style={{ width: "32%" }}
                   >
                     <TouchableOpacity activeOpacity={0.9} onPress={() => handlePlay(item)}>
@@ -537,7 +537,7 @@ export default function BrowseWebScreen() {
                         {progressPercent > 0 && (
                           <View className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
                             <View
-                              className="h-full bg-emerald-400"
+                              className="h-full bg-gold-400"
                               style={{ width: `${progressPercent}%` }}
                             />
                           </View>

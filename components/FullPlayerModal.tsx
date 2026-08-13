@@ -74,7 +74,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
       animationType="fade"
       onRequestClose={onClose}
     >
-      <View className="flex-1 bg-[#080f0a]">
+      <View className="flex-1 bg-[#0a0e1c]">
         <Image
           source={require("@/assets/images/quran-bg-v2.jpg")}
           style={StyleSheet.absoluteFillObject}
@@ -90,12 +90,12 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
           transition={200}
         />
         <LinearGradient
-          colors={["rgba(3,8,5,0.14)", "rgba(3,8,5,0.28)", "rgba(8,15,10,0.56)"]}
+          colors={["rgba(8,12,26,0.14)", "rgba(8,12,26,0.28)", "rgba(10,14,28,0.56)"]}
           locations={[0, 0.45, 1]}
           style={StyleSheet.absoluteFillObject}
         />
         <LinearGradient
-          colors={["rgba(7,14,9,0.22)", "rgba(7,14,9,0.03)", "rgba(7,14,9,0.4)"]}
+          colors={["rgba(16,23,41,0.22)", "rgba(16,23,41,0.03)", "rgba(16,23,41,0.4)"]}
           locations={[0, 0.4, 1]}
           style={StyleSheet.absoluteFillObject}
         />
@@ -107,7 +107,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
             <TouchableOpacity
               onPress={() => setIsAutoplay(!isAutoplay)}
               className={`h-10 px-4 items-center justify-center rounded-full border border-black/40 ${
-                isAutoplay ? "bg-emerald-400/10" : "bg-black/35"
+                isAutoplay ? "bg-gold-400/10" : "bg-black/35"
               }`}
               accessibilityRole="button"
               accessibilityLabel={
@@ -116,7 +116,7 @@ export function FullPlayerModal({ visible, onClose }: FullPlayerModalProps) {
             >
               <Text
                 className={`text-sm font-semibold ${
-                  isAutoplay ? "text-emerald-200" : "text-white/75"
+                  isAutoplay ? "text-gold-200" : "text-white/75"
                 }`}
               >
                 Autoplay

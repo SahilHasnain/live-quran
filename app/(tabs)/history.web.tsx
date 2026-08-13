@@ -145,7 +145,7 @@ export default function HistoryWebScreen() {
             </Text>
           </View>
 
-          <View className="w-[360px] rounded-[28px] border border-white/10 bg-[#0a140e] p-5">
+          <View className="w-[360px] rounded-[28px] border border-white/10 bg-[#101729] p-5">
             <View className="mt-4 flex-row items-center rounded-2xl border border-white/10 bg-black/20 px-4">
               <MaterialIcons name="search" size={20} color="#737373" />
               <TextInput
@@ -165,7 +165,7 @@ export default function HistoryWebScreen() {
               key={item.key}
               onPress={() => switchMode(item.key)}
               className={`rounded-full px-5 py-3 ${
-                mode === item.key ? "bg-emerald-500" : "bg-white/5"
+                mode === item.key ? "bg-gold-500" : "bg-white/5"
               }`}
             >
               <Text className="text-sm font-semibold text-white">{item.label}</Text>
@@ -179,7 +179,7 @@ export default function HistoryWebScreen() {
             <Text className="mt-4 text-neutral-400">Loading history...</Text>
           </View>
         ) : filteredHistory.length === 0 ? (
-          <View className="rounded-[28px] border border-white/10 bg-[#0a140e] p-12">
+          <View className="rounded-[28px] border border-white/10 bg-[#101729] p-12">
             <MaterialIcons name="history" size={52} color="#737373" />
             <Text className="mt-4 text-xl font-semibold text-white">No history yet</Text>
           </View>
@@ -193,7 +193,7 @@ export default function HistoryWebScreen() {
                   key={`${item.mode}-${item.id}`}
                   onPress={() => handlePlay(item)}
                   activeOpacity={0.85}
-                  className="mb-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#09130d]"
+                  className="mb-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#0d1424]"
                   style={{ width: "48.5%" }}
                 >
                   <View className="flex-row">
@@ -213,7 +213,7 @@ export default function HistoryWebScreen() {
                       {progressPercent > 0 && (
                         <View className="absolute bottom-0 left-0 right-0 h-1 bg-black/40">
                           <View
-                            className="h-full bg-emerald-400"
+                            className="h-full bg-gold-400"
                             style={{ width: `${progressPercent}%` }}
                           />
                         </View>

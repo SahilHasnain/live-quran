@@ -37,15 +37,15 @@ export default function TabLayoutWeb() {
   return (
     <HeaderVisibilityProvider>
       <TabBarVisibilityProvider>
-        <View className="flex-1 bg-[#050906]">
-          <View className="absolute inset-0 bg-[rgb(5,9,6)]" />
-          <View className="absolute -left-24 top-[-80px] h-[360px] w-[360px] rounded-full bg-emerald-400/10" />
+        <View className="flex-1 bg-[#060913]">
+          <View className="absolute inset-0 bg-[rgb(6,9,19)]" />
+          <View className="absolute -left-24 top-[-80px] h-[360px] w-[360px] rounded-full bg-gold-400/10" />
           <View className="absolute right-[-120px] top-[10%] h-[460px] w-[460px] rounded-full bg-amber-400/5" />
-          <View className="absolute bottom-[-140px] left-[20%] h-[400px] w-[400px] rounded-full bg-emerald-500/10" />
+          <View className="absolute bottom-[-140px] left-[20%] h-[400px] w-[400px] rounded-full bg-gold-500/10" />
 
           <View className="flex-1 flex-row px-6 py-6">
             <View
-              className={`mr-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#0a120d]/92 ${
+              className={`mr-6 overflow-hidden rounded-[28px] border border-white/10 bg-[#0d1424]/92 ${
                 isSidebarCollapsed ? "w-[96px]" : "w-[280px]"
               }`}
             >
@@ -55,8 +55,8 @@ export default function TabLayoutWeb() {
                 }`}
               >
                 <View className="mb-4 flex-row items-center justify-between">
-                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-emerald-500/15">
-                    <MaterialIcons name="auto-stories" size={26} color="#34d399" />
+                  <View className="h-12 w-12 items-center justify-center rounded-2xl bg-gold-500/15">
+                    <MaterialIcons name="auto-stories" size={26} color="#e0bd5e" />
                   </View>
                   <Pressable
                     onPress={toggleSidebar}
@@ -92,19 +92,19 @@ export default function TabLayoutWeb() {
                         isSidebarCollapsed ? "justify-center px-2 py-3" : "px-4 py-4"
                       } ${
                         isActive
-                          ? "bg-emerald-500/15 border border-emerald-400/30"
+                          ? "bg-gold-500/15 border border-gold-400/30"
                           : "border border-transparent bg-transparent"
                       }`}
                     >
                       <View
                         className={`items-center justify-center rounded-xl ${
                           isSidebarCollapsed ? "h-12 w-12" : "mr-4 h-11 w-11"
-                        } ${isActive ? "bg-emerald-400/15" : "bg-white/5"}`}
+                        } ${isActive ? "bg-gold-400/15" : "bg-white/5"}`}
                       >
                         <MaterialIcons
                           name={item.icon}
                           size={22}
-                          color={isActive ? "#6ee7b7" : "#737373"}
+                          color={isActive ? "#f1dc9c" : "#737373"}
                         />
                       </View>
                       {!isSidebarCollapsed && (
@@ -124,7 +124,7 @@ export default function TabLayoutWeb() {
               </View>
             </View>
 
-            <View className="flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-[#07110b]/80">
+            <View className="flex-1 overflow-hidden rounded-[32px] border border-white/10 bg-[#0a0e1c]/80">
               <View style={{ flex: 1 }}>
                 <Slot />
               </View>
