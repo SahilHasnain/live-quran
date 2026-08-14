@@ -8,9 +8,9 @@ const getPackageName = () => {
 };
 
 const getAppName = () => {
-  if (IS_DEV) return "Al Quran (Dev)";
-  if (IS_PREVIEW) return "Al Quran (Preview)";
-  return "Al Quran";
+  if (IS_DEV) return "Quranly (Dev)";
+  if (IS_PREVIEW) return "Quranly (Preview)";
+  return "Quranly";
 };
 
 export default {
@@ -35,10 +35,9 @@ export default {
     android: {
       adaptiveIcon: {
         foregroundImage: "./assets/images/icon.png",
-        backgroundColor: "#ffffff"
       },
       package: getPackageName(),
-      versionCode: 18,
+      versionCode: 19,
       notification: {
         icon: "./assets/images/status_bar_icon.png",
         color: "#228B22",
