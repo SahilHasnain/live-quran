@@ -37,7 +37,7 @@ export default {
         foregroundImage: "./assets/images/icon.png",
       },
       package: getPackageName(),
-      versionCode: 19,
+      versionCode: 20,
       notification: {
         icon: "./assets/images/status_bar_icon.png",
         color: "#228B22",
