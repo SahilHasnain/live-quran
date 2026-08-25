@@ -51,22 +51,3 @@ app-example
 
 /inspiration
 config.bat
-
-# Generated Quran SQLite database (run 
-> live-quran@1.0.0 build-db
-> node scripts/build-quran-db.mjs
-
-Creating verses table...
-  verses: 6236
-Creating tafseer table...
-  tafseer: 4376
-Creating translations table...
-  translations en: 6349
-  translations si: 6349
-  translations ps: 6349
-  translations sr: 6349
-Creating juz table...
-  juz: 30
-
-Done! D:\Projects\live-quranssets\db\quran.db (25.31 MB) to regenerate)
-assets/db/
