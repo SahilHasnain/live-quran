@@ -90,37 +90,27 @@ const VerseCard = memo(function VerseCard({
   const isRTL = lang !== "en";
 
   return (
-    <View className="mb-6 rounded-2xl border border-white/10 bg-[#101729] p-4">
-      {/* Verse number badge */}
-      <View className="mb-3 flex-row items-center justify-between">
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
-          <Text className="text-xs font-bold text-gold-400">
+    <View className="border-b border-white/5 py-3">
+      <View className="mb-2 flex-row items-start justify-end">
+        <View className="mr-2 mt-0.5 h-6 w-6 items-center justify-center rounded-full bg-gold-500/15">
+          <Text className="text-[10px] font-bold text-gold-400">
             {verseNumber}
           </Text>
         </View>
-        <Text className="text-xs text-neutral-600">
-          {verse.verse_key}
+        <Text
+          className="flex-1 text-right text-xl leading-[36px] text-white"
+          style={{ fontFamily: "KFGQPC_Uthmanic_Hafs_Regular" }}
+        >
+          {verse.text_uthmani}
         </Text>
       </View>
 
-      {/* Arabic text */}
-      <Text
-        className="mb-4 text-right text-xl leading-[40px] text-white"
-        style={{ fontFamily: "KFGQPC_Uthmanic_Hafs_Regular" }}
-      >
-        {verse.text_uthmani}
-      </Text>
-
-      {/* Divider */}
-      <View className="mb-4 h-px bg-white/10" />
-
-      {/* Translation text */}
       {translation ? (
         <Text
           style={{
-            fontSize: isRTL ? 20 : 18,
-            lineHeight: isRTL ? 36 : 32,
-            color: "#d4d4d4",
+            fontSize: isRTL ? 18 : 16,
+            lineHeight: isRTL ? 32 : 28,
+            color: "#a3a3a3",
             textAlign: isRTL ? "right" : "left",
             writingDirection: isRTL ? "rtl" : "ltr",
           }}
@@ -128,7 +118,7 @@ const VerseCard = memo(function VerseCard({
           {translation.text}
         </Text>
       ) : (
-        <Text style={{ fontSize: 18, lineHeight: 32, color: "#525252", fontStyle: "italic" }}>
+        <Text style={{ fontSize: 16, lineHeight: 28, color: "#525252", fontStyle: "italic" }}>
           Translation not available for this verse
         </Text>
       )}

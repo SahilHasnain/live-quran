@@ -75,31 +75,21 @@ const VerseCard = memo(function VerseCard({
   const verseNumber = verse.verse_number;
 
   return (
-    <View className="mb-6 rounded-2xl border border-white/10 bg-[#101729] p-4">
-      {/* Verse number badge */}
-      <View className="mb-3 flex-row items-center justify-between">
-        <View className="h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
-          <Text className="text-xs font-bold text-gold-400">
+    <View className="border-b border-white/5 py-3">
+      <View className="mb-2 flex-row items-start justify-end">
+        <View className="mr-2 mt-0.5 h-6 w-6 items-center justify-center rounded-full bg-gold-500/15">
+          <Text className="text-[10px] font-bold text-gold-400">
             {verseNumber}
           </Text>
         </View>
-        <Text className="text-xs text-neutral-600">
-          {verse.verse_key}
+        <Text
+          className="flex-1 text-right text-xl leading-[36px] text-white"
+          style={{ fontFamily: "KFGQPC_Uthmanic_Hafs_Regular" }}
+        >
+          {verse.text_uthmani}
         </Text>
       </View>
 
-      {/* Arabic text */}
-      <Text
-        className="mb-4 text-right text-xl leading-[40px] text-white"
-        style={{ fontFamily: "KFGQPC_Uthmanic_Hafs_Regular" }}
-      >
-        {verse.text_uthmani}
-      </Text>
-
-      {/* Divider */}
-      <View className="mb-4 h-px bg-white/10" />
-
-      {/* Tafsir text */}
       {tafseer ? (
         (() => {
           const paragraphs = tafseer.text.split(/\n{2,}/);
@@ -107,11 +97,11 @@ const VerseCard = memo(function VerseCard({
             <Text
               key={index}
               style={{
-                fontSize: 22,
-                lineHeight: 38,
-                color: "#d4d4d4",
+                fontSize: 18,
+                lineHeight: 32,
+                color: "#a3a3a3",
                 marginBottom:
-                  index < paragraphs.length - 1 ? 10 : 0,
+                  index < paragraphs.length - 1 ? 8 : 0,
               }}
             >
               {paragraph.trim()}
@@ -119,7 +109,7 @@ const VerseCard = memo(function VerseCard({
           ));
         })()
       ) : (
-        <Text style={{ fontSize: 22, lineHeight: 38, color: "#525252", fontStyle: "italic" }}>
+        <Text style={{ fontSize: 18, lineHeight: 32, color: "#525252", fontStyle: "italic" }}>
           Tafsir not available for this verse
         </Text>
       )}

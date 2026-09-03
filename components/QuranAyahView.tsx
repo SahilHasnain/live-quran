@@ -22,10 +22,10 @@ export default React.memo(function QuranAyahView({
 }: Props) {
   if (isBismillah) {
     return (
-      <View className="items-center py-6">
+      <View className="items-center py-3">
         <Text
           style={{ fontFamily: "KFGQPC_Uthmanic_Hafs" }}
-          className="text-3xl leading-[60px] text-white/80"
+          className="text-3xl leading-[48px] text-white/80"
         >
           {textUthmani}
         </Text>
@@ -34,15 +34,15 @@ export default React.memo(function QuranAyahView({
   }
 
   return (
-    <View className="flex-row items-start justify-end px-4 py-4">
-      <View className="mr-3 mt-1 h-8 w-8 items-center justify-center rounded-full bg-gold-500/15">
-        <Text className="text-xs font-medium text-gold-400">
+    <View className="flex-row items-start justify-end py-2">
+      <View className="mr-2 mt-0.5 h-6 w-6 items-center justify-center rounded-full bg-gold-500/15">
+        <Text className="text-[10px] font-medium text-gold-400">
           {toArabicDigits(verseNumber)}
         </Text>
       </View>
       <Text
-        style={{ fontFamily: "KFGQPC_Uthmanic_Hafs", lineHeight: 48 }}
-        className="flex-1 text-right text-2xl leading-[48px] text-white"
+        style={{ fontFamily: "KFGQPC_Uthmanic_Hafs", lineHeight: 36 }}
+        className="flex-1 text-right text-2xl leading-[36px] text-white"
       >
         {textUthmani}
       </Text>
