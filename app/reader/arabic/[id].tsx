@@ -13,10 +13,13 @@ import {
   Dimensions,
   FlatList,
   Modal,
+  ScrollView,
   Text,
   TouchableOpacity,
   View,
-  type ViewToken,
+  type LayoutChangeEvent,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
 } from "react-native";
 
 interface JuzMeta {
@@ -72,9 +75,10 @@ function ParaPage({
   const db = useSQLiteContext();
   const verses = useVersesForJuz(db, juzNumber);
 
-  const flatListRef = useRef<FlatList<DbVerse>>(null);
-  const onVerseChangeRef = useRef(onVerseChange);
-  onVerseChangeRef.current = onVerseChange;
+  const scrollRef = useRef<ScrollView>(null);
+  const offsetMapRef = useRef<{ id: number; y: number }[]>([]);
+  const didScrollToInitialRef = useRef(false);
+  const rafRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (verses) {
@@ -82,53 +86,60 @@ function ParaPage({
     }
   }, [verses, juzNumber, onLoaded]);
 
-  const viewabilityConfig = useRef({
-    viewAreaCoveragePercentThreshold: 50,
-  });
-
-  const viewabilityPairs = useRef([
-    {
-      viewabilityConfig: viewabilityConfig.current,
-      onViewableItemsChanged: ({
-        viewableItems,
-      }: {
-        viewableItems: ViewToken<DbVerse>[];
-      }) => {
-        if (viewableItems.length > 0) {
-          onVerseChangeRef.current?.(viewableItems[0].item.id);
+  const handleOnScroll = useCallback(
+    (e: NativeSyntheticEvent<NativeScrollEvent>) => {
+      const y = e.nativeEvent.contentOffset.y;
+      if (rafRef.current != null) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = null;
+        let currentId: number | null = null;
+        const offsets = offsetMapRef.current;
+        for (const entry of offsets) {
+          if (entry.y <= y + 8) {
+            currentId = entry.id;
+          } else {
+            break;
+          }
         }
-      },
+        if (currentId != null) {
+          onVerseChange?.(currentId);
+        }
+      });
     },
-  ]);
+    [onVerseChange],
+  );
 
-  useEffect(() => {
-    if (initialVerseId && verses && verses.length > 0) {
-      const idx = verses.findIndex((v) => v.id === initialVerseId);
-      if (idx > 0) {
-        setTimeout(() => {
-          flatListRef.current?.scrollToIndex({
-            index: idx,
-            animated: false,
-            viewPosition: 0,
-          });
-        }, 50);
+  const handleVerseLayout = useCallback(
+    (verseId: number, e: LayoutChangeEvent) => {
+      const entry = offsetMapRef.current.find((o) => o.id === verseId);
+      if (entry) {
+        entry.y = e.nativeEvent.layout.y;
+      } else {
+        offsetMapRef.current.push({ id: verseId, y: e.nativeEvent.layout.y });
       }
-    }
-  }, [initialVerseId, verses]);
+      offsetMapRef.current.sort((a, b) => a.y - b.y);
 
-  const onScrollToIndexFailed = useCallback(
-    (info: { index: number; averageItemLength: number }) => {
-      const offset = info.averageItemLength * info.index;
-      flatListRef.current?.scrollToOffset({ offset, animated: false });
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index: info.index,
-          animated: false,
-          viewPosition: 0,
-        });
-      }, 100);
+      if (
+        !didScrollToInitialRef.current &&
+        initialVerseId &&
+        verses
+      ) {
+        const targetIdx = verses.findIndex((v) => v.id === initialVerseId);
+        if (targetIdx > 0) {
+          const targetOffset = offsetMapRef.current.find(
+            (o) => o.id === initialVerseId,
+          );
+          if (targetOffset) {
+            didScrollToInitialRef.current = true;
+            scrollRef.current?.scrollTo({
+              y: Math.max(targetOffset.y - 8, 0),
+              animated: false,
+            });
+          }
+        }
+      }
     },
-    [],
+    [initialVerseId, verses],
   );
 
   if (!verses) {
@@ -143,26 +154,25 @@ function ParaPage({
   }
 
   return (
-    <FlatList
-      ref={flatListRef}
+    <ScrollView
+      ref={scrollRef}
       style={{ width: SCREEN_WIDTH }}
       contentContainerClassName="px-4 pb-32"
       showsVerticalScrollIndicator={false}
-      data={verses}
-      keyExtractor={(v) => String(v.id)}
-      renderItem={({ item: v }) => (
-        <QuranAyahView
-          verseNumber={v.verse_number}
-          textUthmani={v.text_uthmani}
-        />
-      )}
-      onScrollToIndexFailed={onScrollToIndexFailed}
-      viewabilityConfigCallbackPairs={viewabilityPairs.current}
-      removeClippedSubviews
-      maxToRenderPerBatch={15}
-      windowSize={7}
-      initialNumToRender={10}
-    />
+      onScroll={handleOnScroll}
+      scrollEventThrottle={16}
+    >
+      <Text style={{ writingDirection: "rtl" }}>
+        {verses.map((v) => (
+          <QuranAyahView
+            key={v.id}
+            verseNumber={v.verse_number}
+            textUthmani={v.text_uthmani}
+            onLayout={(e) => handleVerseLayout(v.id, e)}
+          />
+        ))}
+      </Text>
+    </ScrollView>
   );
 }
 
@@ -181,6 +191,7 @@ export default function ArabicParaReader() {
   const [currentIndex, setCurrentIndex] = useState(
     initialIndex >= 0 ? initialIndex : 0,
   );
+  const currentIndexRef = useRef(currentIndex);
   const [ready, setReady] = useState(false);
   const versesCacheRef = useRef<Record<number, DbVerse[]>>({});
   const [, setVerseCacheVersion] = useState(0);
@@ -200,16 +211,47 @@ export default function ArabicParaReader() {
   }, []);
 
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [savedToast, setSavedToast] = useState(false);
 
   const currentVerseIdRef = useRef<number | null>(null);
   const [currentVerseId, setCurrentVerseId] = useState<number | null>(null);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const savedToastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const persistPosition = useCallback(
+    (juzNumber: number, verseId: number) => {
+      saveProgress(juzNumber, verseId);
+      setSavedToast(true);
+      if (savedToastTimerRef.current) clearTimeout(savedToastTimerRef.current);
+      savedToastTimerRef.current = setTimeout(() => setSavedToast(false), 1500);
+    },
+    [saveProgress],
+  );
+
+  const saveCurrentPosition = useCallback(() => {
+    const juz = sortedJuzs[currentIndexRef.current];
+    if (!juz) return;
+
+    const verseId =
+      currentVerseIdRef.current ?? getJuzVerses(juz.juz_number)[0]?.id;
+    if (verseId) {
+      persistPosition(juz.juz_number, verseId);
+    }
+  }, [getJuzVerses, persistPosition]);
 
   const onVerseChange = useCallback(
     (verseId: number) => {
       currentVerseIdRef.current = verseId;
       setCurrentVerseId(verseId);
+      const juz = sortedJuzs[currentIndexRef.current];
+      if (juz) {
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = setTimeout(() => {
+          saveProgress(juz.juz_number, verseId);
+        }, 1200);
+      }
     },
-    [],
+    [saveProgress, sortedJuzs],
   );
 
   const progress =
@@ -227,14 +269,9 @@ export default function ArabicParaReader() {
         e.nativeEvent.contentOffset.x / SCREEN_WIDTH,
       );
       setCurrentIndex(index);
-      const juz = sortedJuzs[index];
-      if (juz) {
-        const verses = getJuzVerses(juz.juz_number);
-        const firstVerse = verses[0];
-        saveProgress(juz.juz_number, firstVerse?.id ?? 0);
-      }
+      currentIndexRef.current = index;
     },
-    [sortedJuzs, saveProgress, getJuzVerses],
+    [],
   );
 
   const navigateToJuz = useCallback(
@@ -244,27 +281,30 @@ export default function ArabicParaReader() {
       if (idx >= 0) {
         flatListRef.current?.scrollToIndex({ index: idx, animated: false });
         setCurrentIndex(idx);
-        const verses = getJuzVerses(n);
-        const firstVerse = verses[0];
-        saveProgress(n, firstVerse?.id ?? 0);
+        currentIndexRef.current = idx;
       }
     },
-    [sortedJuzs, saveProgress, getJuzVerses],
+    [],
   );
 
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => {
-      const juz = sortedJuzs[currentIndex];
-      if (juz) {
-        const verseId =
-          currentVerseIdRef.current ?? getJuzVerses(juz.juz_number)[0]?.id ?? 0;
-        saveProgress(juz.juz_number, verseId);
-      }
+      saveCurrentPosition();
       router.back();
       return true;
     });
     return () => sub.remove();
-  }, [router, sortedJuzs, currentIndex, saveProgress, getJuzVerses]);
+  }, [router, saveCurrentPosition]);
+
+  // Fallback: persist the last seen position on unmount so "Continue Reading"
+  // always works even if the user navigates away without pressing Save.
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
+      if (savedToastTimerRef.current) clearTimeout(savedToastTimerRef.current);
+      saveCurrentPosition();
+    };
+  }, [saveCurrentPosition]);
 
   useEffect(() => {
     const t = setTimeout(() => setReady(true), 600);
@@ -334,6 +374,29 @@ export default function ArabicParaReader() {
           />
         )}
       />
+
+      <View className="absolute bottom-6 right-5 items-end">
+        {savedToast && (
+          <View className="mb-2 rounded-full bg-white/10 px-3 py-2">
+            <Text className="text-xs font-medium text-white">
+              Position saved
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity
+          onPress={saveCurrentPosition}
+          accessibilityLabel="Save reading position"
+          accessibilityRole="button"
+          activeOpacity={0.8}
+          className="h-14 w-14 items-center justify-center rounded-full bg-gold-500 shadow-lg shadow-black/40"
+        >
+          <MaterialIcons
+            name={savedToast ? "check" : "bookmark-add"}
+            size={24}
+            color="#0a0e1c"
+          />
+        </TouchableOpacity>
+      </View>
 
       <Modal
         visible={pickerVisible}

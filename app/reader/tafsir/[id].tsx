@@ -65,6 +65,85 @@ function useSurahTafseerData(surahId: number) {
   return data;
 }
 
+type TafsirBlock =
+  | { type: "heading"; text: string }
+  | { type: "gloss"; gloss: string; text: string }
+  | { type: "body"; text: string };
+
+function parseTafsirText(raw: string): TafsirBlock[] {
+  const blocks: TafsirBlock[] = [];
+  const paragraphs = raw.split(/\n{2,}/);
+
+  for (const paragraph of paragraphs) {
+    const text = paragraph.trim();
+    if (!text) continue;
+
+    if (text.length <= 60 && text.endsWith(":")) {
+      blocks.push({ type: "heading", text });
+      continue;
+    }
+
+    const glossMatch = text.match(/^\{([^{}]*)\}([\s\S]*)$/);
+    if (glossMatch) {
+      blocks.push({
+        type: "gloss",
+        gloss: glossMatch[1].trim(),
+        text: glossMatch[2].trim(),
+      });
+      continue;
+    }
+
+    blocks.push({ type: "body", text });
+  }
+
+  return blocks;
+}
+
+const TafsirText = memo(function TafsirText({ raw }: { raw: string }) {
+  const blocks = parseTafsirText(raw);
+
+  return (
+    <View className="gap-2">
+      {blocks.map((block, index) => {
+        if (block.type === "heading") {
+          return (
+            <Text
+              key={index}
+              className="text-lg font-bold text-gold-400"
+              style={{ fontSize: 20, lineHeight: 30 }}
+            >
+              {block.text}
+            </Text>
+          );
+        }
+
+        if (block.type === "gloss") {
+          return (
+            <View
+              key={index}
+              className="rounded-xl border border-gold-400/20 bg-gold-500/10 px-3 py-2"
+            >
+              <Text style={{ fontSize: 19, lineHeight: 32, color: "#e8d9a0" }}>
+                {block.gloss}
+              </Text>
+              <View className="my-2 border-t border-white/10" />
+              <Text style={{ fontSize: 20, lineHeight: 34, color: "#d4d4d4" }}>
+                {block.text}
+              </Text>
+            </View>
+          );
+        }
+
+        return (
+          <Text key={index} style={{ fontSize: 20, lineHeight: 34, color: "#b3b3b3" }}>
+            {block.text}
+          </Text>
+        );
+      })}
+    </View>
+  );
+});
+
 const VerseCard = memo(function VerseCard({
   verse,
   tafseer,
@@ -91,25 +170,9 @@ const VerseCard = memo(function VerseCard({
       </View>
 
       {tafseer ? (
-        (() => {
-          const paragraphs = tafseer.text.split(/\n{2,}/);
-          return paragraphs.map((paragraph, index) => (
-            <Text
-              key={index}
-              style={{
-                fontSize: 18,
-                lineHeight: 32,
-                color: "#a3a3a3",
-                marginBottom:
-                  index < paragraphs.length - 1 ? 8 : 0,
-              }}
-            >
-              {paragraph.trim()}
-            </Text>
-          ));
-        })()
+        <TafsirText raw={tafseer.text} />
       ) : (
-        <Text style={{ fontSize: 18, lineHeight: 32, color: "#525252", fontStyle: "italic" }}>
+        <Text style={{ fontSize: 20, lineHeight: 34, color: "#525252", fontStyle: "italic" }}>
           Tafsir not available for this verse
         </Text>
       )}
